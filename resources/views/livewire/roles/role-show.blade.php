@@ -1,0 +1,29 @@
+<div>
+    <div class="relative mb-6 w-full">
+        <flux:heading size="xl" level="1">{{ __('View Role') }}</flux:heading>
+        <flux:subheading size="lg" class="mb-6">{{ __('This page is for viewing role details') }}</flux:subheading>
+        <flux:separator variant="subtle" />
+    </div>
+
+    <div class="py-3">
+        <flux:button variant="primary" href="{{ route('roles.index') }}">Back</flux:button>
+    </div>
+
+    <div class="w-150">
+        <form class="mt-6 space-y-6">
+            <div class="py-3">
+                <div class="mb-4">
+                    <flux:input wire:model="name" type="name" label="Name" />                   
+                </div>
+                <div class="mb-4">
+                    <flux:checkbox.group wire:model="permissions" label="Permissions">
+                        @foreach ($allPermissions as $permission)
+                            <flux:checkbox label="{{ $permission->name}}" value="{{ $permission->name}}" disabled/>
+                        @endforeach
+                    </flux:checkbox.group>                    
+                </div> 
+            </div>
+        </form>
+    </div>
+
+</div>
