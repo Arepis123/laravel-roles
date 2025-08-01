@@ -23,32 +23,23 @@
 
         <form wire:submit.prevent="save" class="space-y-4">
 
-            <flux:field>
-                <flux:label>Type</flux:label>
-                <flux:select wire:model="asset_type" placeholder="Choose booking type...">
-                    <flux:select.option value="meeting_room">Meeting Room</flux:select.option>
-                    <flux:select.option value="vehicle">Vehicle</flux:select.option>
-                    <flux:select.option value="it_asset">IT Asset</flux:select.option>
-                </flux:select>            
-            </flux:field>
-{{-- <?php dd($asset_options); ?> --}}
-            @if (!empty($asset_options))
-                <div>
-                    <label class="block font-medium">Asset</label>
-                    <select wire:model="asset_id" class="w-full border rounded px-3 py-2">
-                        <option value="">-- Select Asset --</option>
-                        @foreach ($asset_options as $id => $name)
-                            <option value="{{ $id }}">{{ $name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            @endif          
-
-            <flux:field>
-                <flux:label>Name</flux:label>
-                <flux:input placeholder="" wire:model="asset_id"/>
-                <flux:error name="asset_id" />
-            </flux:field>    
+        <flux:field>
+            <flux:label>Type</flux:label>
+            <flux:select wire:model.live="asset_type" placeholder="Select booking type">
+                @foreach ($this->assetTypeOptions as $option)
+                    <flux:select.option value="{{ $option['value'] }}">{{ $option['label'] }}</flux:select.option>
+                @endforeach
+            </flux:select>            
+        </flux:field>
+                        
+        <flux:field>
+            <flux:label>Asset</flux:label>
+            <flux:select wire:model="asset_id" placeholder="Select asset" :disabled="!$asset_type">
+                @foreach ($this->assetOptions as $asset)
+                    <flux:select.option value="{{ $asset->id }}">{{ $asset->name }}</flux:select.option>
+                @endforeach
+            </flux:select>
+        </flux:field>    
 
             <flux:field>
                 <flux:label>Capacity</flux:label>

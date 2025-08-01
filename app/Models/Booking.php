@@ -30,24 +30,10 @@ class Booking extends Model
     public function getAssetTypeLabelAttribute()
     {
         return match (class_basename($this->asset_type)) {
-            'meeting_room' => 'Meeting Room',
-            'it_asset'     => 'IT Asset',
-            'vehicle'      => 'Vehicle',
-            default        => 'Unknown',
+            'MeetingRoom' => 'Meeting Room',
+            'Vehicle'     => 'Vehicle',
+            'ItAsset'     => 'IT Asset',
+            default       => 'Unknown',
         };
     }  
-    
-    public function getAssetNameAttribute()
-    {
-        switch ($this->asset_type) {
-            case 'meeting_room':
-                return \App\Models\MeetingRoom::find($this->asset_id)?->name ?? '-';
-            case 'vehicle':
-                return \App\Models\Vehicle::find($this->asset_id)?->model ?? '-';
-            case 'it_asset':
-                return \App\Models\ItAsset::find($this->asset_id)?->name ?? '-';
-            default:
-                return '-';
-        }
-    }    
 }

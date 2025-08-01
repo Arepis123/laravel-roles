@@ -40,8 +40,8 @@
                     @foreach ($bookings as $booking)
                         <tr class="hover:bg-gray-100 dark:hover:bg-neutral-700">
                             <td class="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">{{ $loop->iteration }}</td>
-                            <td class="px-6 py-2 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">
-                                @if ($booking->asset_type_label == 'Meeting Room')                            
+                            <td class="px-6 py-2 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">                                
+                                @if ($booking->asset_type_label == 'Vehicle')                            
                                 <span class="inline-flex items-center px-2 py-1 gap-2 rounded bg-gray-200 text-s font-medium text-gray-700">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="m20.772 10.156-1.368-4.105A2.995 2.995 0 0 0 16.559 4H7.441a2.995 2.995 0 0 0-2.845 2.051l-1.368 4.105A2.003 2.003 0 0 0 2 12v5c0 .753.423 1.402 1.039 1.743-.013.066-.039.126-.039.195V21a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-2h12v2a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-2.062c0-.069-.026-.13-.039-.195A1.993 1.993 0 0 0 22 17v-5c0-.829-.508-1.541-1.228-1.844zM4 17v-5h16l.002 5H4zM7.441 6h9.117c.431 0 .813.274.949.684L18.613 10H5.387l1.105-3.316A1 1 0 0 1 7.441 6z"></path><circle cx="6.5" cy="14.5" r="1.5"></circle><circle cx="17.5" cy="14.5" r="1.5"></circle></svg>
                                     <span class="items-center">{{ $booking->asset_type_label }}</span>
@@ -53,7 +53,7 @@
                                     <span class="items-center">{{ $booking->asset_type_label }}</span>
                                 </span>
                                 @endif      
-                                @if ($booking->asset_type_label == 'Vehicle')                            
+                                @if ($booking->asset_type_label == 'Meeting Room')                            
                                 <span class="inline-flex items-center px-2 py-1 gap-2 rounded bg-gray-200 text-s font-medium text-gray-700">                                    
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M19 2H9c-1.103 0-2 .897-2 2v6H5c-1.103 0-2 .897-2 2v9a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V4c0-1.103-.897-2-2-2zM5 12h6v8H5v-8zm14 8h-6v-8c0-1.103-.897-2-2-2H9V4h10v16z"></path><path d="M11 6h2v2h-2zm4 0h2v2h-2zm0 4.031h2V12h-2zM15 14h2v2h-2zm-8 .001h2v2H7z"></path></svg>
                                     <span class="items-center">{{ $booking->asset_type_label }}</span>
@@ -62,7 +62,7 @@
                                 {{-- <flux:badge class="" icon="truck">{{ $booking->asset_type_label }}</flux:badge>  --}}
                             </td>
                             <td class="px-6 py-2 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">
-                                @if ($booking->asset_type == 'vehicle')
+                                @if ($booking->asset_type_label == 'Vehicle')
                                     {{ $booking->asset?->model ?? '-' }}
                                 @else
                                     {{ $booking->asset?->name ?? '-' }}
