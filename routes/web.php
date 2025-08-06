@@ -14,6 +14,7 @@ use App\Livewire\Roles\RoleEdit;
 use App\Livewire\Roles\RoleShow;
 use App\Livewire\Bookings\BookingIndex;      // Admin: all bookings  
 use App\Livewire\Bookings\BookingCreate;
+use App\Livewire\Bookings\BookingShow;
 use App\Livewire\Bookings\BookingMyIndex;    // User: own bookings
 
 Route::get('/', function () {
@@ -54,7 +55,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('bookings/my', BookingMyIndex::class)->name('bookings.index.user')->middleware('role:Admin');
 
     // All roles can use create if they have permission
-    Route::get('bookings/create', BookingCreate::class)->name('bookings.create')->middleware('permission:book.create'); 
+    Route::get('bookings/create', BookingCreate::class)->name('bookings.create')->middleware('permission:book.create');
+    Route::get('bookings/{id}', BookingShow::class)->name('bookings.show')->middleware('permission:book.view');
 
     Route::get('settings/profile', Profile::class)->name('settings.profile');
     Route::get('settings/password', Password::class)->name('settings.password');

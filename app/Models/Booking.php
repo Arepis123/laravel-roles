@@ -15,8 +15,15 @@ class Booking extends Model
         'start_time',
         'end_time',
         'status',
+        'capacity',
+        'additional_booking',
+        'refreshment_details',
     ];
     
+    protected $casts = [
+        'additional_booking' => 'array',
+    ];
+
     public function asset()
     {
         return $this->morphTo(null, 'asset_type', 'asset_id');

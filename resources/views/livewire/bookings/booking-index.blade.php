@@ -88,7 +88,7 @@
                             </td>
                             <td class="px-6 py-2 whitespace-nowrap text-center text-sm font-medium">                              
                                 <flux:button.group>
-                                        <flux:button size="sm">View</flux:button>
+                                        <flux:button size="sm" href="{{ route('bookings.show', $booking->id) }}">View</flux:button>
                                     <flux:dropdown>
                                         <flux:button icon="chevron-down" size="sm" ></flux:button>                                           
                                         <flux:menu>

@@ -43,7 +43,7 @@
 
             <flux:field>
                 <flux:label>Capacity</flux:label>
-                <flux:input placeholder="How many people" wire:model="" type="number"/>
+                <flux:input placeholder="How many people" wire:model="capacity" type="number"/>
                 <flux:error name="" />
             </flux:field>             
             
@@ -62,12 +62,32 @@
 
             <flux:textarea label="Purpose" wire:model="purpose" placeholder="Explain your booking purpose"/>
 
-            <flux:checkbox.group wire:model="" label="Addtional booking">
-                <flux:checkbox label="Refreshment" value="refreshment" description="Refreshment might be mineral water and traditional kuih"/>
-                <flux:checkbox label="Smart Monitor" value="smart_monitor" description="IT will setup the smart monitor before the meeting start"/>
-                <flux:checkbox label="Laptop" value="laptop" description="IT will setup laptop"/>
-            </flux:checkbox.group>            
+            <flux:checkbox.group wire:model.live="additional_booking" label="Additional Services">
+                <flux:checkbox 
+                    label="Refreshment" 
+                    value="refreshment" 
+                    description="Meals such as breakfast, lunch, or snacks can be arranged before or during the session." 
+                />
 
+                @if (in_array('refreshment', $additional_booking))
+                    <div class="ml-6 mb-4">
+                        <flux:textarea wire:model.live="refreshment_details" placeholder="e.g., breakfast and coffee for 5 people. Pastries for 5 people"/>
+                    </div>
+                @endif
+
+                <flux:checkbox 
+                    label="Smart Monitor" 
+                    value="smart_monitor" 
+                    description="A smart monitor will be set up in the room before the meeting starts." 
+                />
+
+                <flux:checkbox 
+                    label="Laptop" 
+                    value="laptop" 
+                    description="A laptop will be prepared and set up for use during your session." 
+                />
+            </flux:checkbox.group>
+         
             <flux:button type="submit" variant="primary">
                 Submit Booking
             </flux:button>

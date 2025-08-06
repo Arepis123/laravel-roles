@@ -1,3 +1,88 @@
 <div>
-    {{-- Close your eyes. Count to one. That is how long forever feels. --}}
+    <div class="relative mb-6 w-full">
+        <flux:heading size="xl" level="1">{{ __('View Booking') }}</flux:heading>
+        <flux:subheading size="lg" class="mb-6">{{ __('This page is for viewing booking details') }}</flux:subheading>
+        <flux:separator variant="subtle" />
+    </div>
+
+    <div class="py-3">
+        <flux:button variant="primary" href="{{ route('bookings.index') }}">Back</flux:button>
+    </div>
+
+    <div class="max-w-2xl mt-8 space-y-6">
+        {{-- <flux:heading size="xl"><b>Booking Info</b></flux:heading>
+
+        <flux:separator variant="subtle" class="my-2" /> --}}
+
+        @if (session()->has('success'))
+            <div class="text-green-600">{{ session('success') }}</div>
+        @endif
+
+        <flux:field>
+            <flux:label>Type</flux:label>
+            <flux:select wire:model.live="asset_type" placeholder="Select booking type">
+                @foreach ($this->assetTypeOptions as $option)
+                    <flux:select.option value="{{ $option['value'] }}" readonly>{{ $option['label'] }}</flux:select.option>
+                @endforeach
+            </flux:select>            
+        </flux:field>
+                        
+        <flux:field>
+            <flux:label>Asset</flux:label>
+            <flux:select wire:model="asset_id" placeholder="Select asset" :disabled="!$asset_type">
+                @foreach ($this->assetOptions as $asset)
+                    <flux:select.option value="{{ $asset->id }}" readonly>{{ $asset->name }}</flux:select.option>
+                @endforeach
+            </flux:select>
+        </flux:field>    
+
+            <flux:field>
+                <flux:label>Capacity</flux:label>
+                <flux:input placeholder="How many people" wire:model="capacity" type="number" readonly/>
+                <flux:error name="" />
+            </flux:field>             
+            
+            <div class="grid grid-cols-2 gap-4">
+                <flux:field>
+                    <flux:label>Start Time</flux:label>
+                    <flux:input placeholder="Select time" wire:model="start_time" type="datetime-local" readonly/>
+                    <flux:error name="start_time" />
+                </flux:field>
+                <flux:field>
+                    <flux:label>End Time</flux:label>
+                    <flux:input placeholder="Select time" wire:model="end_time" type="datetime-local" readonly/>
+                    <flux:error name="end_time" />
+                </flux:field>             
+            </div>          
+
+            <flux:textarea label="Purpose" wire:model="purpose" placeholder="Explain your booking purpose" readonly/>
+
+            <flux:checkbox.group wire:model.live="additional_booking" label="Additional Services">
+                <flux:checkbox 
+                    label="Refreshment" 
+                    value="refreshment" 
+                    description="Meals such as breakfast, lunch, or snacks can be arranged before or during the session."  readonly
+                />
+
+                @if (in_array('refreshment', $additional_booking))
+                    <div class="ml-6 mb-4">
+                        <flux:textarea wire:model.live="refreshment_details" placeholder="e.g., breakfast and coffee for 5 people. Pastries for 5 people"/>
+                    </div>
+                @endif
+
+                <flux:checkbox 
+                    label="Smart Monitor" 
+                    value="smart_monitor" 
+                    description="A smart monitor will be set up in the room before the meeting starts."  readonly
+                />
+
+                <flux:checkbox 
+                    label="Laptop" 
+                    value="laptop" 
+                    description="A laptop will be prepared and set up for use during your session."  readonly
+                />
+            </flux:checkbox.group>
+              
+    </div>
+
 </div>
