@@ -94,9 +94,21 @@
                                         <flux:menu>
                                             <flux:menu.submenu heading="Change status">
                                                 <flux:menu.radio.group position="bottom" align="center">
-                                                    <flux:menu.radio :checked="$booking->status == 'pending'">Pending</flux:menu.radio>
-                                                    <flux:menu.radio :checked="$booking->status == 'cancel'">Cancel</flux:menu.radio>
-                                                    <flux:menu.radio :checked="$booking->status == 'done'">Done</flux:menu.radio>
+                                                    <flux:menu.radio :checked="$booking->status == 'pending'" wire:click="changeStatus('pending')">
+                                                        Pending
+                                                    </flux:menu.radio>
+                                                    <flux:menu.radio :checked="$booking->status == 'pending'" wire:click="changeStatus('approved')">
+                                                        Approve
+                                                    </flux:menu.radio>   
+                                                    <flux:menu.radio :checked="$booking->status == 'pending'" wire:click="changeStatus('rejected')">
+                                                        Reject
+                                                    </flux:menu.radio>                                                                                                     
+                                                    <flux:menu.radio :checked="$booking->status == 'cancel'" wire:click="changeStatus('cancelled')">
+                                                        Cancel
+                                                    </flux:menu.radio>
+                                                    <flux:menu.radio :checked="$booking->status == 'done'" wire:click="changeStatus('done')">
+                                                        Done
+                                                    </flux:menu.radio>
                                                 </flux:menu.radio.group>
                                             </flux:menu.submenu>
                                         </flux:menu>

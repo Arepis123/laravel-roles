@@ -15,6 +15,7 @@ use App\Livewire\Roles\RoleShow;
 use App\Livewire\Bookings\BookingIndex;      // Admin: all bookings  
 use App\Livewire\Bookings\BookingCreate;
 use App\Livewire\Bookings\BookingShow;
+use App\Livewire\Bookings\BookingEdit;
 use App\Livewire\Bookings\BookingMyIndex;    // User: own bookings
 
 Route::get('/', function () {
@@ -57,10 +58,111 @@ Route::middleware(['auth'])->group(function () {
     // All roles can use create if they have permission
     Route::get('bookings/create', BookingCreate::class)->name('bookings.create')->middleware('permission:book.create');
     Route::get('bookings/{id}', BookingShow::class)->name('bookings.show')->middleware('permission:book.view');
+    Route::get('bookings/{id}/edit', RoleEdit::class)->name('bookings.edit')->middleware('permission:book.edit');
 
     Route::get('settings/profile', Profile::class)->name('settings.profile');
     Route::get('settings/password', Password::class)->name('settings.password');
     Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
+
+
+Route::get('/inspect-booking/{bookingId}', function ($bookingId) {
+    try {
+        $booking = \App\Models\Booking::findOrFail($bookingId);
+        
+        return response()->json([
+            'booking_data' => [
+                'id' => $booking->id,
+                'status' => $booking->status,
+                'booked_by' => $booking->booked_by,
+                'status_history' => $booking->status_history,
+                'created_at' => $booking->created_at,
+                'updated_at' => $booking->updated_at,
+            ],
+            'user_data' => $booking->bookedBy ? [
+                'id' => $booking->bookedBy->id,
+                'name' => $booking->bookedBy->name,
+                'email' => $booking->bookedBy->email,
+            ] : null,
+            'relationship_test' => [
+                'direct_find' => \App\Models\User::find($booking->booked_by)?->email,
+                'via_relationship' => $booking->bookedBy?->email,
+                'relationship_exists' => method_exists($booking, 'bookedBy'),
+            ],
+            'current_auth' => [
+                'user_id' => auth()->id(),
+                'user_name' => auth()->user()?->name,
+                'is_same_user' => auth()->id() === $booking->booked_by,
+            ]
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+})->name('inspect.booking');    
+
+Route::get('/test-booking-email/{bookingId}', function ($bookingId) {
+    try {
+        // Find the booking
+        $booking = \App\Models\Booking::findOrFail($bookingId);
+        
+        // Get the booking owner
+        $user = $booking->bookedBy;
+        
+        if (!$user) {
+            return response()->json([
+                'error' => 'No user found for this booking',
+                'booking_id' => $bookingId,
+                'booked_by' => $booking->booked_by
+            ]);
+        }
+        
+        \Log::info('Testing email for booking: ' . $bookingId);
+        \Log::info('User email: ' . $user->email);
+        
+        // Send the notification
+        $user->notify(new \App\Notifications\BookingStatusChanged(
+            $booking,
+            'pending',
+            'approved',
+            'Test Admin'
+        ));
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Test email sent successfully',
+            'booking_id' => $bookingId,
+            'user_email' => $user->email,
+            'user_name' => $user->name
+        ]);
+        
+    } catch (\Exception $e) {
+        \Log::error('Test email failed: ' . $e->getMessage());
+        
+        return response()->json([
+            'error' => 'Failed to send test email',
+            'message' => $e->getMessage(),
+            'booking_id' => $bookingId
+        ]);
+    }
+})->name('test.booking.email');
+
+// Simple mail test
+Route::get('/test-mail', function () {
+    try {
+        \Mail::raw('This is a test email from ' . config('app.name'), function ($message) {
+            $message->to(auth()->user()->email ?? 'arepis123@gmail.com')
+                   ->subject('Test Email - ' . now());
+        });
+        
+        return 'Test email sent! Check your inbox and spam folder.';
+    } catch (\Exception $e) {
+        return 'Mail test failed: ' . $e->getMessage();
+    }
+})->name('test.mail');    
 });
+
 
 require __DIR__.'/auth.php';
