@@ -11,8 +11,7 @@ use Illuminate\Notifications\Notification;
 // class BookingStatusChanged extends Notification implements ShouldQueue
 class BookingStatusChanged extends Notification
 {
-    // use Queueable;
-
+    protected $shouldQueue;
     protected $booking;
     protected $oldStatus;
     protected $newStatus;
@@ -21,12 +20,13 @@ class BookingStatusChanged extends Notification
     /**
      * Create a new notification instance.
      */
-    public function __construct(Booking $booking, string $oldStatus, string $newStatus, string $changedByName)
+    public function __construct(Booking $booking, string $oldStatus, string $newStatus, string $changedByName,bool $shouldQueue = false)
     {
         $this->booking = $booking;
         $this->oldStatus = $oldStatus;
         $this->newStatus = $newStatus;
         $this->changedByName = $changedByName;
+        $this->shouldQueue = $shouldQueue;
         
         \Log::info('📧 BookingStatusChanged notification created', [
             'booking_id' => $booking->id,
@@ -43,7 +43,7 @@ class BookingStatusChanged extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return $this->shouldQueue ? ['mail'] : ['mail'];
     }
 
     /**

@@ -1,4 +1,4 @@
-<div class="max-w-4xl mx-auto p-6 space-y-6">
+<div class="max-w-5xl mx-auto p-6 space-y-6">
     {{-- Header Section --}}
     <div class="flex items-center justify-between border-b pb-4">
         <div>
