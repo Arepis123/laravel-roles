@@ -14,9 +14,9 @@ class BookingCreate extends Component
 {
     public string $asset_type = '';
     public string $asset_id = '';
-    public string $booking_date = '';  // New: separate date field
-    public string $start_time = '';    // Modified: now just time (H:i format)
-    public string $end_time = '';      // Modified: now just time (H:i format)
+    public string $booking_date = '';  
+    public string $start_time = '';   
+    public string $end_time = '';     
     public string $purpose = '';
     public string $capacity = '';     
 
@@ -40,6 +40,12 @@ class BookingCreate extends Component
             'name_field' => 'name'
         ],
     ];
+
+    public function mount()
+    {
+        // Initialize additional_booking as empty array
+        $this->additional_booking = [];
+    }
 
     public function getAssetTypeOptionsProperty()
     {
@@ -67,6 +73,39 @@ class BookingCreate extends Component
     public function updatedAssetType()
     {
         $this->asset_id = '';
+        // Reset time selections when asset type changes
+        $this->start_time = '';
+        $this->end_time = '';
+    }
+
+    public function updatedAssetId()
+    {
+        // Reset time selections when asset changes
+        $this->start_time = '';
+        $this->end_time = '';
+    }
+
+    public function updatedBookingDate()
+    {
+        // Reset time selections when date changes
+        $this->start_time = '';
+        $this->end_time = '';
+    }
+
+    public function updatedStartTime()
+    {
+        // Reset end time when start time changes
+        $this->end_time = '';
+    }
+
+    // Add this method to handle additional_booking updates
+    public function updatedAdditionalBooking()
+    {
+        // Clear refreshment_details if refreshment is unchecked
+        if (!in_array('refreshment', $this->additional_booking)) {
+            $this->refreshment_details = '';
+            $this->resetErrorBag('refreshment_details');
+        }
     }
 
     /**
@@ -78,6 +117,11 @@ class BookingCreate extends Component
         $start = 8; // 8 AM
         $end = 18;  // 6 PM
         
+        // Return empty if asset not selected
+        if (!$this->asset_type || !$this->asset_id || !$this->booking_date) {
+            return $slots;
+        }
+
         for ($hour = $start; $hour < $end; $hour++) {
             for ($minute = 0; $minute < 60; $minute += 30) {
                 $timeString = sprintf('%02d:%02d', $hour, $minute);
@@ -90,8 +134,11 @@ class BookingCreate extends Component
                         continue;
                     }
                 }
-                
-                $slots[$timeString] = $displayTime;
+
+                // Check if this time slot is available
+                if ($this->isTimeSlotAvailable($timeString)) {
+                    $slots[$timeString] = $displayTime;
+                }
             }
         }
         
@@ -103,7 +150,9 @@ class BookingCreate extends Component
      */
     public function getAvailableEndTimes()
     {
-        if (!$this->start_time) return [];
+        if (!$this->start_time || !$this->asset_type || !$this->asset_id || !$this->booking_date) {
+            return [];
+        }
         
         $slots = [];
         
@@ -111,13 +160,21 @@ class BookingCreate extends Component
             $startTime = Carbon::createFromFormat('H:i', $this->start_time);
             $endOfDay = Carbon::createFromFormat('H:i', '18:00'); // 6 PM
             
-            // Start from 15 minutes after start time
+            // Start from 30 minutes after start time
             $currentTime = $startTime->copy()->addMinutes(30);            
             
             while ($currentTime->lte($endOfDay)) {
                 $timeString = $currentTime->format('H:i');
                 $displayTime = $currentTime->format('g:i A');
-                $slots[$timeString] = $displayTime;
+                
+                // Check if the time range from start_time to this end_time is available
+                if ($this->isTimeRangeAvailable($this->start_time, $timeString)) {
+                    $slots[$timeString] = $displayTime;
+                } else {
+                    // If this slot is not available, stop checking further slots
+                    break;
+                }
+                
                 $currentTime->addMinutes(30);
             }
             
@@ -132,8 +189,92 @@ class BookingCreate extends Component
     }
 
     /**
-     * Get booking duration as computed property
+     * Check if a specific time slot is available for the selected asset
      */
+    protected function isTimeSlotAvailable($timeSlot)
+    {
+        if (!$this->asset_type || !$this->asset_id || !$this->booking_date) {
+            return false;
+        }
+
+        try {
+            $checkDateTime = Carbon::createFromFormat('Y-m-d H:i', $this->booking_date . ' ' . $timeSlot);
+            
+            // Check if there's any booking that conflicts with this time slot
+            $conflictingBooking = Booking::where('asset_type', $this->assetTypeConfig[$this->asset_type]['model'])
+                ->where('asset_id', $this->asset_id)
+                ->where('status', '!=', 'cancelled')
+                ->where('start_time', '<=', $checkDateTime)
+                ->where('end_time', '>', $checkDateTime)
+                ->exists();
+
+            return !$conflictingBooking;
+
+        } catch (\Exception $e) {
+            \Log::error('Error checking time slot availability:', [
+                'error' => $e->getMessage(),
+                'time_slot' => $timeSlot,
+                'asset_type' => $this->asset_type,
+                'asset_id' => $this->asset_id,
+                'booking_date' => $this->booking_date
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Check if a time range is available for the selected asset
+     */
+    protected function isTimeRangeAvailable($startTime, $endTime)
+    {
+        if (!$this->asset_type || !$this->asset_id || !$this->booking_date) {
+            return false;
+        }
+
+        try {
+            $startDateTime = Carbon::createFromFormat('Y-m-d H:i', $this->booking_date . ' ' . $startTime);
+            $endDateTime = Carbon::createFromFormat('Y-m-d H:i', $this->booking_date . ' ' . $endTime);
+            
+            // Check if there's any booking that conflicts with this time range
+            $conflictingBooking = Booking::where('asset_type', $this->assetTypeConfig[$this->asset_type]['model'])
+                ->where('asset_id', $this->asset_id)
+                ->where('status', '!=', 'cancelled')
+                ->where(function ($query) use ($startDateTime, $endDateTime) {
+                    $query->where(function ($q) use ($startDateTime, $endDateTime) {
+                        // Existing booking starts during our requested time
+                        $q->whereBetween('start_time', [$startDateTime, $endDateTime->copy()->subSecond()]);
+                    })
+                    ->orWhere(function ($q) use ($startDateTime, $endDateTime) {
+                        // Existing booking ends during our requested time  
+                        $q->whereBetween('end_time', [$startDateTime->copy()->addSecond(), $endDateTime]);
+                    })
+                    ->orWhere(function ($q) use ($startDateTime, $endDateTime) {
+                        // Existing booking completely encompasses our requested time
+                        $q->where('start_time', '<=', $startDateTime)
+                          ->where('end_time', '>=', $endDateTime);
+                    })
+                    ->orWhere(function ($q) use ($startDateTime, $endDateTime) {
+                        // Our requested time completely encompasses existing booking
+                        $q->where('start_time', '>=', $startDateTime)
+                          ->where('end_time', '<=', $endDateTime);
+                    });
+                })
+                ->exists();
+
+            return !$conflictingBooking;
+
+        } catch (\Exception $e) {
+            \Log::error('Error checking time range availability:', [
+                'error' => $e->getMessage(),
+                'start_time' => $startTime,
+                'end_time' => $endTime,
+                'asset_type' => $this->asset_type,
+                'asset_id' => $this->asset_id,
+                'booking_date' => $this->booking_date
+            ]);
+            return false;
+        }
+    }
     public function getBookingDurationProperty()
     {
         if (!$this->start_time || !$this->end_time) return '';
@@ -168,24 +309,6 @@ class BookingCreate extends Component
      */
     public function getBookingDuration()
     {
-        if (!$this->start_time || !$this->end_time) return '';
-        
-        $start = Carbon::createFromFormat('H:i', $this->start_time);
-        $end = Carbon::createFromFormat('H:i', $this->end_time);
-        
-        $minutes = $start->diffInMinutes($end);
-        $hours = intval($minutes / 60);
-        $remainingMinutes = $minutes % 60;
-        
-        $duration = '';
-        if ($hours > 0) {
-            $duration .= $hours . ' hour' . ($hours > 1 ? 's' : '');
-        }
-        if ($remainingMinutes > 0) {
-            if ($hours > 0) $duration .= ' and ';
-            $duration .= $remainingMinutes . ' minute' . ($remainingMinutes > 1 ? 's' : '');
-        }
-        
         return $this->getBookingDurationProperty();
     }
 
@@ -197,11 +320,18 @@ class BookingCreate extends Component
         // Debug: Log what's being updated
         \Log::info('Property updated:', [
             'property' => $propertyName,
-            'value' => $this->{$propertyName},
+            'value' => $this->{$propertyName} ?? 'N/A',
             'booking_date' => $this->booking_date,
             'start_time' => $this->start_time,
             'end_time' => $this->end_time
         ]);
+
+        // Handle array properties differently
+        if (strpos($propertyName, 'additional_booking') === 0) {
+            // Handle additional_booking array updates
+            $this->updatedAdditionalBooking();
+            return;
+        }
 
         // Clear previous errors for the field being updated
         $this->resetErrorBag($propertyName);
@@ -284,6 +414,7 @@ class BookingCreate extends Component
             'purpose' => 'required|string|min:3',
             'capacity' => 'nullable|numeric|min:1',
             'additional_booking' => 'array',
+            'additional_booking.*' => 'string|in:refreshment,smart_monitor,laptop',
         ];
 
         // Add conditional rule for refreshment_details
@@ -300,6 +431,8 @@ class BookingCreate extends Component
     public function messages()
     {
         return [
+            'asset_type.required' => 'Please select an asset type.',
+            'asset_id.required' => 'Please select an asset.',
             'booking_date.required' => 'Please select a booking date.',
             'booking_date.after_or_equal' => 'Booking date must be today or in the future.',
             'start_time.required' => 'Please select a start time.',
@@ -312,6 +445,7 @@ class BookingCreate extends Component
             'capacity.min' => 'Capacity must be at least 1.',
             'refreshment_details.required' => 'Please provide refreshment details.',
             'refreshment_details.min' => 'Refreshment details must be at least 3 characters long.',
+            'additional_booking.*.in' => 'Invalid additional booking option selected.',
         ];
     }
 

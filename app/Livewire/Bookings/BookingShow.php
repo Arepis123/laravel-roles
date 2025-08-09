@@ -142,7 +142,6 @@ public function changeStatus($newStatus)
         session()->flash('error', 'Failed to update booking status. Please try again.');
     }
 }
-
 private function notifyBookingOwner($oldStatus, $newStatus)
 {
     try {

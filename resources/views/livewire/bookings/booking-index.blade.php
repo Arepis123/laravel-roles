@@ -27,7 +27,7 @@
                     <tr>
                         <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">No</th>
                         <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Type</th>   
-                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Name</th> 
+                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Asset</th> 
                         <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Start Time</th>
                         <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">End Time</th>
                         <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Booked By</th>
@@ -79,9 +79,13 @@
                             <td class="px-6 py-2 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">{{ \Carbon\Carbon::parse($booking->created_at)->format('M d, h:i A') }}</td>
                             <td class="px-6 py-2 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">
                                 @if ($booking->status == 'pending')
-                                    <flux:badge color="yellow">{{ ucwords($booking->status) }}</flux:badge> 
-                                @elseif ($booking->status == 'cancel')
-                                    <flux:badge color="red">{{ ucwords($booking->status) }}</flux:badge> 
+                                    <flux:badge color="yellow">{{ ucwords($booking->status) }}</flux:badge>
+                                @elseif ($booking->status == 'approved')     
+                                    <flux:badge color="sky">{{ ucwords($booking->status) }}</flux:badge>  
+                                @elseif ($booking->status == 'rejected')     
+                                    <flux:badge color="red">{{ ucwords($booking->status) }}</flux:badge>                                                                                                
+                                @elseif ($booking->status == 'cancelled')
+                                    <flux:badge color="zinc">{{ ucwords($booking->status) }}</flux:badge> 
                                 @elseif ($booking->status == 'done')
                                     <flux:badge color="green">{{ ucwords($booking->status) }}</flux:badge>
                                 @endif
@@ -94,19 +98,19 @@
                                         <flux:menu>
                                             <flux:menu.submenu heading="Change status">
                                                 <flux:menu.radio.group position="bottom" align="center">
-                                                    <flux:menu.radio :checked="$booking->status == 'pending'" wire:click="changeStatus('pending')">
+                                                    <flux:menu.radio :checked="$booking->status == 'pending'" wire:click="changeStatus('pending', {{ $booking->id }})">
                                                         Pending
                                                     </flux:menu.radio>
-                                                    <flux:menu.radio :checked="$booking->status == 'pending'" wire:click="changeStatus('approved')">
+                                                    <flux:menu.radio :checked="$booking->status == 'approved'" wire:click="changeStatus('approved', {{ $booking->id }})">
                                                         Approve
                                                     </flux:menu.radio>   
-                                                    <flux:menu.radio :checked="$booking->status == 'pending'" wire:click="changeStatus('rejected')">
+                                                    <flux:menu.radio :checked="$booking->status == 'rejected'" wire:click="changeStatus('rejected', {{ $booking->id }})">
                                                         Reject
                                                     </flux:menu.radio>                                                                                                     
-                                                    <flux:menu.radio :checked="$booking->status == 'cancel'" wire:click="changeStatus('cancelled')">
+                                                    <flux:menu.radio :checked="$booking->status == 'cancelled'" wire:click="changeStatus('cancelled', {{ $booking->id }})">
                                                         Cancel
                                                     </flux:menu.radio>
-                                                    <flux:menu.radio :checked="$booking->status == 'done'" wire:click="changeStatus('done')">
+                                                    <flux:menu.radio :checked="$booking->status == 'done'" wire:click="changeStatus('done', {{ $booking->id }})">
                                                         Done
                                                     </flux:menu.radio>
                                                 </flux:menu.radio.group>

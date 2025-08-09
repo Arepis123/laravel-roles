@@ -39,9 +39,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('roles/{id}/edit', RoleEdit::class)->name('roles.edit')->middleware('permission:role.edit');
     Route::get('roles/{id}', RoleShow::class)->name('roles.show')->middleware('permission:role.view');
 
-    // Route::get('bookings', BookingIndex::class)->name('bookings.index')->middleware('permission:book.view|book.create|book.edit|book.delete');
-    // Route::get('bookings/create', BookingCreate::class)->name('bookings.create')->middleware('permission:book.create');   
-
     Route::get('bookings', function () {
         if (auth()->user()->hasRole('Super Admin')) {
             return redirect()->route('bookings.index.admin');
@@ -58,12 +55,19 @@ Route::middleware(['auth'])->group(function () {
     // All roles can use create if they have permission
     Route::get('bookings/create', BookingCreate::class)->name('bookings.create')->middleware('permission:book.create');
     Route::get('bookings/{id}', BookingShow::class)->name('bookings.show')->middleware('permission:book.view');
-    Route::get('bookings/{id}/edit', RoleEdit::class)->name('bookings.edit')->middleware('permission:book.edit');
+    Route::get('bookings/{booking}/edit', BookingEdit::class)->name('bookings.edit')->middleware('permission:book.edit');
 
     Route::get('settings/profile', Profile::class)->name('settings.profile');
     Route::get('settings/password', Password::class)->name('settings.password');
     Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
 
+    Route::prefix('api')->name('api.')->group(function () {
+        Route::get('calendar-bookings', [App\Http\Controllers\Api\CalendarController::class, 'getBookings'])
+             ->name('calendar.bookings');
+        
+        Route::get('calendar-stats', [App\Http\Controllers\Api\CalendarController::class, 'getStats'])
+             ->name('calendar.stats');
+    });    
 
 Route::get('/inspect-booking/{bookingId}', function ($bookingId) {
     try {

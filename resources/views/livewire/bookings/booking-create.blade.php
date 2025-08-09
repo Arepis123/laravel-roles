@@ -1,4 +1,3 @@
-
 <div>
     <div class="relative mb-6 w-full">
         <flux:heading size="xl" level="1">{{ __('Booking') }}</flux:heading>
@@ -13,9 +12,6 @@
     @endsession 
 
     <div class="max-w-2xl mt-8 space-y-6">
-        {{-- <flux:heading size="xl"><b>Booking Info</b></flux:heading>
-
-        <flux:separator variant="subtle" class="my-2" /> --}}
 
         @if (session()->has('success'))
             <div class="text-green-600">{{ session('success') }}</div>
@@ -34,7 +30,7 @@
                         
         <flux:field>
             <flux:label>Asset</flux:label>
-            <flux:select wire:model="asset_id" placeholder="Select asset" :disabled="!$asset_type">
+            <flux:select wire:model.live="asset_id" placeholder="Select asset" :disabled="!$asset_type">
                 @foreach ($this->assetOptions as $asset)
                     <flux:select.option value="{{ $asset->id }}">{{ $asset->name }}</flux:select.option>
                 @endforeach
@@ -44,7 +40,7 @@
             <flux:field>
                 <flux:label>Capacity</flux:label>
                 <flux:input placeholder="How many people" wire:model="capacity" type="number"/>
-                <flux:error name="" />
+                <flux:error name="capacity" />
             </flux:field>                         
                    
             <div class="py-4 my-0">
@@ -69,18 +65,41 @@
                     @endif
                 </flux:field>
 
-                {{-- Time Selection - Only show if date is selected --}}
-                @if($booking_date)
+                {{-- Asset and Date Selection Notice --}}
+                @if(!$asset_type || !$asset_id)
+                    <div x-data="{ visible: true }" x-show="visible" x-collapse>
+                        <div x-show="visible" x-transition>
+                            <flux:callout variant="warning" icon="information-circle" inline x-data="{ visible: true }" x-show="visible">
+                                <flux:callout.heading>Note</flux:callout.heading>
+                                <flux:callout.text>Please select an asset type and asset before choosing time slots to see real-time availability.</flux:callout.text>
+                                <x-slot name="controls">
+                                    <flux:button icon="x-mark" variant="ghost" x-on:click="visible = false" />
+                                </x-slot>
+                            </flux:callout>   
+                        </div>
+                    </div>   
+                                                   
+                @endif
+
+                {{-- Time Selection - Only show if asset and date are selected --}}
+                @if($booking_date && $asset_type && $asset_id)
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {{-- Start Time --}}
                         <flux:field>
                             <flux:label>Start Time</flux:label>
                             <flux:select wire:model.live="start_time" placeholder="Select start time">
-                                @foreach($this->getAvailableTimeSlots() as $time => $label)
+                                @forelse($this->getAvailableTimeSlots() as $time => $label)
                                     <flux:select.option value="{{ $time }}">{{ $label }}</flux:select.option>
-                                @endforeach
+                                @empty
+                                    <flux:select.option disabled>No available time slots</flux:select.option>
+                                @endforelse
                             </flux:select>
                             <flux:error name="start_time" />
+                            @if(empty($this->getAvailableTimeSlots()))
+                                <flux:description class="text-red-600">
+                                    No available time slots for this asset on the selected date.
+                                </flux:description>
+                            @endif
                         </flux:field>
 
                         {{-- End Time --}}
@@ -88,54 +107,32 @@
                             <flux:label>End Time</flux:label>
                             <flux:select wire:model.live="end_time" placeholder="Select end time" :disabled="!$start_time">
                                 @if($start_time)
-                                    @foreach($this->getAvailableEndTimes() as $time => $label)
+                                    @forelse($this->getAvailableEndTimes() as $time => $label)
                                         <flux:select.option value="{{ $time }}">{{ $label }}</flux:select.option>
-                                    @endforeach
+                                    @empty
+                                        <flux:select.option disabled>No available end times</flux:select.option>
+                                    @endforelse
                                 @else
                                     <flux:select.option disabled>Select start time first</flux:select.option>
                                 @endif
                             </flux:select>
                             <flux:error name="end_time" />
+                            @if($start_time && empty($this->getAvailableEndTimes()))
+                                <flux:description class="text-red-600">
+                                    No available end times from the selected start time.
+                                </flux:description>
+                            @endif
                         </flux:field>
                     </div>
-
-                    {{-- Alternative: Simple Time Inputs (if you prefer input fields over dropdowns) --}}
-                    {{--
-                    <div class="grid grid-cols-2 gap-4">
-                        <flux:field>
-                            <flux:label>Start Time</flux:label>
-                            <flux:input 
-                                placeholder="09:00" 
-                                wire:model.live="start_time" 
-                                type="time"
-                                step="900"
-                            />
-                            <flux:error name="start_time" />
-                            <flux:description>15-minute intervals</flux:description>
-                        </flux:field>
-                        <flux:field>
-                            <flux:label>End Time</flux:label>
-                            <flux:input 
-                                placeholder="17:00" 
-                                wire:model.live="end_time" 
-                                type="time"
-                                step="900"
-                            />
-                            <flux:error name="end_time" />
-                        </flux:field>             
-                    </div>
-                    --}}
 
                     {{-- Booking Summary --}}
                     @if($start_time && $end_time)
-                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <h3 class="font-semibold text-blue-900 mb-2">Booking Summary</h3>
-                            <div class="space-y-1 text-sm text-blue-800">
-                                <p><strong>Date:</strong> {{ \Carbon\Carbon::parse($booking_date)->format('l, F j, Y') }}</p>
-                                <p><strong>Time:</strong> {{ \Carbon\Carbon::parse($start_time)->format('g:i A') }} - {{ \Carbon\Carbon::parse($end_time)->format('g:i A') }}</p>
-                                <p><strong>Duration:</strong> {{ $this->bookingDuration }}</p>
-                            </div>
-                        </div>
+                        <flux:callout variant="success" icon="check-badge">
+                            <flux:callout.heading>Available Booking</flux:callout.heading>
+                            <flux:callout.text><strong>Date:</strong> {{ \Carbon\Carbon::parse($booking_date)->format('l, F j, Y') }}</flux:callout.text>
+                            <flux:callout.text><strong>Time:</strong> {{ \Carbon\Carbon::parse($start_time)->format('g:i A') }} - {{ \Carbon\Carbon::parse($end_time)->format('g:i A') }}</flux:callout.text>
+                            <flux:callout.text><strong>Duration:</strong> {{ $this->bookingDuration }}</flux:callout.text>
+                        </flux:callout>                        
                     @endif
                 @endif
             </div>
@@ -151,29 +148,30 @@
             </div>
 
             <flux:checkbox.group wire:model.live="additional_booking" label="Additional Services">
-                <flux:checkbox 
-                    label="Refreshment" 
-                    value="refreshment" 
-                    description="Meals such as breakfast, lunch, or snacks can be arranged before or during the session." 
-                />
 
-                @if (in_array('refreshment', $additional_booking))
-                    <div class="ml-6 mb-4">
-                        <flux:textarea wire:model.live="refreshment_details" placeholder="e.g., breakfast and coffee for 5 people. Pastries for 5 people"/>
-                    </div>
-                @endif
-
-                <flux:checkbox 
+                <flux:callout color="sky" class="mb-3">
+                    <flux:checkbox label="Refreshment" value="refreshment" description="Meals such as breakfast, lunch, or snacks can be arranged before or during the session." />                    
+                    @if (in_array('refreshment', $additional_booking))
+                        <div class="ml-6 mb-4">
+                            <flux:textarea wire:model.live="refreshment_details" placeholder="e.g., breakfast and coffee for 5 people. Pastries for 5 people"/>
+                            <flux:error name="refreshment_details" />
+                        </div>
+                    @endif                   
+                </flux:callout>     
+                
+                <flux:callout color="sky" class="mb-3">
+                    <flux:checkbox label="Technical Support" value="technical" description="IT will help in giving technical support inside the meeting room." />                                     
+                </flux:callout>        
+                
+                <flux:callout color="sky" class="mb-3">
+                    <flux:checkbox label="Laptop" value="laptop" description="A laptop will be prepared and set up for use during your session." />                                     
+                </flux:callout>                 
+                
+                <!-- <flux:checkbox 
                     label="Smart Monitor" 
                     value="smart_monitor" 
                     description="A smart monitor will be set up in the room before the meeting starts." 
-                />
-
-                <flux:checkbox 
-                    label="Laptop" 
-                    value="laptop" 
-                    description="A laptop will be prepared and set up for use during your session." 
-                />
+                /> -->
             </flux:checkbox.group>
          
             <flux:button type="submit" variant="primary">

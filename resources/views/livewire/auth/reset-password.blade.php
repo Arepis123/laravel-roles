@@ -11,6 +11,7 @@
             :label="__('Email')"
             type="email"
             required
+            readonly
             autocomplete="email"
         />
 

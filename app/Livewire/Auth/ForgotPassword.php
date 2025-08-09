@@ -10,18 +10,34 @@ use Livewire\Component;
 class ForgotPassword extends Component
 {
     public string $email = '';
+    public bool $loading = false;
 
-    /**
-     * Send a password reset link to the provided email address.
-     */
+    protected $rules = [
+        'email' => ['required', 'string', 'email', 'max:255'],
+    ];
+
     public function sendPasswordResetLink(): void
     {
-        $this->validate([
-            'email' => ['required', 'string', 'email'],
-        ]);
+        $this->loading = true;
+        
+        $this->validate();
 
-        Password::sendResetLink($this->only('email'));
+        // Send the reset link
+        $status = Password::sendResetLink($this->only('email'));
 
-        session()->flash('status', __('A reset link will be sent if the account exists.'));
+        $this->loading = false;
+
+        if ($status === Password::RESET_LINK_SENT) {
+            session()->flash('status', __('A password reset link has been sent to your email address.'));
+            $this->reset('email');
+        } else {
+            // For security, show generic message even if email doesn't exist
+            session()->flash('status', __('A reset link will be sent if the account exists.'));
+        }
+    }
+
+    public function render()
+    {
+        return view('livewire.auth.forgot-password');
     }
 }
