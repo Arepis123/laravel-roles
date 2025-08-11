@@ -37,7 +37,7 @@
 
     
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
-        <!-- Stats Cards -->
+        <!-- Stats Cards - First Row -->
         <div class="grid auto-rows-min gap-4 md:grid-cols-3">
             <!-- Total Bookings Card -->
             <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
@@ -83,6 +83,135 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                         Active today
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards - Second Row -->
+        <div class="grid auto-rows-min gap-4 md:grid-cols-3">
+            <!-- This Week's Bookings Card -->
+            <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
+                <div class="absolute inset-0 p-6 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">This Week</h3>
+                        <div class="flex items-baseline gap-2 mt-2">
+                            <p class="text-3xl font-bold text-teal-600 dark:text-teal-400" id="weekBookings">
+                                {{ App\Models\Booking::whereBetween('start_time', [now()->startOfWeek(), now()->endOfWeek()])->count() }}
+                            </p>
+                            @php
+                                $thisWeek = App\Models\Booking::whereBetween('start_time', [now()->startOfWeek(), now()->endOfWeek()])->count();
+                                $lastWeek = App\Models\Booking::whereBetween('start_time', [now()->subWeek()->startOfWeek(), now()->subWeek()->endOfWeek()])->count();
+                                $percentChange = $lastWeek > 0 ? round((($thisWeek - $lastWeek) / $lastWeek) * 100) : 0;
+                            @endphp
+                            @if($percentChange != 0)
+                                <span class="text-sm font-medium {{ $percentChange > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                                    {{ $percentChange > 0 ? '↑' : '↓' }} {{ abs($percentChange) }}%
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        vs last week
+                    </div>
+                </div>
+            </div>
+
+            <!-- Utilization Rate Card -->
+            <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
+                <div class="absolute inset-0 p-6 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Utilization Rate</h3>
+                        @php
+                            // Count total assets from all three models
+                            $totalVehicles = App\Models\Vehicle::count();
+                            $totalMeetingRooms = App\Models\MeetingRoom::count();
+                            $totalItAssets = App\Models\ItAsset::count();
+                            $totalAssets = $totalVehicles + $totalMeetingRooms + $totalItAssets;
+                            
+                            // Count distinct assets that have approved/done bookings today
+                            $bookedVehicles = App\Models\Booking::whereDate('start_time', '<=', today())
+                                ->whereDate('end_time', '>=', today())
+                                ->where('asset_type', 'App\Models\Vehicle')
+                                ->whereIn('status', ['approved', 'done'])
+                                ->distinct('asset_id')
+                                ->count('asset_id');
+                                
+                            $bookedMeetingRooms = App\Models\Booking::whereDate('start_time', '<=', today())
+                                ->whereDate('end_time', '>=', today())
+                                ->where('asset_type', 'App\Models\MeetingRoom')
+                                ->whereIn('status', ['approved', 'done'])
+                                ->distinct('asset_id')
+                                ->count('asset_id');
+                                
+                            $bookedItAssets = App\Models\Booking::whereDate('start_time', '<=', today())
+                                ->whereDate('end_time', '>=', today())
+                                ->where('asset_type', 'App\Models\ItAsset')
+                                ->whereIn('status', ['approved', 'done'])
+                                ->distinct('asset_id')
+                                ->count('asset_id');
+                                
+                            $bookedToday = $bookedVehicles + $bookedMeetingRooms + $bookedItAssets;
+                            
+                            $utilizationRate = $totalAssets > 0 ? round(($bookedToday / $totalAssets) * 100) : 0;
+                        @endphp
+                        <div class="mt-2">
+                            <div class="flex items-baseline gap-2">
+                                <p class="text-3xl font-bold text-purple-600 dark:text-purple-400">{{ $utilizationRate }}%</p>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">{{ $bookedToday }}/{{ $totalAssets }}</span>
+                            </div>
+                            <!-- Progress bar -->
+                            <div class="mt-2 w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                <div class="bg-purple-600 h-2 rounded-full dark:bg-purple-400 transition-all duration-300" style="width: {{ $utilizationRate }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        Assets in use today
+                    </div>
+                </div>
+            </div>
+
+            <!-- Most Booked Asset Card -->
+            <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
+                <div class="absolute inset-0 p-6 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Most Booked</h3>
+                        @php
+                            $mostBooked = App\Models\Booking::select('asset_id', 'asset_type', DB::raw('count(*) as total'))
+                                ->whereBetween('start_time', [now()->startOfMonth(), now()->endOfMonth()])
+                                ->groupBy('asset_id', 'asset_type')
+                                ->orderBy('total', 'desc')
+                                ->first();
+                            
+                            $assetName = 'No bookings';
+                            $bookingCount = 0;
+                            
+                            if ($mostBooked && $mostBooked->asset) {
+                                $assetName = $mostBooked->asset->name ?? $mostBooked->asset->model ?? 'Unknown';
+                                $bookingCount = $mostBooked->total;
+                            }
+                        @endphp
+                        <div class="mt-2">
+                            <p class="text-xl font-bold text-indigo-600 dark:text-indigo-400 truncate" title="{{ $assetName }}">
+                                {{ Str::limit($assetName, 20) }}
+                            </p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                                {{ $bookingCount }} <span class="text-base font-normal text-gray-600 dark:text-gray-400">bookings</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                        </svg>
+                        This month
                     </div>
                 </div>
             </div>
