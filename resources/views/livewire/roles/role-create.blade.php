@@ -1,8 +1,8 @@
 <div>
     <div class="relative mb-6 w-full">
-        <flux:heading size="xl" level="1">{{ __('Create Role') }}</flux:heading>
-        <flux:subheading size="lg" class="mb-6">{{ __('Form to create new role') }}</flux:subheading>
-        <flux:separator variant="subtle" />
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ __('Create Role') }}</h1>
+        <p class="text-gray-600 mt-1 dark:text-gray-400">{{ __('Create new role here') }}</p>
+        <flux:separator variant="subtle" class="mt-4" />        
     </div>
 
     <div class="py-3">

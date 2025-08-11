@@ -2,7 +2,7 @@
     {{-- Header Section --}}
     <div class="flex items-center justify-between border-b pb-4">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Booking Details</h1>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Booking Details</h1>
             <p class="text-sm text-gray-600">Booking ID: #{{ $booking->id }}</p>
         </div>
         
@@ -100,7 +100,7 @@
                                 @endif
                             </div>
                             
-                            <p class="text-sm text-gray-600 mt-1">{{ $change['reason'] ?? 'Status changed' }}</p>
+                            <p class="text-sm text-gray-600 mt-1 dark:text-gray-400">{{ $change['reason'] ?? 'Status changed' }}</p>
                             
                             <div class="flex items-center space-x-4 mt-1 text-xs text-gray-500">
                                 <span>By: {{ $change['changed_by_name'] ?? 'Unknown' }}</span>

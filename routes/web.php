@@ -17,6 +17,8 @@ use App\Livewire\Bookings\BookingCreate;
 use App\Livewire\Bookings\BookingShow;
 use App\Livewire\Bookings\BookingEdit;
 use App\Livewire\Bookings\BookingMyIndex;    // User: own bookings
+use App\Livewire\Admin\AssetManagement;
+use App\Livewire\Admin\Reports;
 
 Route::get('/', function () {
     return view('welcome');
@@ -61,111 +63,59 @@ Route::middleware(['auth'])->group(function () {
     Route::get('settings/password', Password::class)->name('settings.password');
     Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
 
+    Route::get('/assets', AssetManagement::class)->name('assets')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
+    
     Route::prefix('api')->name('api.')->group(function () {
         Route::get('calendar-bookings', [App\Http\Controllers\Api\CalendarController::class, 'getBookings'])
              ->name('calendar.bookings');
         
         Route::get('calendar-stats', [App\Http\Controllers\Api\CalendarController::class, 'getStats'])
              ->name('calendar.stats');
-    });    
+    }); 
 
-Route::get('/inspect-booking/{bookingId}', function ($bookingId) {
-    try {
-        $booking = \App\Models\Booking::findOrFail($bookingId);
-        
-        return response()->json([
-            'booking_data' => [
-                'id' => $booking->id,
-                'status' => $booking->status,
-                'booked_by' => $booking->booked_by,
-                'status_history' => $booking->status_history,
-                'created_at' => $booking->created_at,
-                'updated_at' => $booking->updated_at,
-            ],
-            'user_data' => $booking->bookedBy ? [
-                'id' => $booking->bookedBy->id,
-                'name' => $booking->bookedBy->name,
-                'email' => $booking->bookedBy->email,
-            ] : null,
-            'relationship_test' => [
-                'direct_find' => \App\Models\User::find($booking->booked_by)?->email,
-                'via_relationship' => $booking->bookedBy?->email,
-                'relationship_exists' => method_exists($booking, 'bookedBy'),
-            ],
-            'current_auth' => [
-                'user_id' => auth()->id(),
-                'user_name' => auth()->user()?->name,
-                'is_same_user' => auth()->id() === $booking->booked_by,
-            ]
-        ]);
-        
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ]);
-    }
-})->name('inspect.booking');    
-
-Route::get('/test-booking-email/{bookingId}', function ($bookingId) {
-    try {
-        // Find the booking
-        $booking = \App\Models\Booking::findOrFail($bookingId);
-        
-        // Get the booking owner
-        $user = $booking->bookedBy;
-        
-        if (!$user) {
-            return response()->json([
-                'error' => 'No user found for this booking',
-                'booking_id' => $bookingId,
-                'booked_by' => $booking->booked_by
+    // Reports page
+    Route::get('/reports', Reports::class)->name('reports');
+    
+    // Report download route - ADD THIS NEW ROUTE
+    Route::get('/reports/download/{report}', function (ReportLog $report) {
+        try {
+            \Log::info('Route download attempt', [
+                'report_id' => $report->id,
+                'file_path' => $report->file_path,
+                'file_name' => $report->file_name
             ]);
+            
+            if (!Storage::exists($report->file_path)) {
+                \Log::error('File not found in storage', ['file_path' => $report->file_path]);
+                abort(404, 'Report file not found.');
+            }
+            
+            $fullPath = storage_path('app/' . $report->file_path);
+            \Log::info('Full file path', ['full_path' => $fullPath]);
+            
+            if (!file_exists($fullPath)) {
+                \Log::error('Physical file does not exist', ['full_path' => $fullPath]);
+                abort(404, 'Report file does not exist on disk.');
+            }
+            
+            \Log::info('File exists, returning download response');
+            
+            return response()->download($fullPath, $report->file_name, [
+                'Content-Type' => match($report->report_format) {
+                    'pdf' => 'application/pdf',
+                    'csv' => 'text/csv', 
+                    'excel' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    default => 'application/octet-stream'
+                }
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Route download error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            abort(500, 'Error downloading file: ' . $e->getMessage());
         }
-        
-        \Log::info('Testing email for booking: ' . $bookingId);
-        \Log::info('User email: ' . $user->email);
-        
-        // Send the notification
-        $user->notify(new \App\Notifications\BookingStatusChanged(
-            $booking,
-            'pending',
-            'approved',
-            'Test Admin'
-        ));
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Test email sent successfully',
-            'booking_id' => $bookingId,
-            'user_email' => $user->email,
-            'user_name' => $user->name
-        ]);
-        
-    } catch (\Exception $e) {
-        \Log::error('Test email failed: ' . $e->getMessage());
-        
-        return response()->json([
-            'error' => 'Failed to send test email',
-            'message' => $e->getMessage(),
-            'booking_id' => $bookingId
-        ]);
-    }
-})->name('test.booking.email');
-
-// Simple mail test
-Route::get('/test-mail', function () {
-    try {
-        \Mail::raw('This is a test email from ' . config('app.name'), function ($message) {
-            $message->to(auth()->user()->email ?? 'arepis123@gmail.com')
-                   ->subject('Test Email - ' . now());
-        });
-        
-        return 'Test email sent! Check your inbox and spam folder.';
-    } catch (\Exception $e) {
-        return 'Mail test failed: ' . $e->getMessage();
-    }
-})->name('test.mail');    
+    })->name('reports.download');
+ 
 });
 
 

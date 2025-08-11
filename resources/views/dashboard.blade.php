@@ -161,16 +161,49 @@
     <script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.18/index.global.js'></script>
     
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        // Store calendar instance globally so we can destroy it if needed
+        let calendarInstance = null;
+        let refreshInterval = null;
+
+        function initializeCalendar() {
+            // Destroy existing calendar if it exists
+            if (calendarInstance) {
+                calendarInstance.destroy();
+                calendarInstance = null;
+            }
+
+            // Clear existing interval
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+            }
+
             // Initialize calendar
             const calendarEl = document.getElementById('calendar');
-            const calendar = new FullCalendar.Calendar(calendarEl, {
+            
+            // Check if calendar element exists
+            if (!calendarEl) {
+                return;
+            }
+
+            // Build events URL with current filters
+            let eventsUrl = '/api/calendar-bookings?';
+            const params = [];
+            if (currentStatusFilter !== 'all') {
+                params.push(`status=${currentStatusFilter}`);
+            }
+            if (currentAssetFilter !== 'all') {
+                params.push(`asset_type=${currentAssetFilter}`);
+            }
+            eventsUrl += params.join('&');
+
+            calendarInstance = new FullCalendar.Calendar(calendarEl, {
                 customButtons: {
                     myCustomButton: {
-                    text: 'custom!',
-                    click: function() {
-                        alert('clicked the custom button!');
-                    }
+                        text: 'custom!',
+                        click: function() {
+                            alert('clicked the custom button!');
+                        }
                     }
                 },                
                 initialView: 'dayGridMonth',
@@ -186,7 +219,7 @@
                     timeGridDay: { buttonText: 'Day' },
                     listMonth: { buttonText: 'List' }
                 },                
-                events: '/api/calendar-bookings', // We'll create this endpoint
+                events: eventsUrl,
                 eventClick: function(info) {
                     openBookingModal(info.event);
                 },
@@ -210,184 +243,288 @@
                 }
             });
 
-            calendar.render();
+            calendarInstance.render();
 
-            // Modal elements
+            // Setup event listeners
+            setupEventListeners();
+
+            // Refresh calendar every 2 minutes
+            refreshInterval = setInterval(function() {
+                if (calendarInstance) {
+                    calendarInstance.refetchEvents();
+                }
+            }, 120000); // 2 minutes
+        }
+
+        // Store filter states globally to persist across reinitializations
+        let currentStatusFilter = window.currentStatusFilter || 'all';
+        let currentAssetFilter = window.currentAssetFilter || 'all';
+
+        // Track if event listeners are already attached
+        let listenersAttached = false;
+
+        function setupEventListeners() {
+            // Only attach modal listeners once
+            if (!listenersAttached) {
+                // Modal close listeners
+                document.addEventListener('click', function(e) {
+                    if (e.target.id === 'closeModal' || e.target.closest('#closeModal')) {
+                        closeBookingModal();
+                    }
+                    if (e.target.id === 'closeModalBtn') {
+                        closeBookingModal();
+                    }
+                });
+
+                // Use event delegation for Flux dropdown menus
+                document.addEventListener('click', function(e) {
+                    // Status filter
+                    if (e.target.closest('#filterStatus [data-value]')) {
+                        const menuItem = e.target.closest('[data-value]');
+                        if (menuItem) {
+                            currentStatusFilter = menuItem.dataset.value;
+                            window.currentStatusFilter = currentStatusFilter;
+                            const button = document.getElementById('filterStatusButton');
+                            if (button) {
+                                // Update button text content only, not the entire button
+                                const textNode = Array.from(button.childNodes).find(node => node.nodeType === 3);
+                                if (textNode) {
+                                    textNode.textContent = menuItem.textContent;
+                                } else {
+                                    // If no text node, update the first part before any icons
+                                    button.childNodes[0].textContent = menuItem.textContent;
+                                }
+                            }
+                            applyFilters();
+                        }
+                    }
+
+                    // Asset filter
+                    if (e.target.closest('#filterAsset [data-value]')) {
+                        const menuItem = e.target.closest('[data-value]');
+                        if (menuItem) {
+                            currentAssetFilter = menuItem.dataset.value;
+                            window.currentAssetFilter = currentAssetFilter;
+                            const button = document.getElementById('filterAssetButton');
+                            if (button) {
+                                // Update button text content only, not the entire button
+                                const textNode = Array.from(button.childNodes).find(node => node.nodeType === 3);
+                                if (textNode) {
+                                    textNode.textContent = menuItem.textContent;
+                                } else {
+                                    // If no text node, update the first part before any icons
+                                    button.childNodes[0].textContent = menuItem.textContent;
+                                }
+                            }
+                            applyFilters();
+                        }
+                    }
+                });
+
+                listenersAttached = true;
+            }
+
+            // Restore filter button texts after navigation
+            const statusButton = document.getElementById('filterStatusButton');
+            const assetButton = document.getElementById('filterAssetButton');
+            
+            if (statusButton && currentStatusFilter !== 'all') {
+                const statusText = document.querySelector(`#filterStatus [data-value="${currentStatusFilter}"]`)?.textContent;
+                if (statusText) {
+                    const textNode = Array.from(statusButton.childNodes).find(node => node.nodeType === 3);
+                    if (textNode) {
+                        textNode.textContent = statusText;
+                    } else {
+                        statusButton.childNodes[0].textContent = statusText;
+                    }
+                }
+            }
+            
+            if (assetButton && currentAssetFilter !== 'all') {
+                const assetText = document.querySelector(`#filterAsset [data-value="${currentAssetFilter}"]`)?.textContent;
+                if (assetText) {
+                    const textNode = Array.from(assetButton.childNodes).find(node => node.nodeType === 3);
+                    if (textNode) {
+                        textNode.textContent = assetText;
+                    } else {
+                        assetButton.childNodes[0].textContent = assetText;
+                    }
+                }
+            }
+        }
+
+        // Apply filters function (moved outside setupEventListeners for global access)
+        function applyFilters() {
+            if (!calendarInstance) return;
+            
+            let url = '/api/calendar-bookings?';
+            const params = [];
+            
+            if (currentStatusFilter !== 'all') {
+                params.push(`status=${currentStatusFilter}`);
+            }
+            
+            if (currentAssetFilter !== 'all') {
+                params.push(`asset_type=${currentAssetFilter}`);
+            }
+            
+            url += params.join('&');
+            
+            calendarInstance.removeAllEventSources();
+            calendarInstance.addEventSource(url);
+        }
+
+        // Modal functions (global scope)
+        function openBookingModal(event) {
             const modal = document.getElementById('bookingModal');
             const modalTitle = document.getElementById('modalTitle');
             const modalContent = document.getElementById('modalContent');
-            const closeModal = document.getElementById('closeModal');
-            const closeModalBtn = document.getElementById('closeModalBtn');
             const viewDetailsBtn = document.getElementById('viewDetailsBtn');
             const editBookingBtn = document.getElementById('editBookingBtn');
 
-            // Modal functions
-            function openBookingModal(event) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                
-                const props = event.extendedProps;
-                modalTitle.textContent = `Booking #${event.id}`;
-                
-                // Build modal content
-                const statusBadge = `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusClasses(props.status)}">${props.status.charAt(0).toUpperCase() + props.status.slice(1)}</span>`;
-                const assetTypeBadge = `<span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">${props.assetTypeLabel}</span>`;
-                
-                modalContent.innerHTML = `
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-                            <div class="mt-1">${statusBadge}</div>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Type</label>
-                            <div class="mt-1">${assetTypeBadge}</div>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Booked By</label>
-                            <p class="mt-1 text-sm text-gray-900 dark:text-white">${props.bookedBy || 'N/A'}</p>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Duration</label>
-                            <p class="mt-1 text-sm text-gray-900 dark:text-white">${props.timeRange}</p>
-                        </div>
-                        
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Purpose</label>
-                            <p class="mt-1 text-sm text-gray-900 dark:text-white">${props.purpose || 'No purpose specified'}</p>
-                        </div>
-                        
-                        ${props.capacity ? `
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Capacity</label>
-                            <p class="mt-1 text-sm text-gray-900 dark:text-white">${props.capacity} people</p>
-                        </div>
-                        ` : ''}
-                        
-                        ${props.refreshmentDetails ? `
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Refreshments</label>
-                            <p class="mt-1 text-sm text-gray-900 dark:text-white">${props.refreshmentDetails}</p>
-                        </div>
-                        ` : ''}
-                        
-                        ${props.additionalBooking && Object.keys(props.additionalBooking).length > 0 ? `
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Additional Services</label>
-                            <div class="mt-1 text-sm text-gray-900 dark:text-white">
-                                ${Object.entries(props.additionalBooking).map(([key, value]) => 
-                                    `<div><strong>${key}:</strong> ${value}</div>`
-                                ).join('')}
-                            </div>
-                        </div>
-                        ` : ''}
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            const props = event.extendedProps;
+            modalTitle.textContent = `Booking #${event.id}`;
+            
+            // Build modal content
+            const statusBadge = `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusClasses(props.status)}">${props.status.charAt(0).toUpperCase() + props.status.slice(1)}</span>`;
+            const assetTypeBadge = `<span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">${props.assetTypeLabel}</span>`;
+            
+            modalContent.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                        <div class="mt-1">${statusBadge}</div>
                     </div>
-                `;
-                
-                // Show/hide action buttons based on permissions
-                viewDetailsBtn.href = `/bookings/${event.id}`;
-                editBookingBtn.href = `/bookings/${event.id}/edit`;
-                
-                @can('book.view')
-                viewDetailsBtn.classList.remove('hidden');
-                @endcan
-                
-                @can('book.edit')
-                editBookingBtn.classList.remove('hidden');
-                @endcan
-            }
-
-            function closeBookingModal() {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-                viewDetailsBtn.classList.add('hidden');
-                editBookingBtn.classList.add('hidden');
-            }
-
-            // Event listeners
-            closeModal.addEventListener('click', closeBookingModal);
-            closeModalBtn.addEventListener('click', closeBookingModal);
-
-            // Filter bookings with FluxUI dropdowns
-            let currentStatusFilter = 'all';
-            let currentAssetFilter = 'all';
-
-            // Status filter dropdown
-            const statusFilterMenu = document.getElementById('filterStatus');
-            const statusFilterButton = document.getElementById('filterStatusButton');
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Type</label>
+                        <div class="mt-1">${assetTypeBadge}</div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Booked By</label>
+                        <p class="mt-1 text-sm text-gray-900 dark:text-white">${props.bookedBy || 'N/A'}</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Duration</label>
+                        <p class="mt-1 text-sm text-gray-900 dark:text-white">${props.timeRange}</p>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Purpose</label>
+                        <p class="mt-1 text-sm text-gray-900 dark:text-white">${props.purpose || 'No purpose specified'}</p>
+                    </div>
+                    
+                    ${props.capacity ? `
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Capacity</label>
+                        <p class="mt-1 text-sm text-gray-900 dark:text-white">${props.capacity} people</p>
+                    </div>
+                    ` : ''}
+                    
+                    ${props.refreshmentDetails ? `
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Refreshments</label>
+                        <p class="mt-1 text-sm text-gray-900 dark:text-white">${props.refreshmentDetails}</p>
+                    </div>
+                    ` : ''}
+                    
+                    ${props.additionalBooking && Object.keys(props.additionalBooking).length > 0 ? `
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Additional Services</label>
+                        <div class="mt-1 text-sm text-gray-900 dark:text-white">
+                            ${Object.entries(props.additionalBooking).map(([key, value]) => 
+                                `<div><strong>${key}:</strong> ${value}</div>`
+                            ).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
             
-            if (statusFilterMenu) {
-                statusFilterMenu.addEventListener('click', function(e) {
-                    const menuItem = e.target.closest('[data-value]');
-                    if (menuItem) {
-                        currentStatusFilter = menuItem.dataset.value;
-                        statusFilterButton.textContent = menuItem.textContent;
-                        applyFilters();
-                    }
-                });
-            }
-
-            // Asset filter dropdown  
-            const assetFilterMenu = document.getElementById('filterAsset');
-            const assetFilterButton = document.getElementById('filterAssetButton');
+            // Show/hide action buttons based on permissions
+            viewDetailsBtn.href = `/bookings/${event.id}`;
+            editBookingBtn.href = `/bookings/${event.id}/edit`;
             
-            if (assetFilterMenu) {
-                assetFilterMenu.addEventListener('click', function(e) {
-                    const menuItem = e.target.closest('[data-value]');
-                    if (menuItem) {
-                        currentAssetFilter = menuItem.dataset.value;
-                        assetFilterButton.textContent = menuItem.textContent;
-                        applyFilters();
-                    }
-                });
-            }
+            @can('book.view')
+            viewDetailsBtn.classList.remove('hidden');
+            @endcan
+            
+            @can('book.edit')
+            editBookingBtn.classList.remove('hidden');
+            @endcan
+        }
 
-            function applyFilters() {
-                let url = '/api/calendar-bookings?';
-                const params = [];
-                
-                if (currentStatusFilter !== 'all') {
-                    params.push(`status=${currentStatusFilter}`);
+        function closeBookingModal() {
+            const modal = document.getElementById('bookingModal');
+            const viewDetailsBtn = document.getElementById('viewDetailsBtn');
+            const editBookingBtn = document.getElementById('editBookingBtn');
+
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            viewDetailsBtn.classList.add('hidden');
+            editBookingBtn.classList.add('hidden');
+        }
+
+        // Helper functions
+        function getStatusClasses(status) {
+            const classes = {
+                'pending': 'bg-yellow-100 text-yellow-800',
+                'approved': 'bg-green-100 text-green-800',
+                'rejected': 'bg-red-100 text-red-800',
+                'cancelled': 'bg-gray-100 text-gray-800',
+                'done': 'bg-blue-100 text-blue-800'
+            };
+            return classes[status] || 'bg-gray-100 text-gray-800';
+        }
+
+        function showLoading() {
+            console.log('Loading calendar events...');
+        }
+
+        function hideLoading() {
+            console.log('Calendar events loaded.');
+        }
+
+        // Initialize on DOMContentLoaded (for initial page load)
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCalendar();
+        });
+
+        // Initialize on Livewire navigation (for SPA navigation)
+        document.addEventListener('livewire:navigated', function() {
+            // Small delay to ensure DOM is ready
+            setTimeout(function() {
+                initializeCalendar();
+            }, 100);
+        });
+
+        // Alternative: Listen for Livewire page loaded event
+        if (window.Livewire) {
+            Livewire.hook('message.processed', (message, component) => {
+                // Check if calendar element exists but calendar is not initialized
+                const calendarEl = document.getElementById('calendar');
+                if (calendarEl && !calendarInstance) {
+                    initializeCalendar();
                 }
-                
-                if (currentAssetFilter !== 'all') {
-                    params.push(`asset_type=${currentAssetFilter}`);
-                }
-                
-                url += params.join('&');
-                
-                calendar.removeAllEventSources();
-                calendar.addEventSource(url);
-            }
+            });
+        }
 
-            // Helper functions
-            function getStatusClasses(status) {
-                const classes = {
-                    'pending': 'bg-yellow-100 text-yellow-800',
-                    'approved': 'bg-green-100 text-green-800',
-                    'rejected': 'bg-red-100 text-red-800',
-                    'cancelled': 'bg-gray-100 text-gray-800',
-                    'done': 'bg-blue-100 text-blue-800'
-                };
-                return classes[status] || 'bg-gray-100 text-gray-800';
+        // Clean up on page unload
+        document.addEventListener('livewire:navigating', function() {
+            if (calendarInstance) {
+                calendarInstance.destroy();
+                calendarInstance = null;
             }
-
-            function showLoading() {
-                // You can implement a loading spinner here
-                console.log('Loading calendar events...');
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
             }
-
-            function hideLoading() {
-                console.log('Calendar events loaded.');
-            }
-
-            // Refresh calendar every 5 minutes to show updates
-            setInterval(function() {
-                calendar.refetchEvents();
-            }, 300000); // 5 minutes
+            // Don't reset listenersAttached here - keep event delegation active
         });
     </script>
 </x-layouts.app>

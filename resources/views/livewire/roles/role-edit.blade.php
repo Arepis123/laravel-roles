@@ -1,9 +1,9 @@
 <div>
     <div class="relative mb-6 w-full">
-        <flux:heading size="xl" level="1">{{ __('Role User') }}</flux:heading>
-        <flux:subheading size="lg" class="mb-6">{{ __('Form to edit role') }}</flux:subheading>
-        <flux:separator variant="subtle" />
-    </div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ __('Role User') }}</h1>
+        <p class="text-gray-600 mt-1 dark:text-gray-400">{{ __('Form to edit role') }}</p>
+        <flux:separator variant="subtle" class="mt-4" />        
+    </div>     
 
     <div class="py-3">
         <flux:button variant="primary" href="{{ route('roles.index') }}">Back</flux:button>
