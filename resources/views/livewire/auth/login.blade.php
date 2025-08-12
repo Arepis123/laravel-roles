@@ -3,19 +3,18 @@
          style="background-image: url('{{ asset('image/background-ebookingclab-3.jpg') }}');">
     </div>
 
-    <div class="w-full lg:w-2/5 bg-white flex items-center justify-center">
+    <div class="w-full lg:w-2/5 flex items-center justify-center">
         <div class="w-full max-w-md p-10">
 
             <div class="text-center mb-8">
                 <img src="{{ asset('image/logo-clab.png') }}" alt="CLAB Logo" class="mx-auto w-12 mb-3">
                 <h1 class="text-3xl font-bold">e-BOOKING</h1>
-                <p class="text-gray-600 text-sm">Optimizing Workplace Reservations</p>
+                <p class="text-gray-600 dark:text-gray-300 text-sm">Optimizing Workplace Reservations</p>
             </div>
 
             <x-auth-session-status class="text-center mb-4" :status="session('status')" />
 
-            <form wire:submit="login" class="space-y-5">
-                <!-- CLAB ID -->
+            <form wire:submit="login" class="space-y-5">                
                 <flux:input
                     wire:model="email"
                     type="email"

@@ -119,7 +119,7 @@
         {{-- Booking Details Section --}}
         <div class="lg:col-span-2 space-y-6">
             {{-- Asset Information --}}
-            <div class="bg-white border rounded-lg p-6">
+            <div class="border rounded-lg p-6">
                 <h2 class="text-lg font-medium text-gray-900 mb-4">Asset Information</h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -144,7 +144,7 @@
             </div>
 
             {{-- Time & Purpose --}}
-            <div class="bg-white border rounded-lg p-6">
+            <div class="border rounded-lg p-6">
                 <h2 class="text-lg font-medium text-gray-900 mb-4">Booking Details</h2>
                 
                 <div class="space-y-4">
@@ -175,7 +175,7 @@
 
             {{-- Additional Services --}}
             @if(!empty($additional_booking))
-                <div class="bg-white border rounded-lg p-6">
+                <div class="border rounded-lg p-6">
                     <h2 class="text-lg font-medium text-gray-900 mb-4">Additional Services</h2>
                     
                     <flux:checkbox.group wire:model.live="additional_booking" label="">
@@ -214,7 +214,7 @@
         <div class="space-y-6">
             {{-- Status Management --}}
             @if($this->canChangeStatus)
-                <div class="bg-white border rounded-lg p-6">
+                <div class="border rounded-lg p-6">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Status Management</h3>
                     
                     <div class="space-y-4">
@@ -273,7 +273,7 @@
             @endif
 
             {{-- Booking Information --}}
-            <div class="bg-white border rounded-lg p-6">
+            <div class="border rounded-lg p-6">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Booking Information</h3>
                 
                 <div class="space-y-3 text-sm">
@@ -322,12 +322,12 @@
             </div>
 
             {{-- Quick Actions --}}
-            <div class="bg-white border rounded-lg p-6">
+            <div class="border rounded-lg p-6">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
                 
                 <div class="space-y-3">
                     <a href="{{ route('bookings.index') }}" 
-                       class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                       class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                         </svg>

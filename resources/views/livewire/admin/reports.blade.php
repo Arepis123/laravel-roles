@@ -369,11 +369,13 @@
                                             </svg>
                                             Delete
                                         </button> -->
+                                        @can('report.delete')
                                         <flux:tooltip content="Delete">
                                             <flux:button size="sm" wire:click="deleteReport({{ $report->id }})" variant="ghost">
                                                 <flux:icon name="trash"  class="w-4 h-4"/>
                                             </flux:button>
-                                        </flux:tooltip>                                       
+                                        </flux:tooltip>
+                                        @endcan                                    
                                     </div>
                                 </td>
                             </tr>

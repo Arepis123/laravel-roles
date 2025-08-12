@@ -230,9 +230,11 @@
 
                             <td class="px-6 py-4 whitespace-nowrap text-center">                              
                                 <flux:button.group>
+                                    @can('book.create')
                                     <flux:button size="sm" href="{{ route('bookings.show', $booking->id) }}" variant="ghost">
                                         <flux:icon name="eye" class="w-4 h-4" />
                                     </flux:button>
+                                    @endcan
                                     @can('book.edit')
                                     <flux:dropdown>
                                         <flux:button icon="chevron-down" size="sm" variant="ghost"></flux:button>                                           

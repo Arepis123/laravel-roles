@@ -21,8 +21,8 @@ use App\Livewire\Admin\AssetManagement;
 use App\Livewire\Admin\Reports;
 
 Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+    return redirect()->route('login');
+});
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
@@ -49,10 +49,10 @@ Route::middleware(['auth'])->group(function () {
     })->name('bookings.index');
 
     // Admin route – sees all bookings
-    Route::get('bookings/all', BookingIndex::class)->name('bookings.index.admin')->middleware('role:Super Admin');
+    Route::get('bookings/all', BookingIndex::class)->name('bookings.index.admin')->middleware('role:Super Admin|Admin');
 
     // User route – sees only own bookings
-    Route::get('bookings/my', BookingMyIndex::class)->name('bookings.index.user')->middleware('role:Admin');
+    Route::get('bookings/my', BookingMyIndex::class)->name('bookings.index.user');
 
     // All roles can use create if they have permission
     Route::get('bookings/create', BookingCreate::class)->name('bookings.create')->middleware('permission:book.create');
@@ -74,7 +74,7 @@ Route::middleware(['auth'])->group(function () {
     }); 
 
     // Reports page
-    Route::get('/reports', Reports::class)->name('reports');
+    Route::get('/reports', Reports::class)->name('reports')->middleware('permission:report.view|report.create|report.edit|report.delete');;
     
     // Report download route - ADD THIS NEW ROUTE
     Route::get('/reports/download/{report}', function (ReportLog $report) {

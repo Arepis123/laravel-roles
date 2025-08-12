@@ -26,7 +26,9 @@
                     @if(auth()->user()->can('asset.view') || auth()->user()->can('asset.create') || auth()->user()->can('asset.edit') || auth()->user()->can('asset.delete'))                    
                     <flux:navlist.item icon="squares-2x2" :href="route('assets')" :current="request()->routeIs('assets')" wire:navigate>{{ __('Asset') }}</flux:navlist.item>                    
                     @endif
+                    @if(auth()->user()->can('report.view') || auth()->user()->can('report.create') || auth()->user()->can('report.edit') || auth()->user()->can('report.delete'))                                        
                     <flux:navlist.item icon="document" :href="route('reports')" :current="request()->routeIs('reports')" wire:navigate>{{ __('Report') }}</flux:navlist.item>                    
+                    @endif
                 </flux:navlist.group>
             </flux:navlist>
 

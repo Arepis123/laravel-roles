@@ -6,14 +6,14 @@
     </div>
 
     <!-- RIGHT SIDE (Login Form) -->
-    <div class="w-full lg:w-2/5 bg-white flex items-center justify-center">
+    <div class="w-full lg:w-2/5 flex items-center justify-center">
         <div class="w-full max-w-md p-10">
 
             <!-- Logo & Title -->
             <div class="text-center mb-8">
                 <img src="{{ asset('image/logo-clab.png') }}" alt="CLAB Logo" class="mx-auto w-12 mb-3">
                 <h1 class="text-3xl font-bold">e-BOOKING</h1>
-                <p class="text-gray-600 text-sm">Optimizing Workplace Reservations</p>
+                <p class="text-gray-600 dark:text-gray-300 text-sm">Optimizing Workplace Reservations</p>
             </div>
 
             <x-auth-header :title="''" :description="__('Enter your email to receive a password reset link')"/>

@@ -22,12 +22,14 @@ class Booking extends Model
         'status_history',
         'booked_by',
         'status',
-        'status_history',        
+        'status_history',
+        'passengers', // Add passengers field
     ];
     
     protected $casts = [
         'additional_booking' => 'array',
         'status_history' => 'array',
+        'passengers' => 'array', // Cast passengers as array
         'start_time' => 'datetime',
         'end_time' => 'datetime',        
     ];
@@ -51,6 +53,7 @@ class Booking extends Model
             default       => 'Unknown',
         };
     }  
+    
     public function getLatestStatusChangeAttribute()
     {
         $history = $this->status_history ?? [];
@@ -156,5 +159,45 @@ class Booking extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'booked_by');
-    }      
+    }
+    
+    /**
+     * Get the passengers for vehicle bookings
+     */
+    public function passengerUsers()
+    {
+        if (empty($this->passengers)) {
+            return collect();
+        }
+        
+        return User::whereIn('id', $this->passengers)->get();
+    }
+    
+    /**
+     * Check if booking has passengers
+     */
+    public function hasPassengers(): bool
+    {
+        return !empty($this->passengers) && count($this->passengers) > 0;
+    }
+    
+    /**
+     * Get passenger names as a formatted string
+     */
+    public function getPassengerNamesAttribute(): string
+    {
+        if (!$this->hasPassengers()) {
+            return '';
+        }
+        
+        return $this->passengerUsers()->pluck('name')->implode(', ');
+    }
+    
+    /**
+     * Check if a specific user is a passenger in this booking
+     */
+    public function hasPassenger($userId): bool
+    {
+        return in_array($userId, $this->passengers ?? []);
+    }
 }
