@@ -74,7 +74,7 @@ Route::middleware(['auth'])->group(function () {
     }); 
 
     // Reports page
-    Route::get('/reports', Reports::class)->name('reports')->middleware('permission:report.view|report.create|report.edit|report.delete');;
+    Route::get('/reports', Reports::class)->name('reports')->middleware('permission:report.view|report.create|report.edit|report.delete');
     
     // Report download route - ADD THIS NEW ROUTE
     Route::get('/reports/download/{report}', function (ReportLog $report) {
