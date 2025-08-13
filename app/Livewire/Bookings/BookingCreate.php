@@ -9,7 +9,9 @@ use App\Models\Vehicle;
 use App\Models\ItAsset;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use App\Mail\BookingNotification;
 use Carbon\Carbon;
 
 class BookingCreate extends Component
@@ -830,7 +832,28 @@ class BookingCreate extends Component
             }
 
             // Create the booking
-            auth()->user()->bookings()->create($bookingData);
+            $newBooking = auth()->user()->bookings()->create($bookingData);
+
+            // Send email notification to admin
+            try {
+                Mail::to('e-booking@clab.com.my')
+                    ->send(new BookingNotification($newBooking, auth()->user()));
+                
+                \Log::info('Booking notification email sent to admin', [
+                    'booking_id' => $newBooking->id,
+                    'user_id' => auth()->id(),
+                    'admin_email' => 'e-booking@clab.com.my'
+                ]);
+            } catch (\Exception $mailException) {
+                // Log the error but don't fail the booking creation
+                \Log::error('Failed to send booking notification email', [
+                    'booking_id' => $newBooking->id,
+                    'error' => $mailException->getMessage()
+                ]);
+                
+                // Optionally, you can add a warning message to the user
+                // session()->flash('warning', 'Booking created successfully, but notification email could not be sent to admin.');
+            }
 
             // Create success message based on booking type
             $successMessage = 'Booking submitted successfully for ';
@@ -839,6 +862,7 @@ class BookingCreate extends Component
             } else {
                 $successMessage .= $startDateTime->format('F j, Y') . ' from ' . $startDateTime->format('g:i A') . ' to ' . $endDateTime->format('g:i A');
             }
+            $successMessage .= '. Admin has been notified via email.';
 
             session()->flash('success', $successMessage);
             

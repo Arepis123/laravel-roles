@@ -137,36 +137,60 @@
 
                             <td class="px-6 py-4">
                                 <div class="text-sm text-gray-900 dark:text-neutral-200">
-                                    <div class="font-medium">{{ \Carbon\Carbon::parse($booking->start_time)->format('M d, Y') }}</div>
-                                    <div class="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                                        <flux:icon name="clock" class="w-3 h-3" />
-                                        <flux:text class="text-xs">
-                                            {{ \Carbon\Carbon::parse($booking->start_time)->format('h:i A') }} - 
-                                            {{ \Carbon\Carbon::parse($booking->end_time)->format('h:i A') }}
-                                        </flux:text>
-
-                                    </div>
-                                    <div class="text-xs text-gray-400 mt-1">
-                                        @php
-                                            $start = \Carbon\Carbon::parse($booking->start_time);
-                                            $end = \Carbon\Carbon::parse($booking->end_time);
-
-                                            $totalMinutes = $start->diffInMinutes($end);
-                                            $totalHours = floor($totalMinutes / 60);
-                                            $days = floor($totalHours / 24);
-
-                                            if ($totalMinutes < 60) {
-                                                $durationText = $totalMinutes . 'm';
-                                            } elseif ($totalHours < 24) {
-                                                $hours = $totalHours;
-                                                $minutes = $totalMinutes % 60;
-                                                $durationText = $hours . 'h' . ($minutes > 0 ? ' ' . $minutes . 'm' : '');
+                                    @php
+                                        $start = \Carbon\Carbon::parse($booking->start_time);
+                                        $end = \Carbon\Carbon::parse($booking->end_time);
+                                        $totalMinutes = $start->diffInMinutes($end);
+                                        $totalHours = floor($totalMinutes / 60);
+                                        $days = (int) $start->diffInDays($end);
+                                        
+                                        // Enhanced date display logic
+                                        if ($days > 1) {
+                                            // Multi-day booking
+                                            if ($start->month === $end->month) {
+                                                // Same month: "Aug 14 - 17, 2025"
+                                                $dateDisplay = $start->format('M j') . ' - ' . $end->format('j, Y');
                                             } else {
-                                                $hours = $totalHours % 24;
-                                                $durationText = $days . 'd' . ($hours > 0 ? ' ' . $hours . 'h' : '');
+                                                // Different months: "Aug 29 - Sept 2, 2025"
+                                                $dateDisplay = $start->format('M j') . ' - ' . $end->format('M j, Y');
                                             }
-                                        @endphp
+                                        } else {
+                                            // Same day booking
+                                            $dateDisplay = $start->format('M d, Y');
+                                        }
+                                        
+                                        // Duration calculation
+                                        if ($totalMinutes < 60) {
+                                            $durationText = $totalMinutes . 'm';
+                                        } elseif ($totalHours < 24) {
+                                            $hours = $totalHours;
+                                            $minutes = $totalMinutes % 60;
+                                            $durationText = $hours . 'h' . ($minutes > 0 ? ' ' . $minutes . 'm' : '');
+                                        } else {
+                                            $hours = $totalHours % 24;
+                                            $durationText = $days . 'd' . ($hours > 0 ? ' ' . $hours . 'h' : '');
+                                        }
+                                    @endphp
 
+                                    <div class="font-medium">{{ $dateDisplay }}</div>
+                                    @if($days === 0)
+                                        {{-- Single day booking - show time range --}}
+                                        <div class="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                                            <flux:icon name="clock" class="w-3 h-3" />
+                                            <flux:text class="text-xs">
+                                                {{ $start->format('h:i A') }} - {{ $end->format('h:i A') }}
+                                            </flux:text>
+                                        </div>
+                                    @else
+                                        {{-- Multi-day booking - show start and end times --}}
+                                        <div class="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                                            <flux:icon name="clock" class="w-3 h-3" />
+                                            <flux:text class="text-xs">
+                                                {{ $start->format('h:i A') }} → {{ $end->format('h:i A') }}
+                                            </flux:text>
+                                        </div>
+                                    @endif
+                                    <div class="text-xs text-gray-400 mt-1">
                                         {{ $durationText }}
                                     </div>
                                 </div>

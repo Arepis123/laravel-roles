@@ -37,41 +37,46 @@ class BookingIndex extends Component
     {
         $query = Booking::with(['user', 'asset']);
 
-        // Apply search filter
+        // Apply search filter - SUPER SIMPLE VERSION
         if (!empty($this->search)) {
             $query->where(function ($q) {
-                // Search in user data
+                // Search in user data (booking owner)
                 $q->whereHas('user', function ($userQuery) {
                     $userQuery->where('name', 'like', '%' . $this->search . '%')
                              ->orWhere('email', 'like', '%' . $this->search . '%');
                 })
                 // Search by booking ID
                 ->orWhere('id', 'like', '%' . $this->search . '%')
-                // Search in vehicles (has model and plate_number, no name)
-                ->orWhere(function ($assetQuery) {
-                    $assetQuery->where('asset_type', 'vehicle')
-                               ->whereHasMorph('asset', 'App\Models\Vehicle', function ($vehicleQuery) {
-                                   $vehicleQuery->where('model', 'like', '%' . $this->search . '%')
-                                              ->orWhere('plate_number', 'like', '%' . $this->search . '%');
-                               });
-                })
-                // Search in meeting rooms (has name, no model or plate_number)
-                ->orWhere(function ($assetQuery) {
-                    $assetQuery->where('asset_type', 'meeting_room')
-                               ->whereHasMorph('asset', 'App\Models\MeetingRoom', function ($roomQuery) {
-                                   $roomQuery->where('name', 'like', '%' . $this->search . '%')
-                                           ->orWhere('location', 'like', '%' . $this->search . '%');
-                               });
-                })
-                // Search in IT assets (has name and asset_tag, no model or plate_number)
-                ->orWhere(function ($assetQuery) {
-                    $assetQuery->where('asset_type', 'it_asset')
-                               ->whereHasMorph('asset', 'App\Models\ItAsset', function ($itQuery) {
-                                   $itQuery->where('name', 'like', '%' . $this->search . '%')
-                                          ->orWhere('asset_tag', 'like', '%' . $this->search . '%')
-                                          ->orWhere('location', 'like', '%' . $this->search . '%');
-                               });
-                });
+                // Search by status
+                ->orWhere('status', 'like', '%' . $this->search . '%')
+                // Search by date
+                ->orWhere('start_time', 'like', '%' . $this->search . '%')
+                ->orWhere('end_time', 'like', '%' . $this->search . '%');
+
+                // Get asset IDs that match search term, then search bookings
+                $vehicleIds = \DB::table('vehicles')->where('model', 'like', '%' . $this->search . '%')->pluck('id');
+                if ($vehicleIds->isNotEmpty()) {
+                    $q->orWhere(function($subQuery) use ($vehicleIds) {
+                        $subQuery->where('asset_type', 'App\Models\Vehicle')
+                                ->whereIn('asset_id', $vehicleIds);
+                    });
+                }
+
+                $meetingRoomIds = \DB::table('meeting_rooms')->where('name', 'like', '%' . $this->search . '%')->pluck('id');
+                if ($meetingRoomIds->isNotEmpty()) {
+                    $q->orWhere(function($subQuery) use ($meetingRoomIds) {
+                        $subQuery->where('asset_type', 'App\Models\MeetingRoom')
+                                ->whereIn('asset_id', $meetingRoomIds);
+                    });
+                }
+
+                $itAssetIds = \DB::table('it_assets')->where('name', 'like', '%' . $this->search . '%')->pluck('id');
+                if ($itAssetIds->isNotEmpty()) {
+                    $q->orWhere(function($subQuery) use ($itAssetIds) {
+                        $subQuery->where('asset_type', 'App\Models\ItAsset')
+                                ->whereIn('asset_id', $itAssetIds);
+                    });
+                }
             });
         }
 
@@ -82,15 +87,7 @@ class BookingIndex extends Component
 
         // Apply asset type filter
         if (!empty($this->assetTypeFilter)) {
-            // Map the filter values to actual asset_type values
-            $assetTypeMap = [
-                'Vehicle' => 'vehicle',
-                'Room' => 'meeting_room',
-                'Equipment' => 'it_asset'
-            ];
-            
-            $actualAssetType = $assetTypeMap[$this->assetTypeFilter] ?? strtolower($this->assetTypeFilter);
-            $query->where('asset_type', $actualAssetType);
+            $query->where('asset_type', $this->assetTypeFilter);
         }
 
         // Apply sorting
