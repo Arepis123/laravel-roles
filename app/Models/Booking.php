@@ -23,7 +23,8 @@ class Booking extends Model
         'booked_by',
         'status',
         'status_history',
-        'passengers', // Add passengers field
+        'passengers', 
+        'destination', 
     ];
     
     protected $casts = [

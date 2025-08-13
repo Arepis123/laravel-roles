@@ -41,7 +41,7 @@
             @if($this->shouldShowCapacity)
                 <flux:field>
                     <flux:label>Capacity</flux:label>
-                    <flux:input placeholder="How many people" wire:model.live="capacity" type="number"/>
+                    <flux:input placeholder="{{ $this->capacityPlaceholder }}" wire:model.live="capacity" type="number"/>
                     <flux:error name="capacity" />
                     @if($asset_type === 'vehicle' && $capacity)
                         <flux:description>
@@ -55,6 +55,15 @@
                 </flux:field>
             @endif
 
+            {{-- Destination field for Vehicles --}}
+            @if($asset_type === 'vehicle')
+                <flux:field>
+                    <flux:label>Destination</flux:label>
+                    <flux:input placeholder="Where are you going?" wire:model="destination" type="text"/>
+                    <flux:error name="destination" />
+                </flux:field>
+            @endif
+
             {{-- Passengers Selection for Vehicles using Tailwind --}}
             @if($this->shouldShowPassengers)
                 <div class="space-y-2">
@@ -63,7 +72,7 @@
                     </label>
                     
                     <div class="border border-gray-300 dark:border-gray-600 rounded-lg p-3 max-h-48 overflow-y-auto bg-white dark:bg-gray-800">
-                        @forelse ($this->availablePassengers as $user)
+                        @forelse ($availablePassengers as $user)
                             <div class="flex items-center py-2 px-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">
                                 <input type="checkbox" 
                                        wire:model="passengers"
@@ -83,11 +92,11 @@
                         @endforelse
                     </div>
                     
-                    @if(count($passengers) > 0)
+                    @if(count($passengers) > 0 && $availablePassengers)
                         <div class="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md">
                             <p class="text-sm text-blue-700 dark:text-blue-300">
                                 <strong>Selected passengers:</strong> 
-                                {{ $this->availablePassengers->whereIn('id', $passengers)->pluck('name')->implode(', ') }}
+                                {{ $availablePassengers->whereIn('id', $passengers)->pluck('name')->implode(', ') }}
                             </p>
                         </div>
                     @endif
@@ -146,7 +155,7 @@
 
                 {{-- Multi-day booking notice --}}
                 @if($this->allowsMultiDayBooking && $this->bookingDays > 1)
-                    <flux:callout variant="info" icon="information-circle">
+                    <flux:callout color="blue" icon="information-circle">
                         <flux:callout.heading>Multi-day Booking</flux:callout.heading>
                         <flux:callout.text>
                             You are booking for {{ $this->bookingDays }} days. 

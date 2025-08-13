@@ -23,6 +23,8 @@ class BookingCreate extends Component
     public string $purpose = '';
     public string $capacity = '';     
     public array $passengers = []; // New property for vehicle passengers
+    public string $destination = ''; // Add destination for vehicles
+    public $availablePassengers; // Property for available passengers
 
     public array $additional_booking = [];
     public string $refreshment_details = '';
@@ -62,6 +64,17 @@ class BookingCreate extends Component
         // Initialize additional_booking as empty array
         $this->additional_booking = [];
         $this->passengers = [];
+        $this->availablePassengers = collect(); // Initialize as empty collection
+    }
+
+    /**
+     * Load available users for passenger selection
+     */
+    public function loadAvailablePassengers()
+    {
+        $this->availablePassengers = User::where('id', '!=', Auth::id())
+            ->orderBy('name')
+            ->get();
     }
 
     /**
@@ -141,13 +154,15 @@ class BookingCreate extends Component
     }
 
     /**
-     * Get available users for passenger selection (excluding current user)
+     * Get placeholder text for capacity field based on asset type
      */
-    public function getAvailablePassengersProperty()
+    public function getCapacityPlaceholderProperty()
     {
-        return User::where('id', '!=', Auth::id())
-            ->orderBy('name')
-            ->get();
+        if ($this->asset_type === 'vehicle') {
+            return 'No of driver and passenger';
+        }
+        
+        return 'How many people';
     }
 
     /**
@@ -193,6 +208,19 @@ class BookingCreate extends Component
         $model = $config['model'];
         $nameField = $config['name_field'];
 
+        // Special handling for vehicles to include plate number
+        if ($this->asset_type === 'vehicle') {
+            return $model::select('id', 'model', 'plate_number')
+                ->get()
+                ->map(function ($vehicle) {
+                    // Create a stdClass object to maintain consistency with the blade template
+                    $item = new \stdClass();
+                    $item->id = $vehicle->id;
+                    $item->name = $vehicle->model . ' (' . $vehicle->plate_number . ')';
+                    return $item;
+                });
+        }
+
         return $model::select('id', "{$nameField} as name")->get();
     }
 
@@ -210,10 +238,12 @@ class BookingCreate extends Component
             return in_array($service, $availableServices);
         });
         
-        // Clear passengers if not vehicle
+        // Clear vehicle-specific fields if not vehicle
         if ($this->asset_type !== 'vehicle') {
             $this->passengers = [];
             $this->capacity = '';
+            $this->destination = '';
+            $this->availablePassengers = collect();
         }
         
         // Clear refreshment details if refreshment is not available
@@ -250,6 +280,13 @@ class BookingCreate extends Component
     {
         // Reset passengers if capacity changes
         if ($this->asset_type === 'vehicle') {
+            // Load available passengers when capacity changes
+            if (is_numeric($this->capacity) && $this->capacity > 1) {
+                $this->loadAvailablePassengers();
+            } else {
+                $this->availablePassengers = collect();
+            }
+            
             // If capacity is reduced, trim excess passengers
             if (is_numeric($this->capacity) && $this->capacity > 0) {
                 $maxPassengers = $this->maxPassengers;
@@ -341,11 +378,20 @@ class BookingCreate extends Component
                 }
             }
         } else {
-            // For vehicles and IT assets (multi-day bookings), just show all time slots
+            // For vehicles and IT assets (multi-day bookings)
             for ($hour = $start; $hour < $end; $hour++) {
                 for ($minute = 0; $minute < 60; $minute += 30) {
                     $timeString = sprintf('%02d:%02d', $hour, $minute);
                     $displayTime = Carbon::createFromFormat('H:i', $timeString)->format('g:i A');
+                    
+                    // Skip past times for today's bookings
+                    if ($this->booking_date === date('Y-m-d')) {
+                        $timeToCheck = Carbon::createFromFormat('Y-m-d H:i', $this->booking_date . ' ' . $timeString);
+                        if ($timeToCheck->isPast()) {
+                            continue;
+                        }
+                    }
+                    
                     $slots[$timeString] = $displayTime;
                 }
             }
@@ -659,6 +705,11 @@ class BookingCreate extends Component
             $rules['capacity'] = 'nullable|numeric|min:1';
         }
 
+        // Add destination validation for vehicles
+        if ($this->asset_type === 'vehicle') {
+            $rules['destination'] = 'required|string|min:3';
+        }
+
         // Add end_date validation for multi-day bookings
         if ($this->allowsMultiDayBooking && $this->end_date) {
             $rules['end_date'] = 'required|date|after_or_equal:booking_date';
@@ -706,6 +757,8 @@ class BookingCreate extends Component
             'purpose.min' => 'Purpose must be at least 3 characters long.',
             'capacity.numeric' => 'Capacity must be a number.',
             'capacity.min' => 'Capacity must be at least 1.',
+            'destination.required' => 'Please provide the destination.',
+            'destination.min' => 'Destination must be at least 3 characters long.',
             'refreshment_details.required' => 'Please provide refreshment details.',
             'refreshment_details.min' => 'Refreshment details must be at least 3 characters long.',
             'additional_booking.*.in' => 'Invalid additional service option selected.',
@@ -766,9 +819,14 @@ class BookingCreate extends Component
                 'refreshment_details' => in_array('refreshment', $this->additional_booking) ? $this->refreshment_details : null,
             ];
 
-            // Add passengers data if it's a vehicle booking with passengers
-            if ($this->asset_type === 'vehicle' && !empty($this->passengers)) {
-                $bookingData['passengers'] = $this->passengers;
+            // Add vehicle-specific data
+            if ($this->asset_type === 'vehicle') {
+                $bookingData['destination'] = $this->destination;
+                
+                // Add passengers data if there are passengers
+                if (!empty($this->passengers)) {
+                    $bookingData['passengers'] = $this->passengers;
+                }
             }
 
             // Create the booking

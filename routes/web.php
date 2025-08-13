@@ -42,7 +42,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('roles/{id}', RoleShow::class)->name('roles.show')->middleware('permission:role.view');
 
     Route::get('bookings', function () {
-        if (auth()->user()->hasRole('Super Admin')) {
+        if (auth()->user()->hasAnyRole(['Super Admin','Admin'])) {
             return redirect()->route('bookings.index.admin');
         }
         return redirect()->route('bookings.index.user');
@@ -63,7 +63,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('settings/password', Password::class)->name('settings.password');
     Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
 
-    Route::get('/assets', AssetManagement::class)->name('assets')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
+    Route::get('assets/assets', AssetManagement::class)->name('assets')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
     
     Route::prefix('api')->name('api.')->group(function () {
         Route::get('calendar-bookings', [App\Http\Controllers\Api\CalendarController::class, 'getBookings'])
@@ -74,7 +74,7 @@ Route::middleware(['auth'])->group(function () {
     }); 
 
     // Reports page
-    Route::get('/reports', Reports::class)->name('reports')->middleware('permission:report.view|report.create|report.edit|report.delete');
+    Route::get('reports/reports', Reports::class)->name('reports')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
     
     // Report download route - ADD THIS NEW ROUTE
     Route::get('/reports/download/{report}', function (ReportLog $report) {

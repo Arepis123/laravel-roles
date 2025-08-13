@@ -1,4 +1,4 @@
-<div class="max-w-5xl mx-auto p-6 space-y-6">
+<div class="max-w-6xl mx-auto p-6 space-y-6">
     {{-- Header Section --}}
     <div class="flex items-center justify-between border-b pb-4">
         <div>
@@ -222,41 +222,39 @@
                             <flux:button icon="chevron-down" size="sm" variant="outline" class="w-full justify-between">
                                 Change Status
                             </flux:button>                                           
-                            <flux:menu class="w-full">
-                                <flux:menu.submenu heading="Change status">
-                                    <flux:menu.radio.group position="bottom" align="center">
-                                        <flux:menu.radio 
-                                            :checked="$status == 'pending'" 
-                                            wire:click="changeStatus('pending')"
-                                        >
-                                            Pending
-                                        </flux:menu.radio>
-                                        <flux:menu.radio 
-                                            :checked="$status == 'approved'" 
-                                            wire:click="changeStatus('approved')"
-                                        >
-                                            Approved
-                                        </flux:menu.radio>
-                                        <flux:menu.radio 
-                                            :checked="$status == 'rejected'" 
-                                            wire:click="changeStatus('rejected')"
-                                        >
-                                            Rejected
-                                        </flux:menu.radio>
-                                        <flux:menu.radio 
-                                            :checked="$status == 'cancelled'" 
-                                            wire:click="changeStatus('cancelled')"
-                                        >
-                                            Cancelled
-                                        </flux:menu.radio>
-                                        <flux:menu.radio 
-                                            :checked="$status == 'done'" 
-                                            wire:click="changeStatus('done')"
-                                        >
-                                            Done
-                                        </flux:menu.radio>
-                                    </flux:menu.radio.group>
-                                </flux:menu.submenu>
+                            <flux:menu>
+                                <flux:menu.radio.group position="bottom" align="center">
+                                    <flux:menu.radio 
+                                        :checked="$status == 'pending'" 
+                                        wire:click="changeStatus('pending')"
+                                    >
+                                        Pending
+                                    </flux:menu.radio>
+                                    <flux:menu.radio 
+                                        :checked="$status == 'approved'" 
+                                        wire:click="changeStatus('approved')"
+                                    >
+                                        Approved
+                                    </flux:menu.radio>
+                                    <flux:menu.radio 
+                                        :checked="$status == 'rejected'" 
+                                        wire:click="changeStatus('rejected')"
+                                    >
+                                        Rejected
+                                    </flux:menu.radio>
+                                    <flux:menu.radio 
+                                        :checked="$status == 'cancelled'" 
+                                        wire:click="changeStatus('cancelled')"
+                                    >
+                                        Cancelled
+                                    </flux:menu.radio>
+                                    <flux:menu.radio 
+                                        :checked="$status == 'done'" 
+                                        wire:click="changeStatus('done')"
+                                    >
+                                        Done
+                                    </flux:menu.radio>
+                                </flux:menu.radio.group>                               
                             </flux:menu>
                         </flux:dropdown>
 
