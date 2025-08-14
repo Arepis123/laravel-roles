@@ -17,6 +17,7 @@ class BookingIndex extends Component
     public $search = '';
     public $sortField = 'created_at';
     public $sortDirection = 'desc';
+    public $booking;
     
     protected $queryString = [
         'search' => ['except' => ''],
@@ -97,57 +98,139 @@ class BookingIndex extends Component
         return $query->paginate(15);
     }
 
-    public function changeStatus($status, $bookingId = null)
+    public function changeStatus($newStatus)
     {
         try {
-            // If bookingId is passed directly, use it. Otherwise use selectedBookingId
-            $id = $bookingId ?? $this->selectedBookingId;
-            
-            if (!$id) {
-                session()->flash('error', 'No booking selected');
-                return;
-            }
-
-            $booking = Booking::findOrFail($id);
-
-            // Authorization check using Spatie permissions
-            if (!$this->canUserChangeStatus($booking)) {
-                session()->flash('error', 'You are not authorized to change this booking status');
-                return;
-            }
+            \Log::info('🔄 changeStatus called', [
+                'new_status' => $newStatus,
+                'current_status' => $this->booking->status,
+                'booking_id' => $this->booking->id,
+                'auth_user' => auth()->id(),
+                'booked_by' => $this->booking->booked_by
+            ]);
 
             // Validate status
             $validStatuses = ['pending', 'approved', 'rejected', 'cancelled', 'done'];
-            if (!in_array($status, $validStatuses)) {
-                session()->flash('error', 'Invalid status provided');
+            
+            if (!in_array($newStatus, $validStatuses)) {
+                \Log::warning('❌ Invalid status provided: ' . $newStatus);
+                session()->flash('error', 'Invalid status selected.');
                 return;
             }
 
-            // Additional business logic validation
-            if (!$this->canChangeStatus($booking, $status)) {
+            // Don't update if status is the same
+            if ($this->booking->status === $newStatus) {
+                \Log::info('ℹ️ Status unchanged - no update needed');
+                session()->flash('info', 'Booking is already in ' . ucfirst($newStatus) . ' status.');
                 return;
             }
 
-            // Update the status
-            $booking->update([
-                'status' => $status,
-                'updated_at' => now(),
+            // Store the old status before updating
+            $oldStatus = $this->booking->status;
+            \Log::info('📝 Status change confirmed', [
+                'from' => $oldStatus,
+                'to' => $newStatus
             ]);
 
-            // Success message
-            session()->flash('success', "Booking status changed to " . ucfirst($status));
+            // Get current status history
+            $statusHistory = $this->booking->status_history ?? [];
+            
+            // Add new status change to history
+            $statusHistory[] = [
+                'status' => $newStatus,
+                'previous_status' => $oldStatus,
+                'changed_by' => auth()->id(),
+                'changed_by_name' => auth()->user()->name,
+                'changed_at' => now()->toDateTimeString(),
+                'reason' => $this->getStatusChangeReason($oldStatus, $newStatus)
+            ];
 
-            // Reset selection
-            $this->selectedBookingId = null;
+            // Update booking with new status and history
+            $updateResult = $this->booking->update([
+                'status' => $newStatus,
+                'status_history' => $statusHistory
+            ]);
+
+            \Log::info('💾 Database update result', [
+                'success' => $updateResult,
+                'booking_id' => $this->booking->id
+            ]);
+            
+            // Update local property
+            $this->status = $newStatus;
+            
+            // Refresh the booking model to get updated data
+            $this->booking->refresh();
+            
+            // Show success message
+            session()->flash('success', "Booking status changed from " . ucfirst($oldStatus) . " to " . ucfirst($newStatus) . " successfully.");
+            
+            // ALWAYS send email notification (remove the condition check)
+            \Log::info('📧 About to send notification...');
+            $this->notifyBookingOwner($oldStatus, $newStatus);
+            
+            \Log::info('✅ changeStatus completed successfully');
+            
+        } catch (\Exception $e) {
+            \Log::error('❌ changeStatus failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'booking_id' => $this->booking->id ?? 'unknown'
+            ]);
+            session()->flash('error', 'Failed to update booking status. Please try again.');
+        }
+    }
+    
+    private function notifyBookingOwner($oldStatus, $newStatus)
+    {
+        try {
+            \Log::info('📧 notifyBookingOwner called', [
+                'booking_id' => $this->booking->id,
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+                'booked_by' => $this->booking->booked_by,
+                'auth_user' => auth()->id()
+            ]);
+            
+            // Load the booking owner
+            $bookingOwner = $this->booking->bookedBy;
+            
+            if (!$bookingOwner) {
+                \Log::error('❌ Booking owner not found', [
+                    'booking_id' => $this->booking->id,
+                    'booked_by_id' => $this->booking->booked_by
+                ]);
+                return;
+            }
+
+            \Log::info('👤 Booking owner found', [
+                'user_id' => $bookingOwner->id,
+                'user_name' => $bookingOwner->name,
+                'user_email' => $bookingOwner->email
+            ]);
+
+            \Log::info('📤 Sending notification...');
+
+            // Send notification
+            $bookingOwner->notify(new \App\Notifications\BookingStatusChanged(
+                $this->booking,
+                $oldStatus,
+                $newStatus,
+                auth()->user()->name
+            ));
+
+            \Log::info('✅ Status change notification sent successfully', [
+                'booking_id' => $this->booking->id,
+                'recipient' => $bookingOwner->email,
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus
+            ]);
 
         } catch (\Exception $e) {
-            session()->flash('error', 'An error occurred while updating the booking status');
-            
-            // Log the error for debugging
-            \Log::error('Booking status change error: ' . $e->getMessage(), [
-                'booking_id' => $id ?? 'unknown',
-                'status' => $status,
-                'user_id' => auth()->id(),
+            \Log::error('❌ Failed to send booking status notification', [
+                'booking_id' => $this->booking->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
         }
     }

@@ -702,9 +702,9 @@ class BookingCreate extends Component
             'passengers.*' => 'exists:users,id',
         ];
 
-        // Add capacity validation only if it should be shown
+        // Add capacity validation only if it should be shown (Meeting Room and Vehicle)
         if ($this->shouldShowCapacity) {
-            $rules['capacity'] = 'nullable|numeric|min:1';
+            $rules['capacity'] = 'required|numeric|min:1';
         }
 
         // Add destination validation for vehicles
