@@ -11,10 +11,16 @@ class UserCreate extends Component
 {
     public $name, $email, $password, $confirm_password, $allRoles;
     public $roles = [];
+    public $status = 'active'; // Added status field
 
     public function mount()
     {
         $this->allRoles = Role::all();
+        // Set default role to 'User' if it exists
+        $userRole = Role::where('name', 'User')->first();
+        if ($userRole) {
+            $this->roles = [$userRole->name];
+        }
     }
 
     public function render()
@@ -26,15 +32,17 @@ class UserCreate extends Component
     {
         $this->validate([
             'name' => 'required',
-            'email' => 'required|email',
+            'email' => 'required|email|unique:users,email',
             'roles' => 'required',
-            'password' => 'required|same:confirm_password'
+            'password' => 'required|min:8|same:confirm_password',
+            'status' => 'required|in:active,inactive'
         ]);
 
         $user = User::create([
             'name' => $this->name,
             'email' => $this->email,
-            'password' => Hash::make($this->password)
+            'password' => Hash::make($this->password),
+            'status' => $this->status
         ]);
 
         $user->syncRoles($this->roles);

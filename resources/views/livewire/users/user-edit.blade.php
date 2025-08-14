@@ -1,40 +1,48 @@
 <div>
     <div class="relative mb-6 w-full">
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ __('Edit User') }}</h1>
-        <p class="text-gray-600 mt-1 dark:text-gray-400">{{ __('Form to edit new user') }}</p>
+        <p class="text-gray-600 mt-1 dark:text-gray-400">{{ __('Update user information') }}</p>
         <flux:separator variant="subtle" class="mt-4" />        
     </div>
 
     <div class="py-3">
-        <flux:button variant="primary" href="{{ route('users.index') }}">Back</flux:button>
+        <flux:button variant="primary" href="{{ route('users.index') }}">
+            <flux:icon.arrow-left class="size-4" />
+            Back
+        </flux:button>
     </div>
 
-    <div class="w-150">
-        <form  wire:submit="submit" class="">
-            <div class="py-3">
-                <div class="mb-4">
-                    <flux:input wire:model="name" type="name" label="Name" />
+    <div class="max-w-2xl">
+        <form wire:submit="submit">
+            <div class="space-y-4">
+                <flux:input wire:model="name" type="text" label="Name" placeholder="Enter full name" required />
+                
+                <flux:input wire:model="email" type="email" label="Email" placeholder="user@example.com" required />
+                
+                <flux:input wire:model="password" type="password" label="Password (leave blank to keep current)" placeholder="Minimum 8 characters" />
+                
+                <flux:input wire:model="confirm_password" type="password" label="Confirm Password" placeholder="Re-enter password" />
+                
+                <div>
+                    <flux:radio.group wire:model="status" label="Status">
+                        <flux:radio label="Active" value="active" />
+                        <flux:radio label="Inactive" value="inactive" />
+                    </flux:radio.group>
                 </div>
-                <div class="mb-4">
-                    <flux:input wire:model="email" type="email" label="Email" />
-                </div>
-                <div class="mb-4">
-                    <flux:input wire:model="password" type="password" label="Password" />
-                </div>
-                <div class="mb-4">
-                    <flux:input wire:model="confirm_password" type="password" label="Confirm Password" />
-                </div>
-                <div class="mb-4">
+                
+                <div>
                     <flux:checkbox.group wire:model="roles" label="Roles">
                         @foreach ($allRoles as $role)
                             <flux:checkbox label="{{ $role->name }}" value="{{ $role->name }}" />
                         @endforeach
                     </flux:checkbox.group>                     
                 </div>  
-                <flux:button variant="primary" type="submit">Submit</flux:button>
+                
+                <div class="flex gap-2 pt-4">
+                    <flux:button variant="primary" type="submit">Update User</flux:button>
+                    <flux:button variant="ghost" href="{{ route('users.index') }}">Cancel</flux:button>
+                </div>
             </div>
         </form>
     </div>
-
-
 </div>

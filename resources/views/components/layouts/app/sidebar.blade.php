@@ -12,16 +12,21 @@
             </a>
 
             <flux:navlist variant="outline">
-                <flux:navlist.group :heading="__('Platform')" class="grid">
-                    <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
-                    @if(auth()->user()->can('user.view') || auth()->user()->can('user.create') || auth()->user()->can('user.edit') || auth()->user()->can('user.delete'))
-                    <flux:navlist.item icon="user" :href="route('users.index')" :current="request()->routeIs('users.index')" wire:navigate>{{ __('User') }}</flux:navlist.item>
-                    @endif
-                    @if(auth()->user()->can('role.view') || auth()->user()->can('role.create') || auth()->user()->can('role.edit') || auth()->user()->can('role.delete'))
-                    <flux:navlist.item icon="key" :href="route('roles.index')" :current="request()->routeIs('roles.index')" wire:navigate>{{ __('Role') }}</flux:navlist.item>
-                    @endif
+                <flux:navlist.group :heading="__('MENU')" class="grid">
+                    <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>  
+                </flux:navlist.group>
+            </flux:navlist>
+
+            <flux:navlist variant="outline">
+                <flux:navlist.group :heading="__('ADMIN')" class="grid">
                     @if(auth()->user()->can('book.view') || auth()->user()->can('book.create') || auth()->user()->can('book.edit') || auth()->user()->can('book.delete'))
                     <flux:navlist.item icon="calendar" :href="route('bookings.index')" :current="request()->routeIs('bookings.index')" wire:navigate>{{ __('Booking') }}</flux:navlist.item>
+                    @endif                    
+                    @if(auth()->user()->can('user.view') || auth()->user()->can('user.create') || auth()->user()->can('user.edit') || auth()->user()->can('user.delete'))
+                    <flux:navlist.item icon="user" :href="route('users.index')" :current="request()->routeIs('users.index')" wire:navigate>{{ __('User') }}</flux:navlist.item>
+                    @endif                    
+                    @if(auth()->user()->hasRole(['Super Admin']))
+                    <flux:navlist.item icon="key" :href="route('roles.index')" :current="request()->routeIs('roles.index')" wire:navigate>{{ __('Role') }}</flux:navlist.item>
                     @endif
                     @if(auth()->user()->can('asset.view') || auth()->user()->can('asset.create') || auth()->user()->can('asset.edit') || auth()->user()->can('asset.delete'))                    
                     <flux:navlist.item icon="squares-2x2" :href="route('assets')" :current="request()->routeIs('assets')" wire:navigate>{{ __('Asset') }}</flux:navlist.item>                    
@@ -30,7 +35,7 @@
                     <flux:navlist.item icon="document" :href="route('reports')" :current="request()->routeIs('reports')" wire:navigate>{{ __('Report') }}</flux:navlist.item>                    
                     @endif
                 </flux:navlist.group>
-            </flux:navlist>
+            </flux:navlist>            
 
             <flux:spacer />
 
