@@ -13,7 +13,7 @@ class UserIndex extends Component
     public $search = '';
     public $statusFilter = '';
     public $roleFilter = '';
-    public $perPage = 10;
+    public $perPage = 15;
     
     // Sorting properties
     public $sortField = 'created_at';

@@ -86,18 +86,22 @@
             </div>
             
             <div class="md:col-span-2">
-                <flux:button variant="ghost" wire:click="resetFilters" class="w-full">
-                    <flux:icon.arrow-path class="size-4" />
-                    Reset Filters
-                </flux:button>
+                <flux:button wire:click="resetFilters" variant="filled" class="w-full">
+                    <flux:icon.arrow-path class="w-4 h-4 mr-1 inline-block me-2 transform transition-transform duration-200 rotate-180" />
+                    <span>{{__('Reset Filters')}}</span>
+                </flux:button>                
             </div>
             
             @can('user.create')
             <div class="md:col-span-2">
                 <flux:button variant="primary" href="{{ route('users.create') }}" class="w-full">
-                    <flux:icon.plus class="size-4" />
+                    <flux:icon.plus class="w-4 h-4 me-1" />
                     Create User
                 </flux:button>
+                {{-- <flux:button variant="primary" href="{{ route('bookings.create') }}">
+                    <flux:icon name="plus" class="w-4 h-4 mr-2" />
+                    New Booking
+                </flux:button>                 --}}
             </div>
             @endcan
         </div>
@@ -244,10 +248,8 @@
                         <tr class="hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
-                                    <div class="flex-shrink-0 h-10 w-10">
-                                        <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-                                            {{ $user->initials() }}
-                                        </div>
+                                    <div class="flex-shrink-0 h-10 w-10">                                        
+                                        <flux:avatar circle color="auto" name="{{ $user->name ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $user->name) : 'N/A' }}" />
                                     </div>
                                     <div class="ml-4">
                                         <div class="text-sm font-medium text-gray-900 dark:text-white">
@@ -265,7 +267,16 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex flex-wrap gap-1">
                                     @forelse ($user->roles as $role)
-                                        <flux:badge size="sm" variant="outline">{{ $role->name }}</flux:badge>
+                                        <flux:badge variant="outline">
+                                            @if($role->name === 'Super Admin')
+                                                <flux:icon.shield-user class="text-sky-500 me-1 size-5"/>
+                                            @elseif($role->name === 'Admin')
+                                                <flux:icon.shield-user class="text-amber-500 me-1 size-5"/>
+                                            @else
+                                                <flux:icon.shield-user class="text-green-500 me-1 size-5"/>
+                                            @endif
+                                            {{ $role->name }}
+                                        </flux:badge>
                                     @empty
                                         <span class="text-sm text-gray-500">No roles</span>
                                     @endforelse
@@ -275,7 +286,7 @@
                                 @if($user->status === 'active')
                                     <flux:badge variant="success">Active</flux:badge>
                                 @else
-                                    <flux:badge variant="danger">Inactive</flux:badge>
+                                    <flux:badge>Inactive</flux:badge>
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
@@ -290,7 +301,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             </svg>
                                         </flux:button>
-                                    @endcan
+                                    @endcan                                    
                                     
                                     @can('user.edit')
                                         <flux:button size="sm" variant="ghost" href="{{ route('users.edit', $user->id) }}" title="Edit">
@@ -298,36 +309,34 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                                             </svg>
                                         </flux:button>
-                                        
-                                        <flux:button 
-                                            size="sm" 
-                                            variant="ghost" 
-                                            wire:click="toggleStatus({{ $user->id }})"
-                                            title="Toggle Status"
-                                        >
-                                            @if($user->status === 'active')
-                                                <svg class="size-4 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9v6m-4.5 0V9M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                            @else
-                                                <svg class="size-4 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z" />
-                                                </svg>
-                                            @endif
-                                        </flux:button>
                                     @endcan
-                                    
-                                    @can('user.delete')
-                                        @if($user->id !== auth()->id())
-                                            <flux:modal.trigger name="delete-user-{{ $user->id }}">
-                                                <flux:button size="sm" variant="ghost" title="Delete">
-                                                    <svg class="size-4 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                                                    </svg>
-                                                </flux:button>
-                                            </flux:modal.trigger>
-                                        @endif
+
+                                    @can('user.edit')
+                                    <flux:dropdown>
+                                        <flux:button icon="chevron-down" size="sm" variant="ghost"></flux:button>                                           
+                                        <flux:menu>
+                                            <flux:menu.submenu heading="Change status" icon="cog-6-tooth">
+                                                <flux:menu.radio.group>
+                                                    <flux:menu.radio :checked="$user->status === 'active'" wire:click="toggleStatus({{ $user->id }})">                                                        
+                                                        Active
+                                                    </flux:menu.radio>
+                                                    <flux:menu.radio :checked="$user->status == 'inactive'" wire:click="toggleStatus({{ $user->id }})">                                                        
+                                                        Inactive
+                                                    </flux:menu.radio>
+                                                </flux:menu.radio.group>
+                                            </flux:menu.submenu>
+                                            @if(auth()->user()->hasRole(['Super Admin']))
+                                            <flux:menu.separator />
+                                            @if($user->id !== auth()->id())
+                                                <flux:modal.trigger name="delete-user-{{ $user->id }}">
+                                                    <flux:menu.item icon="trash" variant="danger">
+                                                        Delete User
+                                                    </flux:menu.item>
+                                                </flux:modal.trigger>
+                                                @endif
+                                            @endif 
+                                        </flux:menu>
+                                    </flux:dropdown>
                                     @endcan
                                 </div>
                             </td>
