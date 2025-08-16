@@ -1,37 +1,177 @@
 <x-layouts.app :title="__('Dashboard')">
-    <!-- FullCalendar CSS -->
-    <link href='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.18/main.min.css' rel='stylesheet' />
+    @php
+        $userRole = auth()->user()->getRoleNames()->first();
+        $isAdminRole = in_array($userRole, ['Super Admin', 'Admin']);
+    @endphp
+    
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <style>
-        /* Apply to all FullCalendar buttons */
-        .fc .fc-button {
-            border-radius: 8px; /* change to 9999px for fully rounded pill shape */
-            padding: 5px 12px;
-            border: 1px solid #ccc;
-            background-color: #F4F4F4;
-            color:rgb(65, 65, 69);
-            font-size: 14px;
+        /* Custom Schedule-X styles to match your design */
+        .sx__calendar-wrapper {
             font-family: Inter, sans-serif, 'Instrument Sans';
-            font-weight: 500;
+            height: 100%;
+        }
+
+        /* Custom button styles for Schedule-X */
+        .sx__view-selection-item,
+        .sx__date-picker__chevron-wrapper {
+            border-radius: 8px;
             transition: background-color 0.2s ease, box-shadow 0.2s ease;
         }
 
-        /* Active/pressed state */
-        .fc .fc-button:active {
-            background-color: #d6d8db;
+        .sx__view-selection-item {
+            padding: 5px 12px;
+            background-color: #F4F4F4;
+            color: rgb(65, 65, 69);
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid #ccc;
+            cursor: pointer;
         }
 
-        /* Optional: style your custom button specifically */
-        .fc .fc-myCustomButton-button {
-            background-color: #2563eb;
+        .sx__view-selection-item--active {
+            background-color: #2563eb !important;
+            color: white !important;
+            border-color: #2563eb !important;
+        }
+
+        .sx__view-selection-item:hover:not(.sx__view-selection-item--active) {
+            background-color: #e5e7eb;
+        }
+
+        /* Ensure view selector is visible and clickable */
+        .sx__view-selection {
+            display: flex;
+            gap: 4px;
+            z-index: 10;
+        }
+
+        /* Fix calendar height */
+        #calendar {
+            min-height: 600px;
+        }
+
+        /* Dark mode support */
+        .dark .sx__calendar-wrapper {
+            background-color: rgb(38, 38, 38);
             color: white;
-            border-color: #2563eb;
         }
 
-        .fc .fc-myCustomButton-button:hover {
-            background-color: #1d4ed8;
+        .dark .sx__month-grid-day {
+            background-color: rgb(38, 38, 38);
+            border-color: rgb(64, 64, 64);
+        }
+
+        .dark .sx__month-grid-day:hover {
+            background-color: rgb(51, 51, 51);
+        }
+
+        .dark .sx__calendar-header {
+            background-color: rgb(38, 38, 38);
+            border-color: rgb(64, 64, 64);
+        }
+
+        /* Custom event tooltip */
+        .booking-tooltip {
+            position: absolute;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            min-width: 250px;
+            display: none;
+        }
+
+        .dark .booking-tooltip {
+            background: rgb(38, 38, 38);
+            border-color: rgb(64, 64, 64);
+            color: white;
+        }
+
+        /* Loading overlay */
+        .calendar-loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .dark .calendar-loading {
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .calendar-loading.hidden {
+            display: none;
+        }
+        
+        .dark .sx__calendar-wrapper {
+            background-color: rgb(38, 38, 38);
+            color: white;
+        }
+
+        .dark .sx__month-grid-day {
+            background-color: rgb(38, 38, 38);
+            border-color: rgb(64, 64, 64);
+        }
+
+        .dark .sx__month-grid-day:hover {
+            background-color: rgb(51, 51, 51);
+        }
+
+        .dark .sx__calendar-header {
+            background-color: rgb(38, 38, 38);
+            border-color: rgb(64, 64, 64);
+        }
+
+        /* Custom event tooltip */
+        .booking-tooltip {
+            position: absolute;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            min-width: 250px;
+            display: none;
+        }
+
+        .dark .booking-tooltip {
+            background: rgb(38, 38, 38);
+            border-color: rgb(64, 64, 64);
+            color: white;
+        }
+
+        /* Loading overlay */
+        .calendar-loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .dark .calendar-loading {
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .calendar-loading.hidden {
+            display: none;
         }
     </style>
 
@@ -227,14 +367,22 @@
                         @can('book.create')                        
                             <flux:button size="sm" href="{{ route('bookings.create') }}" icon="plus">New Booking</flux:button>                        
                         @endcan
+                        
+                        @php
+                            $userRole = auth()->user()->getRoleNames()->first();
+                            $isAdminRole = in_array($userRole, ['Super Admin', 'Admin']);
+                        @endphp
+                        
                         <flux:dropdown>
                             <flux:button size="sm" variant="filled" id="filterStatusButton" icon:trailing="chevron-down">All Bookings</flux:button>
                             <flux:menu id="filterStatus">
                                 <flux:menu.item data-value="all">All Bookings</flux:menu.item>
                                 <flux:menu.item data-value="pending">Pending</flux:menu.item>
                                 <flux:menu.item data-value="approved">Approved</flux:menu.item>
-                                <flux:menu.item data-value="rejected">Rejected</flux:menu.item>
-                                <flux:menu.item data-value="cancelled">Cancelled</flux:menu.item>
+                                @if($isAdminRole)
+                                    <flux:menu.item data-value="rejected">Rejected</flux:menu.item>
+                                    <flux:menu.item data-value="cancelled">Cancelled</flux:menu.item>
+                                @endif
                                 <flux:menu.item data-value="done">Done</flux:menu.item>
                             </flux:menu>
                         </flux:dropdown>
@@ -251,409 +399,176 @@
                 </div>
 
                 <!-- Calendar Container -->
-                <div id="calendar" class="flex-1"></div>
+                <div id="calendar" class="flex-1 relative" wire:ignore>
+                    <div class="calendar-loading">
+                        <div class="flex items-center gap-2">
+                            <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span class="text-gray-600 dark:text-gray-300">Loading calendar...</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Booking Details Modal -->
-    <div id="bookingModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-white dark:bg-neutral-800 rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h3 id="modalTitle" class="text-lg font-semibold text-gray-900 dark:text-white">Booking Details</h3>
-                <button id="closeModal" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
+    <!-- Custom Booking Tooltip -->
+    <div id="bookingTooltip" class="booking-tooltip">
+        <!-- Content will be populated by JavaScript -->
+    </div>
+
+    <!-- FluxUI Booking Details Modal -->
+    <flux:modal name="booking-details" class="md:w-[800px]">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg" id="modalTitle">Booking Details</flux:heading>
+                <flux:text class="mt-2">View booking information and details.</flux:text>
             </div>
 
             <div id="modalContent" class="space-y-4">
                 <!-- Content will be populated by JavaScript -->
             </div>
 
-            <div class="flex justify-end gap-3 mt-6">
-                <button id="closeModalBtn" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 dark:text-gray-400 dark:border-neutral-600 dark:hover:bg-neutral-700">
-                    Close
-                </button>
-                <a id="viewDetailsBtn" href="#" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 hidden">
-                    View Details
-                </a>
-                <a id="editBookingBtn" href="#" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 hidden">
-                    Edit Booking
-                </a>
+            <div class="flex justify-end gap-3">
+                <flux:modal.close>
+                    <flux:button variant="ghost">Close</flux:button>
+                </flux:modal.close>
+                
+                @can('book.view')
+                    <flux:button id="viewDetailsBtn" href="#" class="hidden">
+                        View Details
+                    </flux:button>
+                @endcan
+                
+                @can('book.edit')
+                    <flux:button id="editBookingBtn" href="#" variant="primary" class="hidden">
+                        Edit Booking
+                    </flux:button>
+                @endcan
             </div>
         </div>
-    </div>
+    </flux:modal>
 
-    <!-- FullCalendar JS -->
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.18/index.global.js'></script>
+    <!-- Include the compiled Schedule-X JavaScript -->
+    @vite(['resources/js/schedule-x-calendar.js'])
     
+    <!-- Alpine.js initialization for calendar -->
+    <div x-data="calendarInit()" x-init="initCalendar" style="display: none;"></div>
+    
+    <!-- Inline script for permission-based features and initialization -->
     <script>
-        // Store calendar instance globally so we can destroy it if needed
-        let calendarInstance = null;
-        let refreshInterval = null;
-
-        function initializeCalendar() {
-            // Destroy existing calendar if it exists
-            if (calendarInstance) {
-                calendarInstance.destroy();
-                calendarInstance = null;
-            }
-
-            // Clear existing interval
-            if (refreshInterval) {
-                clearInterval(refreshInterval);
-                refreshInterval = null;
-            }
-
-            // Initialize calendar
-            const calendarEl = document.getElementById('calendar');
-            
-            // Check if calendar element exists
-            if (!calendarEl) {
-                return;
-            }
-
-            // Build events URL with current filters
-            let eventsUrl = '/api/calendar-bookings?';
-            const params = [];
-            if (currentStatusFilter !== 'all') {
-                params.push(`status=${currentStatusFilter}`);
-            }
-            if (currentAssetFilter !== 'all') {
-                params.push(`asset_type=${currentAssetFilter}`);
-            }
-            eventsUrl += params.join('&');
-
-            calendarInstance = new FullCalendar.Calendar(calendarEl, {
-                customButtons: {
-                    myCustomButton: {
-                        text: 'custom!',
-                        click: function() {
-                            alert('clicked the custom button!');
+        // Pass user role information to JavaScript
+        window.isAdminRole = {{ $isAdminRole ? 'true' : 'false' }};
+        window.allowedStatuses = window.isAdminRole 
+            ? ['pending', 'approved', 'rejected', 'cancelled', 'done']
+            : ['pending', 'approved', 'done'];
+        
+        console.log('User admin status:', window.isAdminRole);
+        console.log('Allowed statuses:', window.allowedStatuses);
+        
+        function calendarInit() {
+            return {
+                initCalendar() {
+                    // Reset flags when component initializes
+                    window.calendarInitializing = false;
+                    window.calendarInitialized = false;
+                    window.calendarInstance = null;
+                    
+                    // Try multiple times to initialize the calendar
+                    let attempts = 0;
+                    const maxAttempts = 10;
+                    
+                    const tryInit = () => {
+                        attempts++;
+                        console.log(`Calendar init attempt ${attempts}/${maxAttempts}`);
+                        
+                        // Check if we're still on the dashboard page
+                        const calendarEl = document.getElementById('calendar');
+                        if (!calendarEl) {
+                            console.log('Calendar element not found, stopping attempts');
+                            return;
                         }
-                    }
-                },                
-                initialView: 'dayGridMonth',
-                height: 'auto',
-                headerToolbar: {
-                    left: 'prev,next today myCustomButton',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
-                },
-                views: {
-                    dayGridMonth: { buttonText: 'Month' },
-                    timeGridWeek: { buttonText: 'Week' },
-                    timeGridDay: { buttonText: 'Day' },
-                    listMonth: { buttonText: 'List' }
-                },                
-                events: eventsUrl,
-                eventClick: function(info) {
-                    openBookingModal(info.event);
-                },
-                eventDidMount: function(info) {
-                    // Add tooltip with booking details
-                    info.el.title = `${info.event.title}\nStatus: ${info.event.extendedProps.status}\nTime: ${info.event.extendedProps.timeRange}`;
-                },
-                loading: function(bool) {
-                    if (bool) {
-                        showLoading();
-                    } else {
-                        hideLoading();
-                    }
-                },
-                eventDisplay: 'block',
-                displayEventTime: true,
-                eventTimeFormat: {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: true
-                }
-            });
-
-            calendarInstance.render();
-
-            // Setup event listeners
-            setupEventListeners();
-
-            // Refresh calendar every 2 minutes
-            refreshInterval = setInterval(function() {
-                if (calendarInstance) {
-                    calendarInstance.refetchEvents();
-                }
-            }, 120000); // 2 minutes
-        }
-
-        // Store filter states globally to persist across reinitializations
-        let currentStatusFilter = window.currentStatusFilter || 'all';
-        let currentAssetFilter = window.currentAssetFilter || 'all';
-
-        // Track if event listeners are already attached
-        let listenersAttached = false;
-
-        function setupEventListeners() {
-            // Only attach modal listeners once
-            if (!listenersAttached) {
-                // Modal close listeners
-                document.addEventListener('click', function(e) {
-                    if (e.target.id === 'closeModal' || e.target.closest('#closeModal')) {
-                        closeBookingModal();
-                    }
-                    if (e.target.id === 'closeModalBtn') {
-                        closeBookingModal();
-                    }
-                });
-
-                // Use event delegation for Flux dropdown menus
-                document.addEventListener('click', function(e) {
-                    // Status filter
-                    if (e.target.closest('#filterStatus [data-value]')) {
-                        const menuItem = e.target.closest('[data-value]');
-                        if (menuItem) {
-                            currentStatusFilter = menuItem.dataset.value;
-                            window.currentStatusFilter = currentStatusFilter;
-                            const button = document.getElementById('filterStatusButton');
-                            if (button) {
-                                // Update button text content only, not the entire button
-                                const textNode = Array.from(button.childNodes).find(node => node.nodeType === 3);
-                                if (textNode) {
-                                    textNode.textContent = menuItem.textContent;
-                                } else {
-                                    // If no text node, update the first part before any icons
-                                    button.childNodes[0].textContent = menuItem.textContent;
-                                }
+                        
+                        if (typeof window.initializeScheduleXCalendar === 'function') {
+                            // Check if calendar is not already initialized or initializing
+                            if (!window.calendarInstance && !window.calendarInitializing) {
+                                console.log('Calendar element found, initializing...');
+                                window.initializeScheduleXCalendar();
+                                return; // Success, stop trying
+                            } else if (window.calendarInstance) {
+                                console.log('Calendar already initialized');
+                                return; // Already initialized, stop trying
                             }
-                            applyFilters();
                         }
-                    }
-
-                    // Asset filter
-                    if (e.target.closest('#filterAsset [data-value]')) {
-                        const menuItem = e.target.closest('[data-value]');
-                        if (menuItem) {
-                            currentAssetFilter = menuItem.dataset.value;
-                            window.currentAssetFilter = currentAssetFilter;
-                            const button = document.getElementById('filterAssetButton');
-                            if (button) {
-                                // Update button text content only, not the entire button
-                                const textNode = Array.from(button.childNodes).find(node => node.nodeType === 3);
-                                if (textNode) {
-                                    textNode.textContent = menuItem.textContent;
-                                } else {
-                                    // If no text node, update the first part before any icons
-                                    button.childNodes[0].textContent = menuItem.textContent;
-                                }
+                        
+                        // Try again if we haven't reached max attempts
+                        if (attempts < maxAttempts && !window.calendarInstance) {
+                            setTimeout(tryInit, 500);
+                        } else if (attempts >= maxAttempts) {
+                            console.error('Failed to initialize calendar after max attempts');
+                            // Show error in calendar element
+                            if (calendarEl && !window.calendarInstance) {
+                                calendarEl.innerHTML = '<div class="flex items-center justify-center h-64 text-gray-600">Unable to load calendar. Please refresh the page.</div>';
                             }
-                            applyFilters();
                         }
-                    }
-                });
-
-                listenersAttached = true;
-            }
-
-            // Restore filter button texts after navigation
-            const statusButton = document.getElementById('filterStatusButton');
-            const assetButton = document.getElementById('filterAssetButton');
-            
-            if (statusButton && currentStatusFilter !== 'all') {
-                const statusText = document.querySelector(`#filterStatus [data-value="${currentStatusFilter}"]`)?.textContent;
-                if (statusText) {
-                    const textNode = Array.from(statusButton.childNodes).find(node => node.nodeType === 3);
-                    if (textNode) {
-                        textNode.textContent = statusText;
-                    } else {
-                        statusButton.childNodes[0].textContent = statusText;
-                    }
-                }
-            }
-            
-            if (assetButton && currentAssetFilter !== 'all') {
-                const assetText = document.querySelector(`#filterAsset [data-value="${currentAssetFilter}"]`)?.textContent;
-                if (assetText) {
-                    const textNode = Array.from(assetButton.childNodes).find(node => node.nodeType === 3);
-                    if (textNode) {
-                        textNode.textContent = assetText;
-                    } else {
-                        assetButton.childNodes[0].textContent = assetText;
-                    }
+                    };
+                    
+                    // Start trying after a short delay
+                    this.$nextTick(() => {
+                        setTimeout(tryInit, 100);
+                    });
                 }
             }
         }
-
-        // Apply filters function (moved outside setupEventListeners for global access)
-        function applyFilters() {
-            if (!calendarInstance) return;
-            
-            let url = '/api/calendar-bookings?';
-            const params = [];
-            
-            if (currentStatusFilter !== 'all') {
-                params.push(`status=${currentStatusFilter}`);
+        
+        // Force initialization using Alpine's x-init which works well with Livewire
+        document.addEventListener('alpine:init', () => {
+            console.log('Alpine initialized, preparing calendar...');
+        });
+        
+        // Also try when the page becomes visible (in case it was backgrounded)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && typeof window.initializeScheduleXCalendar === 'function') {
+                const calendarEl = document.getElementById('calendar');
+                if (calendarEl && !window.calendarInstance && !window.calendarInitializing) {
+                    console.log('Page became visible, checking calendar...');
+                    setTimeout(() => window.initializeScheduleXCalendar(), 100);
+                }
             }
-            
-            if (currentAssetFilter !== 'all') {
-                params.push(`asset_type=${currentAssetFilter}`);
-            }
-            
-            url += params.join('&');
-            
-            calendarInstance.removeAllEventSources();
-            calendarInstance.addEventSource(url);
-        }
-
-        // Modal functions (global scope)
-        function openBookingModal(event) {
-            const modal = document.getElementById('bookingModal');
-            const modalTitle = document.getElementById('modalTitle');
-            const modalContent = document.getElementById('modalContent');
+        });
+        
+        // Add permission-based visibility for modal buttons
+        window.addEventListener('booking-modal-opened', function(e) {
             const viewDetailsBtn = document.getElementById('viewDetailsBtn');
             const editBookingBtn = document.getElementById('editBookingBtn');
-
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            
-            const props = event.extendedProps;
-            modalTitle.textContent = `Booking #${event.id}`;
-            
-            // Build modal content
-            const statusBadge = `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusClasses(props.status)}">${props.status.charAt(0).toUpperCase() + props.status.slice(1)}</span>`;
-            const assetTypeBadge = `<span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">${props.assetTypeLabel}</span>`;
-            
-            modalContent.innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-                        <div class="mt-1">${statusBadge}</div>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Type</label>
-                        <div class="mt-1">${assetTypeBadge}</div>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Booked By</label>
-                        <p class="mt-1 text-sm text-gray-900 dark:text-white">${props.bookedBy || 'N/A'}</p>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Duration</label>
-                        <p class="mt-1 text-sm text-gray-900 dark:text-white">${props.timeRange}</p>
-                    </div>
-                    
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Purpose</label>
-                        <p class="mt-1 text-sm text-gray-900 dark:text-white">${props.purpose || 'No purpose specified'}</p>
-                    </div>
-                    
-                    ${props.capacity ? `
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Capacity</label>
-                        <p class="mt-1 text-sm text-gray-900 dark:text-white">${props.capacity} people</p>
-                    </div>
-                    ` : ''}
-                    
-                    ${props.refreshmentDetails ? `
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Refreshments</label>
-                        <p class="mt-1 text-sm text-gray-900 dark:text-white">${props.refreshmentDetails}</p>
-                    </div>
-                    ` : ''}
-                    
-                    ${props.additionalBooking && Object.keys(props.additionalBooking).length > 0 ? `
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Additional Services</label>
-                        <div class="mt-1 text-sm text-gray-900 dark:text-white">
-                            ${Object.entries(props.additionalBooking).map(([key, value]) => 
-                                `<div><strong>${key}:</strong> ${value}</div>`
-                            ).join('')}
-                        </div>
-                    </div>
-                    ` : ''}
-                </div>
-            `;
-            
-            // Show/hide action buttons based on permissions
-            viewDetailsBtn.href = `/bookings/${event.id}`;
-            editBookingBtn.href = `/bookings/${event.id}/edit`;
             
             @can('book.view')
-            viewDetailsBtn.classList.remove('hidden');
+            if (viewDetailsBtn) viewDetailsBtn.classList.remove('hidden');
             @endcan
             
             @can('book.edit')
-            editBookingBtn.classList.remove('hidden');
+            if (editBookingBtn) editBookingBtn.classList.remove('hidden');
             @endcan
-        }
-
-        function closeBookingModal() {
-            const modal = document.getElementById('bookingModal');
-            const viewDetailsBtn = document.getElementById('viewDetailsBtn');
-            const editBookingBtn = document.getElementById('editBookingBtn');
-
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            viewDetailsBtn.classList.add('hidden');
-            editBookingBtn.classList.add('hidden');
-        }
-
-        // Helper functions
-        function getStatusClasses(status) {
-            const classes = {
-                'pending': 'bg-yellow-100 text-yellow-800',
-                'approved': 'bg-green-100 text-green-800',
-                'rejected': 'bg-red-100 text-red-800',
-                'cancelled': 'bg-gray-100 text-gray-800',
-                'done': 'bg-blue-100 text-blue-800'
-            };
-            return classes[status] || 'bg-gray-100 text-gray-800';
-        }
-
-        function showLoading() {
-            console.log('Loading calendar events...');
-        }
-
-        function hideLoading() {
-            console.log('Calendar events loaded.');
-        }
-
-        // Initialize on DOMContentLoaded (for initial page load)
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeCalendar();
-        });
-
-        // Initialize on Livewire navigation (for SPA navigation)
-        document.addEventListener('livewire:navigated', function() {
-            // Small delay to ensure DOM is ready
-            setTimeout(function() {
-                initializeCalendar();
-            }, 100);
-        });
-
-        // Alternative: Listen for Livewire page loaded event
-        if (window.Livewire) {
-            Livewire.hook('message.processed', (message, component) => {
-                // Check if calendar element exists but calendar is not initialized
-                const calendarEl = document.getElementById('calendar');
-                if (calendarEl && !calendarInstance) {
-                    initializeCalendar();
-                }
-            });
-        }
-
-        // Clean up on page unload
-        document.addEventListener('livewire:navigating', function() {
-            if (calendarInstance) {
-                calendarInstance.destroy();
-                calendarInstance = null;
-            }
-            if (refreshInterval) {
-                clearInterval(refreshInterval);
-                refreshInterval = null;
-            }
-            // Don't reset listenersAttached here - keep event delegation active
         });
     </script>
+    
+    @push('scripts')
+    <script>
+        // Final initialization attempt after everything is loaded
+        window.addEventListener('load', function() {
+            console.log('Window fully loaded, final calendar init attempt...');
+            setTimeout(function() {
+                if (typeof window.initializeScheduleXCalendar === 'function') {
+                    const calendarEl = document.getElementById('calendar');
+                    if (calendarEl && !window.calendarInstance) {
+                        console.log('Final attempt: Initializing calendar...');
+                        window.initializeScheduleXCalendar();
+                    }
+                }
+            }, 1000);
+        });
+    </script>
+    @endpush
 </x-layouts.app>

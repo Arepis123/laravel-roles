@@ -19,10 +19,12 @@
                 
                 <flux:input wire:model="email" type="email" label="Email" placeholder="user@example.com" required />
                 
+                @if(auth()->user()->hasRole(['Super Admin']))
                 <flux:input wire:model="password" type="password" label="Password (leave blank to keep current)" placeholder="Minimum 8 characters" />
                 
                 <flux:input wire:model="confirm_password" type="password" label="Confirm Password" placeholder="Re-enter password" />
-                
+                @endif
+
                 <div>
                     <flux:radio.group wire:model="status" label="Status">
                         <flux:radio label="Active" value="active" />
@@ -33,10 +35,16 @@
                 <div>
                     <flux:checkbox.group wire:model="roles" label="Roles">
                         @foreach ($allRoles as $role)
-                            <flux:checkbox label="{{ $role->name }}" value="{{ $role->name }}" />
+                            @if ($role->name === 'Super Admin')
+                                @if (auth()->user()->hasRole('Super Admin'))
+                                    <flux:checkbox label="{{ $role->name }}" value="{{ $role->name }}" />
+                                @endif
+                            @else
+                                <flux:checkbox label="{{ $role->name }}" value="{{ $role->name }}" />
+                            @endif
                         @endforeach
                     </flux:checkbox.group>                     
-                </div>  
+                </div>                
                 
                 <div class="flex gap-2 pt-4">
                     <flux:button variant="primary" type="submit">Update User</flux:button>

@@ -33,10 +33,16 @@
                 <div>
                     <flux:checkbox.group wire:model="roles" label="Roles">
                         @foreach ($allRoles as $role)
-                            <flux:checkbox label="{{ $role->name }}" value="{{ $role->name }}" />
+                            @if ($role->name === 'Super Admin')
+                                @if (auth()->user()->hasRole('Super Admin'))
+                                    <flux:checkbox label="{{ $role->name }}" value="{{ $role->name }}" />
+                                @endif
+                            @else
+                                <flux:checkbox label="{{ $role->name }}" value="{{ $role->name }}" />
+                            @endif
                         @endforeach
                     </flux:checkbox.group>                     
-                </div> 
+                </div>
                 
                 <div class="flex gap-2 pt-4">
                     <flux:button variant="primary" type="submit">Create User</flux:button>
