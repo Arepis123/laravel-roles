@@ -150,6 +150,10 @@ async function fetchEvents() {
                     status: event.extendedProps?.status || event.status,
                     assetType: event.extendedProps?.assetType || event.assetType,
                     assetTypeLabel: assetTypeLabel,
+                    assetName: event.extendedProps?.assetName || event.assetName,
+                    assetModel: event.extendedProps?.assetModel || event.assetModel,
+                    assetPlateNumber: event.extendedProps?.assetPlateNumber || event.assetPlateNumber,
+                    assetTag: event.extendedProps?.assetTag || event.assetTag,
                     bookedBy: event.extendedProps?.bookedBy || event.bookedBy,
                     purpose: event.extendedProps?.purpose || event.purpose,
                     timeRange: event.extendedProps?.timeRange || event.timeRange,
@@ -481,8 +485,132 @@ function openBookingModal(calendarEvent) {
     }
     
     // Build modal content
-    const statusBadge = `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusClasses(data.status)}">${(data.status || 'pending').charAt(0).toUpperCase() + (data.status || 'pending').slice(1)}</span>`;
-    const assetTypeBadge = `<span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">${data.assetTypeLabel || 'Unknown'}</span>`;
+    const statusBadge = `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusClasses(data.status)}">${(data.status || 'pending').charAt(0).toUpperCase() + (data.status || 'pending').slice(1)}</span>`;    
+    const badgeColors = {
+        "Meeting Room": "bg-blue-100 text-blue-800",
+        "Vehicle": "bg-green-100 text-green-800",
+        "IT Asset": "bg-fuchsia-100 text-fuchsia-800"
+    };
+    const badgeIcons = {
+        "Meeting Room": `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4 me-1">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+                        </svg>`,
+            "Vehicle": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 me-1">
+                            <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>
+                        </svg>`,
+            "IT Asset": `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4 me-1">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25m18 0A2.25 2.25 0 0 0 18.75 3H5.25A2.25 2.25 0 0 0 3 5.25m18 0V12a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 12V5.25" />
+                        </svg>`,
+            "default": `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-4 w-4 me-1">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>`
+    };    
+    
+    // Fallback to gray if label not found
+    const badgeClass = badgeColors[data.assetTypeLabel] || "bg-gray-100 text-gray-800";
+
+    // Fallback to gray if label not found
+    const badgeIcon = badgeIcons[data.assetTypeLabel] || "<flux:icon.x-circle />";    
+    
+    const assetTypeBadge = `
+        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium ${badgeClass}">
+            ${badgeIcon}
+            ${data.assetTypeLabel || 'Unknown'}
+        </span>
+    `;
+    
+    // Format asset name based on asset type
+    const formatAssetName = (data) => {
+        const assetType = data.assetType;
+        
+        if (!assetType) return data.assetName || data.originalTitle || 'N/A';
+        
+        // Handle both short names and full class names
+        const type = assetType.includes('\\') 
+            ? assetType.split('\\').pop().toLowerCase() 
+            : assetType.toLowerCase();
+        
+        switch(type) {
+            case 'vehicle':
+                // For vehicles: show model + plate number
+                if (data.assetModel && data.assetPlateNumber) {
+                    return `${data.assetModel} <span class="text-gray-600 dark:text-gray-400">(${data.assetPlateNumber})</span>`;
+                } else if (data.assetModel) {
+                    return data.assetModel;
+                } else if (data.assetName) {
+                    return data.assetName;
+                }
+                break;
+                
+            case 'itasset':
+            case 'it_asset':
+                // For IT assets: show name + asset tag
+                if (data.assetName && data.assetTag) {
+                    return `${data.assetName} <span class="text-gray-600 dark:text-gray-400">(${data.assetTag})</span>`;
+                } else if (data.assetName) {
+                    return data.assetName;
+                }
+                break;
+                
+            case 'meetingroom':
+            case 'meeting_room':
+                // For meeting rooms: just show the name
+                if (data.assetName) {
+                    return data.assetName;
+                }
+                break;
+        }
+        
+        // Fallback to original title or asset name
+        return data.assetName || data.originalTitle || 'N/A';
+    };
+    
+    // Format additional services beautifully
+    const formatAdditionalServices = (additionalBooking) => {
+        if (!additionalBooking || Object.keys(additionalBooking).length === 0) {
+            return '';
+        }
+        
+        const services = Object.entries(additionalBooking).map(([key, value], index) => {
+            // Format the label
+            let formattedKey = `${index + 1}. `; 
+            
+            // If key looks like a number, use value as the label instead
+            if (!isNaN(key)) {
+                formattedKey += String(value).replace(/_/g, ' ')
+                                             .replace(/^./, str => str.toUpperCase());
+            } else {
+                formattedKey += key.replace(/([A-Z])/g, ' $1')
+                                   .replace(/^./, str => str.toUpperCase())
+                                   .trim();
+            }
+        
+            // Handle value formatting for the right-hand side
+            let formattedValue = value;
+            if (typeof value === 'boolean') {
+                formattedValue = value ? 'Yes' : 'No';
+            } else if (Array.isArray(value)) {
+                formattedValue = value.join(', ');
+            }
+        
+            return `
+                <div class="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">${formattedKey}</span>
+                </div>
+            `;
+        }).join('');
+        
+        
+        
+        return `
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Additional Services</label>
+                <div class="space-y-2">
+                    ${services}
+                </div>
+            </div>
+        `;
+    };
     
     if (modalContent) {
         modalContent.innerHTML = `
@@ -499,7 +627,7 @@ function openBookingModal(calendarEvent) {
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Name</label>
-                    <p class="mt-1 text-sm text-gray-900 dark:text-white">${data.originalTitle || 'N/A'}</p>
+                    <p class="mt-1 text-sm text-gray-900 dark:text-white">${formatAssetName(data)}</p>
                 </div>
                 
                 <div>
@@ -524,36 +652,41 @@ function openBookingModal(calendarEvent) {
                 </div>
                 ` : ''}
                 
-                ${data.refreshmentDetails ? `
+                ${(data.refreshmentDetails && window.isAdminRole) ? `
                 <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Refreshments</label>
-                    <p class="mt-1 text-sm text-gray-900 dark:text-white">${data.refreshmentDetails}</p>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Refreshments</label>    
+                    <div class="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">${data.refreshmentDetails}</span>
+                    </div>                    
                 </div>
                 ` : ''}
                 
-                ${data.additionalBooking && Object.keys(data.additionalBooking).length > 0 ? `
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Additional Services</label>
-                    <div class="mt-1 text-sm text-gray-900 dark:text-white">
-                        ${Object.entries(data.additionalBooking).map(([key, value]) => 
-                            `<div><strong>${key}:</strong> ${value}</div>`
-                        ).join('')}
-                    </div>
-                </div>
-                ` : ''}
+                ${formatAdditionalServices(data.additionalBooking)}
             </div>
         `;
     }
     
-    // Update action buttons
+    // Update action buttons with proper permission handling
     if (viewDetailsBtn) {
         viewDetailsBtn.href = `/bookings/${calendarEvent.id}`;
         viewDetailsBtn.classList.remove('hidden');
     }
     
+    // Show edit button only for Super Admin or Admin roles
     if (editBookingBtn) {
-        editBookingBtn.href = `/bookings/${calendarEvent.id}/edit`;
-        editBookingBtn.classList.remove('hidden');
+        console.log('Checking edit permissions:', {
+            isAdminRole: window.isAdminRole,
+            userRole: window.userRole || 'unknown'
+        });
+        
+        if (window.isAdminRole === true) {
+            editBookingBtn.href = `/bookings/${calendarEvent.id}/edit`;
+            editBookingBtn.classList.remove('hidden');
+            console.log('Edit button shown for admin user');
+        } else {
+            editBookingBtn.classList.add('hidden');
+            console.log('Edit button hidden for non-admin user');
+        }
     }
     
     // Open the FluxUI modal using the global Flux object

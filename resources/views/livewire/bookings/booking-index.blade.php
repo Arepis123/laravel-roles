@@ -118,7 +118,7 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-start gap-2">                                    
                                     <div class="min-w-0">
-                                        <flux:badge size="sm" icon="{{ $booking->asset_type_label == 'Vehicle' ? 'truck' : ($booking->asset_type_label == 'Meeting Room' ? 'building-office' : 'computer-desktop') }}" color="{{ $booking->asset_type_label == 'Vehicle' ? 'green' : ($booking->asset_type_label == 'Meeting Room' ? 'blue' : 'fuchsia') }}">
+                                        <flux:badge size="sm" icon="{{ $booking->asset_type_label == 'Vehicle' ? 'car' : ($booking->asset_type_label == 'Meeting Room' ? 'building-office' : 'computer-desktop') }}" color="{{ $booking->asset_type_label == 'Vehicle' ? 'green' : ($booking->asset_type_label == 'Meeting Room' ? 'blue' : 'fuchsia') }}">
                                             {{ $booking->asset_type_label }}
                                         </flux:badge>
                                         <div class="text-sm font-medium text-gray-900 dark:text-neutral-200 mt-1">

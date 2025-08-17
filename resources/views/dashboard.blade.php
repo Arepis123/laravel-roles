@@ -442,11 +442,11 @@
                     </flux:button>
                 @endcan
                 
-                @can('book.edit')
+                @if($isAdminRole)
                     <flux:button id="editBookingBtn" href="#" variant="primary" class="hidden">
                         Edit Booking
                     </flux:button>
-                @endcan
+                @endif
             </div>
         </div>
     </flux:modal>
@@ -461,10 +461,12 @@
     <script>
         // Pass user role information to JavaScript
         window.isAdminRole = {{ $isAdminRole ? 'true' : 'false' }};
+        window.userRole = '{{ $userRole }}';
         window.allowedStatuses = window.isAdminRole 
             ? ['pending', 'approved', 'rejected', 'cancelled', 'done']
             : ['pending', 'approved', 'done'];
         
+        console.log('User role:', window.userRole);
         console.log('User admin status:', window.isAdminRole);
         console.log('Allowed statuses:', window.allowedStatuses);
         

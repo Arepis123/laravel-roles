@@ -134,7 +134,7 @@
                     <flux:menu.item wire:click="createAsset('meeting_room')" icon="building-office">
                         Add Meeting Room
                     </flux:menu.item>
-                    <flux:menu.item wire:click="createAsset('vehicle')" icon="truck">
+                    <flux:menu.item wire:click="createAsset('vehicle')" icon="car">
                         Add Vehicle
                     </flux:menu.item>
                     <flux:menu.item wire:click="createAsset('it_asset')" icon="computer-desktop">

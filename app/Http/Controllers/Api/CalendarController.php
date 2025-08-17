@@ -70,6 +70,10 @@ class CalendarController extends Controller
                     'isUpcoming' => $booking->isUpcoming(),
                     'isActive' => $booking->isActive(),
                     'isPast' => $booking->isPast(),
+                    'assetName' => $booking->asset->name,
+                    'assetModel' => $booking->asset->model, // for vehicles
+                    'assetPlateNumber' => $booking->asset->plate_number, // for vehicles
+                    'assetTag' => $booking->asset->asset_tag, // for IT assets                    
                 ]
             ];
         });
