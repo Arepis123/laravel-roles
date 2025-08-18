@@ -13,13 +13,15 @@
 
             <flux:navlist variant="outline">
                 <flux:navlist.group :heading="__('MENU')" class="grid">
-                    <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>  
+                    <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
+                    <flux:navlist.item icon="calendar" :href="route('bookings.index.user')" :current="request()->routeIs('bookings.index.user')" wire:navigate>{{ __('Booking') }}</flux:navlist.item> 
                 </flux:navlist.group>
             </flux:navlist>
 
+            @if(auth()->user()->hasRole(['Admin', 'Super Admin']))
             <flux:navlist variant="outline">
                 <flux:navlist.group :heading="__('ADMIN')" class="grid">
-                    @if(auth()->user()->can('book.view') || auth()->user()->can('book.create') || auth()->user()->can('book.edit') || auth()->user()->can('book.delete'))
+                    @if(auth()->user()->hasRole(['Admin', 'Super Admin']))
                     <flux:navlist.item icon="calendar" :href="route('bookings.index')" :current="request()->routeIs('bookings.index')" wire:navigate>{{ __('Booking') }}</flux:navlist.item>
                     @endif                    
                     @if(auth()->user()->can('user.view') || auth()->user()->can('user.create') || auth()->user()->can('user.edit') || auth()->user()->can('user.delete'))
@@ -35,7 +37,8 @@
                     <flux:navlist.item icon="document" :href="route('reports')" :current="request()->routeIs('reports')" wire:navigate>{{ __('Report') }}</flux:navlist.item>                    
                     @endif
                 </flux:navlist.group>
-            </flux:navlist>            
+            </flux:navlist>     
+            @endif       
 
             <flux:spacer />
 
@@ -60,14 +63,15 @@
                     <flux:menu.radio.group>
                         <div class="p-0 text-sm font-normal">
                             <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-                                <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
+                                <!-- <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
                                     <span
                                         class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white"
                                     >
                                         {{ auth()->user()->initials() }}
                                     </span>
-                                </span>
-
+                                </span> -->
+                                <flux:avatar name="{{ auth()->user() ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', auth()->user()->name) : 'N/A' }}" />
+                                
                                 <div class="grid flex-1 text-start text-sm leading-tight">
                                     <span class="truncate font-semibold">{{ auth()->user()->name ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', auth()->user()->name) : 'N/A' }}</span>
                                     <span class="truncate text-xs">{{ auth()->user()->email }}</span>
@@ -101,21 +105,27 @@
             <flux:spacer />
 
             <flux:dropdown position="top" align="end">
-                <flux:profile
-                    :initials="auth()->user()->initials()"
-                    icon-trailing="chevron-down"
-                />
+            <flux:profile
+                :initials="auth()->user()
+                    ? collect(explode(' ', preg_replace('/\s+(BIN|BINTI)\b.*/i', '', auth()->user()->name)))
+                        ->map(fn($part) => strtoupper(substr($part, 0, 1)))
+                        ->implode('')
+                    : 'NA'"
+                icon-trailing="chevron-down"
+            />
+                <!-- <flux:avatar name="{{ auth()->user() ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', auth()->user()->name) : 'N/A' }}" />                 -->
 
                 <flux:menu>
                     <flux:menu.radio.group>
                         <div class="p-0 text-sm font-normal">
                             <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
                                 <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
-                                    <span
+                                    <!-- <span
                                         class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white"
                                     >
                                         {{ auth()->user()->initials() }}
-                                    </span>
+                                    </span> -->
+                                    <flux:avatar class="flex h-full w-full items-center justify-center" name="{{ auth()->user() ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', auth()->user()->name) : 'N/A' }}" />
                                 </span>
 
                                 <div class="grid flex-1 text-start text-sm leading-tight">
