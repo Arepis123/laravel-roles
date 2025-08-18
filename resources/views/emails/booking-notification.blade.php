@@ -248,9 +248,9 @@
     </div>
     
     <div class="footer">
-        <p>This is an automated email from the e-Booking System.</p>
+        <p>This is an automated email from the eBooking CLAB.</p>
         <p>Please do not reply to this email. For assistance, contact the Admin department.</p>
-        <p>&copy; {{ date('Y') }} {{ config('app.name', 'E-Booking System') }}. All rights reserved.</p>
+        <p>&copy; {{ date('Y') }} {{ config('app.name', 'eBooking CLAB') }}. All rights reserved.</p>
     </div>
 </body>
 </html>

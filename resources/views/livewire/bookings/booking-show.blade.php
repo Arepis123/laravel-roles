@@ -1,9 +1,9 @@
-<div class="max-w-6xl mx-auto p-6 space-y-6">
+<div class="max-w-6xl mx-auto space-y-6">
     {{-- Header Section --}}
     <div class="flex items-center justify-between border-b pb-4">
         <div>
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Booking Details</h1>
-            <p class="text-sm text-gray-600">Booking ID: #{{ $booking->id }}</p>
+            <p class="text-sm text-gray-600 dark:text-white">Booking ID: #{{ $booking->id }}</p>
         </div>
         
         {{-- Status Badge --}}
@@ -125,7 +125,7 @@
         <div class="lg:col-span-2 space-y-6">
             {{-- Asset Information --}}
             <div class="border rounded-lg p-6">
-                <h2 class="text-lg font-medium text-gray-900 mb-4">Asset Information</h2>
+                <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Booking Details</h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <flux:field>
@@ -175,7 +175,7 @@
             </div>
 
             {{-- Time & Purpose --}}
-            <div class="border rounded-lg p-6">
+            {{-- <div class="border rounded-lg p-6">
                 <h2 class="text-lg font-medium text-gray-900 mb-4">Booking Details</h2>
                 
                 <div class="space-y-4">
@@ -202,12 +202,12 @@
                         <flux:textarea wire:model="purpose" rows="3" disabled/>
                     </flux:field>
                 </div>
-            </div>
+            </div> --}}
 
             {{-- Additional Services --}}
             @if(!empty($additional_booking))
                 <div class="border rounded-lg p-6">
-                    <h2 class="text-lg font-medium text-gray-900 mb-4">Additional Services</h2>
+                    <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Additional Services</h2>
                     
                     <flux:checkbox.group wire:model.live="additional_booking" label="">
                         <flux:checkbox 
@@ -236,6 +236,15 @@
                             description="A laptop will be prepared and set up for use during your session."
                             disabled
                         />
+
+                        <flux:checkbox 
+                            label="Technical Support" 
+                            value="technical" 
+                            description="IT will help in giving technical support." 
+                            disabled
+                        />                                                             
+
+                        <flux:checkbox label="Email & Other Setup" value="email" description="IT technician will help setup email in the Outlook and other things requested by user." disabled/>
                     </flux:checkbox.group>
                 </div>
             @endif
@@ -246,7 +255,7 @@
             {{-- Status Management --}}
             @if($this->canChangeStatus)
                 <div class="border rounded-lg p-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Manage Status</h3>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Manage Status</h3>
                     
                     <div class="space-y-4">
                         <flux:dropdown>
@@ -255,6 +264,7 @@
                             </flux:button>                                           
                             <flux:menu>
                                 <flux:menu.radio.group position="bottom" align="center">
+                                    @if(auth()->user()->hasRole(['Admin', 'Super Admin']))
                                     <flux:menu.radio 
                                         :checked="$status == 'pending'" 
                                         wire:click="changeStatus('pending')"
@@ -273,12 +283,13 @@
                                     >
                                         Rejected
                                     </flux:menu.radio>
+                                    @endif
                                     <flux:menu.radio 
                                         :checked="$status == 'cancelled'" 
                                         wire:click="changeStatus('cancelled')"
                                     >
                                         Cancelled
-                                    </flux:menu.radio>
+                                    </flux:menu.radio>                                    
                                     <flux:menu.radio 
                                         :checked="$status == 'done'" 
                                         wire:click="changeStatus('done')"
@@ -302,28 +313,28 @@
 
             {{-- Booking Information --}}
             <div class="border rounded-lg p-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Booking Information</h3>
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Booking Information</h3>
                 
                 <div class="space-y-3 text-sm">
                     <div class="flex justify-between">
-                        <span class="text-gray-600">Booked by:</span>
+                        <span class="text-gray-600 dark:text-gray-300">Booked by:</span>
                         <span class="font-medium text-end">{{ $booking->user->name }}</span>
                     </div>
                     
                     <div class="flex justify-between">
-                        <span class="text-gray-600">Created:</span>
+                        <span class="text-gray-600 dark:text-gray-300">Created:</span>
                         <span class="font-medium">{{ $booking->created_at->diffForHumans() }}</span>
                     </div>
                     
                     @if($booking->created_at != $booking->updated_at)
                         <div class="flex justify-between">
-                            <span class="text-gray-600">Last updated:</span>
+                            <span class="text-gray-600 dark:text-gray-300">Last updated:</span>
                             <span class="font-medium">{{ $booking->updated_at->diffForHumans() }}</span>
                         </div>
                     @endif                    
 
                     <div class="flex justify-between">
-                        <span class="text-gray-600">Duration:</span>
+                        <span class="text-gray-600 dark:text-gray-300">Duration:</span>
                         @php
                             $start = \Carbon\Carbon::parse($start_time);
                             $end = \Carbon\Carbon::parse($end_time);
@@ -336,17 +347,17 @@
 
                     @if($booking->isUpcoming())
                         <div class="flex justify-between">
-                            <span class="text-gray-600">Starts in:</span>
+                            <span class="text-gray-600 dark:text-gray-300">Starts in:</span>
                             <span class="font-medium text-green-600">{{ \Carbon\Carbon::parse($start_time)->diffForHumans() }}</span>
                         </div>
                     @elseif($booking->isActive())
                         <div class="flex justify-between">
-                            <span class="text-gray-600">Ends in:</span>
+                            <span class="text-gray-600 dark:text-gray-300">Ends in:</span>
                             <span class="font-medium text-orange-600">{{ \Carbon\Carbon::parse($end_time)->diffForHumans() }}</span>
                         </div>
                     @elseif($booking->isPast())
                         <div class="flex justify-between">
-                            <span class="text-gray-600">Ended:</span>
+                            <span class="text-gray-600 dark:text-gray-300">Ended:</span>
                             <span class="font-medium text-gray-500">{{ \Carbon\Carbon::parse($end_time)->diffForHumans() }}</span>
                         </div>
                     @endif
@@ -355,27 +366,26 @@
 
             {{-- Quick Actions --}}
             <div class="border rounded-lg p-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Quick Actions</h3>
                 
                 <div class="space-y-3">
                     <flux:button href="{{ route('bookings.index') }}" class="w-full" icon="chevron-left">                                                      
                         Back to Bookings
                     </flux:button>                    
                     
-                    @if(auth()->id() === $booking->booked_by)
-                        <!-- <a href="{{ route('bookings.edit', $booking) }}" 
-                           class="w-full inline-flex items-center justify-center px-4 py-2 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                            </svg>
-                            Edit Booking
-                        </a> -->
+                    @if(auth()->user()->hasRole(['Admin', 'Super Admin']))                       
                         <flux:button href="{{ route('bookings.edit', $booking) }}" class="w-full" icon="pencil-square">                                                      
-                            Edit Booking
+                            Edit Booking Super Admin
                         </flux:button>                          
                     @endif
 
-                    @if($status === 'approved' && auth()->user()->hasRole('admin'))
+                    @if(auth()->id() === $booking->booked_by)                       
+                        <flux:button href="{{ route('bookings.edit.user', $booking) }}" class="w-full" icon="pencil-square">                                                      
+                            Edit Booking User
+                        </flux:button>                          
+                    @endif                    
+
+                    @if($status === 'approved' && auth()->user()->hasRole(['Admin', 'Super Admin']))
                         <!-- <button wire:click="changeStatus('done')" 
                                 class="w-full inline-flex items-center justify-center px-4 py-2 border border-green-300 rounded-md shadow-sm text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -388,7 +398,7 @@
                         </flux:button>                         
                     @endif
 
-                    @if(in_array($status, ['pending', 'approved']) && (auth()->id() === $booking->booked_by || auth()->user()->hasRole('admin')))
+                    @if(in_array($status, ['pending', 'approved']) && (auth()->id() === $booking->booked_by || auth()->user()->hasRole(['Admin', 'Super Admin'])))
                         <!-- <button wire:click="changeStatus('cancelled')" 
                                 onclick="return confirm('Are you sure you want to cancel this booking?')"
                                 class="w-full inline-flex items-center justify-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100">

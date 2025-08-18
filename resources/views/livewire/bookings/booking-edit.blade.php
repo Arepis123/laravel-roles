@@ -1,8 +1,8 @@
 <div>
     <div class="relative mb-6 w-full">
-        <flux:heading size="xl" level="1">{{ __('Edit Booking') }}</flux:heading>
-        <flux:subheading size="lg" class="mb-6">{{ __('Modify your booking details') }}</flux:subheading>
-        <flux:separator variant="subtle" />
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ __('Edit Booking') }}</h1>
+        <p class="text-gray-600 mt-1 dark:text-gray-400">{{ __('Modify your booking details') }}</p>
+        <flux:separator variant="subtle" class="mt-4" />        
     </div>
 
     @session('success')
@@ -19,39 +19,40 @@
 
     <div class="max-w-2xl mt-8 space-y-6">
         {{-- Current Booking Info --}}
-        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <h3 class="font-semibold text-gray-900 mb-2">Current Booking Details</h3>
-            <div class="space-y-1 text-sm text-gray-700">
-                <p><strong>Asset:</strong> 
-                    @php
-                        $assetConfig = null;
-                        foreach ($this->assetTypeConfig as $key => $config) {
-                            if ($config['model'] === $booking->asset_type) {
-                                $assetConfig = $config;
-                                break;
-                            }
+        <flux:callout color="blue" icon="information-circle">
+            <flux:callout.heading>Current Booking Details</flux:callout.heading>
+            <flux:callout.text>
+                @php
+                    $assetConfig = null;
+                    foreach ($this->assetTypeConfig as $key => $config) {
+                        if ($config['model'] === $booking->asset_type) {
+                            $assetConfig = $config;
+                            break;
                         }
-                        $assetModel = $assetConfig['model'] ?? '';
-                        $nameField = $assetConfig['name_field'] ?? 'name';
-                        $asset = $assetModel ? $assetModel::find($booking->asset_id) : null;
-                    @endphp
-                    {{ $assetConfig['label'] ?? 'Unknown' }} - {{ $asset->{$nameField} ?? 'Unknown' }}
-                </p>
-                <p><strong>Date:</strong> {{ $booking->start_time->format('l, F j, Y') }}</p>
-                <p><strong>Time:</strong> {{ $booking->start_time->format('g:i A') }} - {{ $booking->end_time->format('g:i A') }}</p>
-                <p><strong>Duration:</strong> {{ $booking->start_time->diffForHumans($booking->end_time, true) }}</p>
-                <p><strong>Status:</strong> 
-                    <span class="px-2 py-1 text-xs rounded-full
-                        @if($booking->status === 'approved') bg-green-100 text-green-800
-                        @elseif($booking->status === 'pending') bg-yellow-100 text-yellow-800
-                        @elseif($booking->status === 'rejected') bg-red-100 text-red-800
-                        @else bg-gray-100 text-gray-800
-                        @endif">
-                        {{ ucfirst($booking->status) }}
-                    </span>
-                </p>
-            </div>
-        </div>
+                    }
+                    $assetModel = $assetConfig['model'] ?? '';
+                    $nameField = $assetConfig['name_field'] ?? 'name';
+                    $asset = $assetModel ? $assetModel::find($booking->asset_id) : null;
+                @endphp
+                <strong>Asset:</strong> {{ $assetConfig['label'] ?? 'Unknown' }} - {{ $asset->{$nameField} ?? 'Unknown' }}<br>
+                <strong>Date:</strong> {{ $booking->start_time->format('l, F j, Y') }}
+                @if($booking->end_time->format('Y-m-d') !== $booking->start_time->format('Y-m-d'))
+                    to {{ $booking->end_time->format('l, F j, Y') }}
+                @endif
+                <br>
+                <strong>Time:</strong> {{ $booking->start_time->format('g:i A') }} - {{ $booking->end_time->format('g:i A') }}<br>
+                <strong>Duration:</strong> {{ $booking->start_time->diffForHumans($booking->end_time, true) }}<br>
+                <strong>Status:</strong> 
+                <span class="px-2 py-1 text-xs rounded-full
+                    @if($booking->status === 'approved') bg-green-100 text-green-800
+                    @elseif($booking->status === 'pending') bg-yellow-100 text-yellow-800
+                    @elseif($booking->status === 'rejected') bg-red-100 text-red-800
+                    @else bg-gray-100 text-gray-800
+                    @endif">
+                    {{ ucfirst($booking->status) }}
+                </span>
+            </flux:callout.text>
+        </flux:callout>
 
         @if (session()->has('success'))
             <div class="text-green-600">{{ session('success') }}</div>
@@ -62,9 +63,10 @@
         @endif
 
         <form wire:submit.prevent="update" class="space-y-4">
+
             <flux:field>
                 <flux:label>Type</flux:label>
-                <flux:select wire:model.live="asset_type" placeholder="Select booking type">
+                <flux:select wire:model.live="asset_type" placeholder="Select booking type" disabled>
                     @foreach ($this->assetTypeOptions as $option)
                         <flux:select.option value="{{ $option['value'] }}">{{ $option['label'] }}</flux:select.option>
                     @endforeach
@@ -72,19 +74,83 @@
             </flux:field>
                             
             <flux:field>
-                <flux:label>Asset</flux:label>
-                <flux:select wire:model="asset_id" placeholder="Select asset" :disabled="!$asset_type">
+                <flux:label>{{ $this->assetFieldLabel }}</flux:label>
+                <flux:select wire:model.live="asset_id" placeholder="Select {{ strtolower($this->assetFieldLabel) }}" :disabled="!$asset_type">
                     @foreach ($this->assetOptions as $asset)
                         <flux:select.option value="{{ $asset->id }}">{{ $asset->name }}</flux:select.option>
                     @endforeach
                 </flux:select>
             </flux:field>    
 
-            <flux:field>
-                <flux:label>Capacity</flux:label>
-                <flux:input placeholder="How many people" wire:model="capacity" type="number"/>
-                <flux:error name="capacity" />
-            </flux:field>                         
+            {{-- Only show capacity for Meeting Room and Vehicle --}}
+            @if($this->shouldShowCapacity)
+                <flux:field>
+                    <flux:label>Capacity</flux:label>
+                    <flux:input placeholder="{{ $this->capacityPlaceholder }}" wire:model.live="capacity" type="number"/>
+                    <flux:error name="capacity" />
+                    @if($asset_type === 'vehicle' && $capacity)
+                        <flux:description>
+                            @if($capacity == 1)
+                                Only you will be using the vehicle
+                            @else
+                                You can select up to {{ $this->maxPassengers }} passenger(s)
+                            @endif
+                        </flux:description>
+                    @endif
+                </flux:field>
+            @endif
+
+            {{-- Destination field for Vehicles --}}
+            @if($asset_type === 'vehicle')
+                <flux:field>
+                    <flux:label>Destination</flux:label>
+                    <flux:input placeholder="Where are you going?" wire:model="destination" type="text"/>
+                    <flux:error name="destination" />
+                </flux:field>
+            @endif
+
+            {{-- Passengers Selection for Vehicles using Tailwind --}}
+            @if($this->shouldShowPassengers)
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Select Passengers ({{ count($passengers) }}/{{ $this->maxPassengers }})
+                    </label>
+                    
+                    <div class="border border-gray-300 dark:border-gray-600 rounded-lg p-3 max-h-48 overflow-y-auto bg-white dark:bg-gray-800">
+                        @forelse ($availablePassengers as $user)
+                            <div class="flex items-center py-2 px-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">
+                                <input type="checkbox" 
+                                       wire:model="passengers"
+                                       value="{{ $user->id }}"
+                                       @if(!in_array($user->id, $passengers) && count($passengers) >= $this->maxPassengers) disabled @endif
+                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer">
+                                <label for="passenger-{{ $user->id }}" class="ml-3 text-sm text-gray-700 dark:text-gray-300 cursor-pointer flex-1"
+                                       wire:click="togglePassenger({{ $user->id }})">
+                                    {{ $user->name }}
+                                    @if($user->email)
+                                        <span class="text-gray-500 dark:text-gray-400 text-xs">({{ $user->email }})</span>
+                                    @endif
+                                </label>
+                            </div>
+                        @empty
+                            <p class="text-gray-500 dark:text-gray-400 text-sm">No other users available</p>
+                        @endforelse
+                    </div>
+                    
+                    @if(count($passengers) > 0 && $availablePassengers)
+                        <div class="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                            <p class="text-sm text-blue-700 dark:text-blue-300">
+                                <strong>Selected passengers:</strong> 
+                                {{ $availablePassengers->whereIn('id', $passengers)->pluck('name')->implode(', ') }}
+                            </p>
+                        </div>
+                    @endif
+                    
+                    @error('passengers')
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+            @endif
                        
             <div class="py-4 my-0">
                 <flux:separator/>
@@ -92,29 +158,79 @@
 
             <div class="space-y-6">
                 {{-- Date Selection --}}
-                <flux:field>
-                    <flux:label>Booking Date</flux:label>
-                    <flux:input 
-                        placeholder="Select date" 
-                        wire:model.live="booking_date" 
-                        type="date"
-                        min="{{ date('Y-m-d') }}"
-                    />
-                    <flux:error name="booking_date" />
-                    @if($booking_date)
-                        <flux:description>
-                            Selected: {{ \Carbon\Carbon::parse($booking_date)->format('l, F j, Y') }}
-                        </flux:description>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {{-- Start Date --}}
+                    <flux:field>
+                        <flux:label>{{ $this->allowsMultiDayBooking ? 'Start Date' : 'Booking Date' }}</flux:label>
+                        <flux:input 
+                            placeholder="Select date" 
+                            wire:model.live="booking_date" 
+                            type="date"
+                            min="{{ date('Y-m-d') }}"
+                        />
+                        <flux:error name="booking_date" />
+                        @if($booking_date)
+                            <flux:description>
+                                {{ \Carbon\Carbon::parse($booking_date)->format('l, F j, Y') }}
+                            </flux:description>
+                        @endif
+                    </flux:field>
+
+                    {{-- End Date (for multi-day bookings) --}}
+                    @if($this->allowsMultiDayBooking)
+                        <flux:field>
+                            <flux:label>End Date (Optional)</flux:label>
+                            <flux:input 
+                                placeholder="Same as start date if empty" 
+                                wire:model.live="end_date" 
+                                type="date"
+                                min="{{ $booking_date ?: date('Y-m-d') }}"
+                                :disabled="!$booking_date"
+                            />
+                            <flux:error name="end_date" />
+                            @if($end_date)
+                                <flux:description>
+                                    {{ \Carbon\Carbon::parse($end_date)->format('l, F j, Y') }}
+                                    ({{ $this->bookingDays }} {{ Str::plural('day', $this->bookingDays) }})
+                                </flux:description>
+                            @endif
+                        </flux:field>
                     @endif
-                </flux:field>
+                </div>
+
+                {{-- Multi-day booking notice --}}
+                @if($this->allowsMultiDayBooking && $this->bookingDays > 1)
+                    <flux:callout color="blue" icon="information-circle">
+                        <flux:callout.heading>Multi-day Booking</flux:callout.heading>
+                        <flux:callout.text>
+                            You are booking for {{ $this->bookingDays }} days. 
+                            The {{ strtolower($this->assetFieldLabel) }} will be reserved from 
+                            {{ \Carbon\Carbon::parse($booking_date)->format('M j') }} to 
+                            {{ \Carbon\Carbon::parse($end_date)->format('M j, Y') }}.
+                        </flux:callout.text>
+                    </flux:callout>
+                @endif
 
                 {{-- Asset and Date Selection Notice --}}
                 @if(!$asset_type || !$asset_id)
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <p class="text-blue-800 text-sm">
-                            <strong>Note:</strong> Please select an asset type and asset before choosing time slots to see real-time availability.
-                        </p>
-                    </div>
+                    <div x-data="{ visible: true }" x-show="visible" x-collapse>
+                        <div x-show="visible" x-transition>
+                            <flux:callout variant="warning" icon="information-circle">
+                                <flux:callout.heading>Note</flux:callout.heading>
+                                <flux:callout.text>
+                                    Please select a booking type and {{ $asset_type ? strtolower($this->assetFieldLabel) : 'asset' }} 
+                                    @if($asset_type === 'meeting_room')
+                                        before choosing time slots to see real-time availability.
+                                    @else
+                                        to continue with your booking.
+                                    @endif
+                                </flux:callout.text>
+                                <x-slot name="controls">
+                                    <flux:button icon="x-mark" variant="ghost" x-on:click="visible = false" />
+                                </x-slot>
+                            </flux:callout>   
+                        </div>
+                    </div>                                      
                 @endif
 
                 {{-- Time Selection - Only show if asset and date are selected --}}
@@ -122,7 +238,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {{-- Start Time --}}
                         <flux:field>
-                            <flux:label>Start Time</flux:label>
+                            <flux:label>{{ $this->allowsMultiDayBooking ? 'Daily Start Time' : 'Start Time' }}</flux:label>
                             <flux:select wire:model.live="start_time" placeholder="Select start time">
                                 @forelse($this->getAvailableTimeSlots() as $time => $label)
                                     <flux:select.option value="{{ $time }}">{{ $label }}</flux:select.option>
@@ -131,16 +247,16 @@
                                 @endforelse
                             </flux:select>
                             <flux:error name="start_time" />
-                            @if(empty($this->getAvailableTimeSlots()))
+                            @if($asset_type === 'meeting_room' && empty($this->getAvailableTimeSlots()))
                                 <flux:description class="text-red-600">
-                                    No available time slots for this asset on the selected date.
+                                    No available time slots for this {{ strtolower($this->assetFieldLabel) }} on the selected date.
                                 </flux:description>
                             @endif
                         </flux:field>
 
                         {{-- End Time --}}
                         <flux:field>
-                            <flux:label>End Time</flux:label>
+                            <flux:label>{{ $this->allowsMultiDayBooking ? 'Daily End Time' : 'End Time' }}</flux:label>
                             <flux:select wire:model.live="end_time" placeholder="Select end time" :disabled="!$start_time">
                                 @if($start_time)
                                     @forelse($this->getAvailableEndTimes() as $time => $label)
@@ -163,14 +279,18 @@
 
                     {{-- Booking Summary --}}
                     @if($start_time && $end_time)
-                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                            <h3 class="font-semibold text-green-900 mb-2">✅ Available Updated Booking</h3>
-                            <div class="space-y-1 text-sm text-green-800">
-                                <p><strong>Date:</strong> {{ \Carbon\Carbon::parse($booking_date)->format('l, F j, Y') }}</p>
-                                <p><strong>Time:</strong> {{ \Carbon\Carbon::parse($start_time)->format('g:i A') }} - {{ \Carbon\Carbon::parse($end_time)->format('g:i A') }}</p>
-                                <p><strong>Duration:</strong> {{ $this->bookingDuration }}</p>
-                            </div>
-                        </div>
+                        <flux:callout variant="success" icon="check-badge">
+                            <flux:callout.heading>Updated Booking Summary</flux:callout.heading>
+                            @if($this->bookingDays > 1)
+                                <flux:callout.text><strong>Period:</strong> {{ \Carbon\Carbon::parse($booking_date)->format('F j') }} - {{ \Carbon\Carbon::parse($end_date)->format('F j, Y') }}</flux:callout.text>
+                                <flux:callout.text><strong>Duration:</strong> {{ $this->bookingDuration }}</flux:callout.text>
+                                <flux:callout.text><strong>Daily Usage:</strong> {{ \Carbon\Carbon::parse($start_time)->format('g:i A') }} - {{ \Carbon\Carbon::parse($end_time)->format('g:i A') }}</flux:callout.text>
+                            @else
+                                <flux:callout.text><strong>Date:</strong> {{ \Carbon\Carbon::parse($booking_date)->format('l, F j, Y') }}</flux:callout.text>
+                                <flux:callout.text><strong>Time:</strong> {{ \Carbon\Carbon::parse($start_time)->format('g:i A') }} - {{ \Carbon\Carbon::parse($end_time)->format('g:i A') }}</flux:callout.text>
+                                <flux:callout.text><strong>Duration:</strong> {{ $this->bookingDuration }}</flux:callout.text>
+                            @endif
+                        </flux:callout>                        
                     @endif
                 @endif
             </div>
@@ -181,36 +301,43 @@
 
             <flux:textarea label="Purpose" wire:model="purpose" placeholder="Explain your booking purpose"/>
 
-            <div class="py-4 my-0">
-                <flux:separator/>
-            </div>
+            {{-- Only show additional services section if there are available services --}}
+            @if(count($this->availableServices) > 0)
+                <div class="py-4 my-0">
+                    <flux:separator/>
+                </div>
 
-            <flux:checkbox.group wire:model.live="additional_booking" label="Additional Services">
-                <flux:checkbox 
-                    label="Refreshment" 
-                    value="refreshment" 
-                    description="Meals such as breakfast, lunch, or snacks can be arranged before or during the session." 
-                />
-
-                @if (in_array('refreshment', $additional_booking))
-                    <div class="ml-6 mb-4">
-                        <flux:textarea wire:model.live="refreshment_details" placeholder="e.g., breakfast and coffee for 5 people. Pastries for 5 people"/>
-                        <flux:error name="refreshment_details" />
-                    </div>
-                @endif
-
-                <flux:checkbox 
-                    label="Smart Monitor" 
-                    value="smart_monitor" 
-                    description="A smart monitor will be set up in the room before the meeting starts." 
-                />
-
-                <flux:checkbox 
-                    label="Laptop" 
-                    value="laptop" 
-                    description="A laptop will be prepared and set up for use during your session." 
-                />
-            </flux:checkbox.group>
+                <flux:checkbox.group wire:model.live="additional_booking" label="Additional Services">
+                    
+                    {{-- Refreshment - Only for Meeting Room --}}
+                    @if($this->isServiceAvailable('refreshment'))
+                        <flux:callout color="sky" class="mb-3">
+                            <flux:checkbox label="Refreshment" value="refreshment" description="Meals such as breakfast, lunch, or snacks can be arranged before or during the session." />                    
+                            @if (in_array('refreshment', $additional_booking))
+                                <div class="ml-6 mb-4">
+                                    <flux:textarea wire:model.live="refreshment_details" placeholder="e.g., breakfast and coffee for 5 people. Pastries for 5 people"/>
+                                    <flux:error name="refreshment_details" />
+                                </div>
+                            @endif                   
+                        </flux:callout>
+                    @endif
+                    
+                    {{-- Technical Support - Only for Meeting Room --}}
+                    @if($this->isServiceAvailable('technical'))
+                        <flux:callout color="sky" class="mb-3">
+                            <flux:checkbox label="Technical Support" value="technical" description="IT will help in giving technical support." />                                     
+                        </flux:callout>
+                    @endif
+                    
+                    {{-- Email & Other Setup - Only for IT Asset --}}
+                    @if($this->isServiceAvailable('email'))
+                        <flux:callout color="sky" class="mb-3">
+                            <flux:checkbox label="Email & Other Setup" value="email" description="IT technician will help setup email in the Outlook and other things requested by user." />                                     
+                        </flux:callout>
+                    @endif
+                    
+                </flux:checkbox.group>
+            @endif
 
             <div class="py-4 my-0">
                 <flux:separator/>
@@ -225,7 +352,8 @@
                     type="button" 
                     variant="outline" 
                     class="flex-1"
-                    onclick="if(confirm('Are you sure you want to cancel this booking?')) { $wire.cancel(); }"
+                    wire:click="cancel"
+                    onclick="return confirm('Are you sure you want to cancel this booking?')"
                 >
                     Cancel Booking
                 </flux:button>
