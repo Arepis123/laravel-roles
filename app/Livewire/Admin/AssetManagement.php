@@ -20,38 +20,53 @@ class AssetManagement extends Component
     public $editingAsset = null;
     public $assetType = '';
     
-    // Form fields for different asset types
+    // Meeting Room specific fields
     #[Validate('required|string|max:255')]
-    public $name = '';
+    public $meeting_room_name = '';
     
     #[Validate('nullable|string|max:255')]
-    public $location = '';
+    public $meeting_room_location = '';
     
     #[Validate('nullable|integer|min:1')]
-    public $capacity = null;
+    public $meeting_room_capacity = null;
     
     #[Validate('nullable|boolean')]
     public $has_projector = false;
     
     #[Validate('nullable|string')]
-    public $notes = '';
+    public $meeting_room_notes = '';
     
-    // Vehicle specific
+    // Vehicle specific fields
     #[Validate('nullable|string|max:255')]
-    public $model = '';
+    public $vehicle_model = '';
     
     #[Validate('nullable|string|max:20')]
     public $plate_number = '';
     
+    #[Validate('nullable|integer|min:1')]
+    public $vehicle_capacity = null;
+    
     #[Validate('nullable|string|max:255')]
     public $driver_name = '';
     
-    // IT Asset specific
+    #[Validate('nullable|string')]
+    public $vehicle_notes = '';
+    
+    // IT Asset specific fields
+    #[Validate('nullable|string|max:255')]
+    public $it_asset_name = '';
+    
     #[Validate('nullable|string|max:255')]
     public $asset_tag = '';
     
+    #[Validate('nullable|string|max:255')]
+    public $it_asset_location = '';
+    
     #[Validate('nullable|string')]
     public $specs = '';
+    
+    #[Validate('nullable|string')]
+    public $it_asset_notes = '';
 
     public function mount()
     {
@@ -176,29 +191,29 @@ class AssetManagement extends Component
         switch($type) {
             case 'meeting_room':
                 $asset = MeetingRoom::find($id);
-                $this->name = $asset->name;
-                $this->location = $asset->location;
-                $this->capacity = $asset->capacity;
+                $this->meeting_room_name = $asset->name;
+                $this->meeting_room_location = $asset->location;
+                $this->meeting_room_capacity = $asset->capacity;
                 $this->has_projector = $asset->has_projector;
-                $this->notes = $asset->notes;
+                $this->meeting_room_notes = $asset->notes;
                 break;
                 
             case 'vehicle':
                 $asset = Vehicle::find($id);
-                $this->model = $asset->model;
+                $this->vehicle_model = $asset->model;
                 $this->plate_number = $asset->plate_number;
-                $this->capacity = $asset->capacity;
+                $this->vehicle_capacity = $asset->capacity;
                 $this->driver_name = $asset->driver_name;
-                $this->notes = $asset->notes;
+                $this->vehicle_notes = $asset->notes;
                 break;
                 
             case 'it_asset':
                 $asset = ItAsset::find($id);
-                $this->name = $asset->name;
+                $this->it_asset_name = $asset->name;
                 $this->asset_tag = $asset->asset_tag;
-                $this->location = $asset->location;
+                $this->it_asset_location = $asset->location;
                 $this->specs = $asset->specs;
-                $this->notes = $asset->notes;
+                $this->it_asset_notes = $asset->notes;
                 break;
         }
         
@@ -226,7 +241,7 @@ class AssetManagement extends Component
             
             $this->showModal = false;
             $this->resetForm();
-            session()->flash('message', 'Asset saved successfully!');
+            session()->flash('success', 'Asset saved successfully!');
             
         } catch (\Exception $e) {
             session()->flash('error', 'Error saving asset: ' . $e->getMessage());
@@ -238,31 +253,31 @@ class AssetManagement extends Component
         switch($this->assetType) {
             case 'meeting_room':
                 MeetingRoom::create([
-                    'name' => $this->name,
-                    'location' => $this->location,
-                    'capacity' => $this->capacity,
+                    'name' => $this->meeting_room_name,
+                    'location' => $this->meeting_room_location,
+                    'capacity' => $this->meeting_room_capacity,
                     'has_projector' => $this->has_projector,
-                    'notes' => $this->notes,
+                    'notes' => $this->meeting_room_notes,
                 ]);
                 break;
                 
             case 'vehicle':
                 Vehicle::create([
-                    'model' => $this->model,
+                    'model' => $this->vehicle_model,
                     'plate_number' => $this->plate_number,
-                    'capacity' => $this->capacity,
+                    'capacity' => $this->vehicle_capacity,
                     'driver_name' => $this->driver_name,
-                    'notes' => $this->notes,
+                    'notes' => $this->vehicle_notes,
                 ]);
                 break;
                 
             case 'it_asset':
                 ItAsset::create([
-                    'name' => $this->name,
+                    'name' => $this->it_asset_name,
                     'asset_tag' => $this->asset_tag,
-                    'location' => $this->location,
+                    'location' => $this->it_asset_location,
                     'specs' => $this->specs,
-                    'notes' => $this->notes,
+                    'notes' => $this->it_asset_notes,
                 ]);
                 break;
         }
@@ -273,31 +288,31 @@ class AssetManagement extends Component
         switch($this->assetType) {
             case 'meeting_room':
                 MeetingRoom::find($this->editingAsset)->update([
-                    'name' => $this->name,
-                    'location' => $this->location,
-                    'capacity' => $this->capacity,
+                    'name' => $this->meeting_room_name,
+                    'location' => $this->meeting_room_location,
+                    'capacity' => $this->meeting_room_capacity,
                     'has_projector' => $this->has_projector,
-                    'notes' => $this->notes,
+                    'notes' => $this->meeting_room_notes,
                 ]);
                 break;
                 
             case 'vehicle':
                 Vehicle::find($this->editingAsset)->update([
-                    'model' => $this->model,
+                    'model' => $this->vehicle_model,
                     'plate_number' => $this->plate_number,
-                    'capacity' => $this->capacity,
+                    'capacity' => $this->vehicle_capacity,
                     'driver_name' => $this->driver_name,
-                    'notes' => $this->notes,
+                    'notes' => $this->vehicle_notes,
                 ]);
                 break;
                 
             case 'it_asset':
                 ItAsset::find($this->editingAsset)->update([
-                    'name' => $this->name,
+                    'name' => $this->it_asset_name,
                     'asset_tag' => $this->asset_tag,
-                    'location' => $this->location,
+                    'location' => $this->it_asset_location,
                     'specs' => $this->specs,
-                    'notes' => $this->notes,
+                    'notes' => $this->it_asset_notes,
                 ]);
                 break;
         }
@@ -337,7 +352,7 @@ class AssetManagement extends Component
                     break;
             }
             
-            session()->flash('message', 'Asset deleted successfully!');
+            session()->flash('success', 'Asset deleted successfully!');
             
         } catch (\Exception $e) {
             session()->flash('error', 'Error deleting asset: ' . $e->getMessage());
@@ -363,31 +378,31 @@ class AssetManagement extends Component
         switch($this->assetType) {
             case 'meeting_room':
                 $rules = [
-                    'name' => 'required|string|max:255',
-                    'location' => 'nullable|string|max:255',
-                    'capacity' => 'nullable|integer|min:1',
+                    'meeting_room_name' => 'required|string|max:255',
+                    'meeting_room_location' => 'nullable|string|max:255',
+                    'meeting_room_capacity' => 'nullable|integer|min:1',
                     'has_projector' => 'nullable|boolean',
-                    'notes' => 'nullable|string',
+                    'meeting_room_notes' => 'nullable|string',
                 ];
                 break;
                 
             case 'vehicle':
                 $rules = [
-                    'model' => 'required|string|max:255',
+                    'vehicle_model' => 'required|string|max:255',
                     'plate_number' => 'required|string|max:20|unique:vehicles,plate_number' . ($this->editingAsset ? ',' . $this->editingAsset : ''),
-                    'capacity' => 'nullable|integer|min:1',
+                    'vehicle_capacity' => 'nullable|integer|min:1',
                     'driver_name' => 'nullable|string|max:255',
-                    'notes' => 'nullable|string',
+                    'vehicle_notes' => 'nullable|string',
                 ];
                 break;
                 
             case 'it_asset':
                 $rules = [
-                    'name' => 'required|string|max:255',
+                    'it_asset_name' => 'required|string|max:255',
                     'asset_tag' => 'nullable|string|max:255|unique:it_assets,asset_tag' . ($this->editingAsset ? ',' . $this->editingAsset : ''),
-                    'location' => 'nullable|string|max:255',
+                    'it_asset_location' => 'nullable|string|max:255',
                     'specs' => 'nullable|string',
-                    'notes' => 'nullable|string',
+                    'it_asset_notes' => 'nullable|string',
                 ];
                 break;
         }
@@ -403,16 +418,27 @@ class AssetManagement extends Component
 
     private function resetForm()
     {
-        $this->name = '';
-        $this->location = '';
-        $this->capacity = null;
+        // Meeting Room fields
+        $this->meeting_room_name = '';
+        $this->meeting_room_location = '';
+        $this->meeting_room_capacity = null;
         $this->has_projector = false;
-        $this->notes = '';
-        $this->model = '';
+        $this->meeting_room_notes = '';
+        
+        // Vehicle fields
+        $this->vehicle_model = '';
         $this->plate_number = '';
+        $this->vehicle_capacity = null;
         $this->driver_name = '';
+        $this->vehicle_notes = '';
+        
+        // IT Asset fields
+        $this->it_asset_name = '';
         $this->asset_tag = '';
+        $this->it_asset_location = '';
         $this->specs = '';
+        $this->it_asset_notes = '';
+        
         $this->editingAsset = null;
         $this->assetType = '';
     }

@@ -24,11 +24,31 @@
         <flux:separator variant="subtle" class="mt-4" />        
     </div>
    
-    @session('success')
+    @if (session()->has('success'))
         <div class="mb-4">
-            <flux:callout variant="success" icon="check-circle" heading="{{ $value }}" />
+            <div x-data="{ visible: true }" x-show="visible" x-collapse>
+                <div x-show="visible" x-transition>
+                    <flux:callout icon="check-circle" variant="success" heading="{{ session('success') }}">                  
+                        <x-slot name="controls">
+                            <flux:button icon="x-mark" variant="ghost" x-on:click="visible = false" />
+                        </x-slot>
+                    </flux:callout>
+                </div>
+            </div>  
         </div>
-    @endsession    
+    @endif
+    
+    @if (session()->has('error'))
+        <div x-data="{ visible: true }" x-show="visible" x-collapse>
+            <div x-show="visible" x-transition>
+                <flux:callout icon="x-circle" variant="danger" heading="{{ session('error') }}">                  
+                    <x-slot name="controls">
+                        <flux:button icon="x-mark" variant="ghost" x-on:click="visible = false" />
+                    </x-slot>
+                </flux:callout>
+            </div>
+        </div>   
+    @endif    
 
     <!-- Action Bar -->
     <div class="flex justify-between items-center mb-4">
@@ -266,23 +286,19 @@
                                             <flux:menu.submenu heading="Change status" icon="cog-6-tooth">
                                                 <flux:menu.radio.group>
                                                     <flux:menu.radio :checked="$booking->status == 'pending'" wire:click="changeStatus('pending', {{ $booking->id }})">
-                                                        <flux:icon name="clock" class="w-4 h-4 mr-2 text-yellow-500" />
+                                                        {{-- <flux:icon name="clock" class="w-4 h-4 mr-2 text-yellow-500" /> --}}
                                                         Pending
                                                     </flux:menu.radio>
-                                                    <flux:menu.radio :checked="$booking->status == 'approved'" wire:click="changeStatus('approved', {{ $booking->id }})">
-                                                        <flux:icon name="check" class="w-4 h-4 mr-2 text-sky-500" />
+                                                    <flux:menu.radio :checked="$booking->status == 'approved'" wire:click="changeStatus('approved', {{ $booking->id }})">                                                     
                                                         Approve
                                                     </flux:menu.radio>   
-                                                    <flux:menu.radio :checked="$booking->status == 'rejected'" wire:click="changeStatus('rejected', {{ $booking->id }})">
-                                                        <flux:icon name="x-mark" class="w-4 h-4 mr-2 text-red-500" />
+                                                    <flux:menu.radio :checked="$booking->status == 'rejected'" wire:click="changeStatus('rejected', {{ $booking->id }})">                                                    
                                                         Reject
                                                     </flux:menu.radio>                                                                                                     
-                                                    <flux:menu.radio :checked="$booking->status == 'cancelled'" wire:click="changeStatus('cancelled', {{ $booking->id }})">
-                                                        <flux:icon name="arrow-turn-down-left" class="w-4 h-4 mr-2 text-zinc-500" />
+                                                    <flux:menu.radio :checked="$booking->status == 'cancelled'" wire:click="changeStatus('cancelled', {{ $booking->id }})">                                                     
                                                         Cancel
                                                     </flux:menu.radio>
-                                                    <flux:menu.radio :checked="$booking->status == 'done'" wire:click="changeStatus('done', {{ $booking->id }})">
-                                                        <flux:icon name="check-circle" class="w-4 h-4 mr-2 text-green-500" />
+                                                    <flux:menu.radio :checked="$booking->status == 'done'" wire:click="changeStatus('done', {{ $booking->id }})">                                                   
                                                         Mark Done
                                                     </flux:menu.radio>
                                                 </flux:menu.radio.group>

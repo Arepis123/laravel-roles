@@ -112,10 +112,13 @@ class CalendarController extends Controller
     {
         $assetName = $booking->asset ? 
             (method_exists($booking->asset, 'name') ? $booking->asset->name : 
-            (method_exists($booking->asset, 'title') ? $booking->asset->title : 'Asset')) : 
+            (method_exists($booking->asset, 'title') ? $booking->asset->title : '')) : 
             'Unknown Asset';
 
-        $userName = $booking->bookedBy?->name ?? 'Unknown';
+        // $userName = $booking->bookedBy?->name ?? 'Unknown';
+        $userName = $booking->bookedBy
+            ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $booking->bookedBy->name)
+            : 'Unknown';
         
         return "{$assetName} - {$userName}";
     }

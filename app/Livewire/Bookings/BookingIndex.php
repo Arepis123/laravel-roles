@@ -98,9 +98,11 @@ class BookingIndex extends Component
         return $query->paginate(15);
     }
 
-    public function changeStatus($newStatus)
+    public function changeStatus($newStatus,$booking_id)
     {
-        try {
+        try {                 
+            $this->booking = Booking::with('user')->findOrFail($booking_id);
+
             \Log::info('🔄 changeStatus called', [
                 'new_status' => $newStatus,
                 'current_status' => $this->booking->status,
@@ -234,6 +236,21 @@ class BookingIndex extends Component
             ]);
         }
     }
+
+    /**
+     * Generate reason for status change
+     */    
+    private function getStatusChangeReason($oldStatus, $newStatus): string
+    {
+        return match([$oldStatus, $newStatus]) {
+            ['pending', 'approved'] => 'Booking approved by admin',
+            ['pending', 'rejected'] => 'Booking rejected by admin',
+            ['approved', 'cancelled'] => 'Booking cancelled',
+            ['approved', 'done'] => 'Booking completed',
+            ['rejected', 'pending'] => 'Booking reopened for review',
+            default => "Status changed from {$oldStatus} to {$newStatus}"
+        };
+    }    
 
     /**
      * Check if user can change booking status using Spatie permissions

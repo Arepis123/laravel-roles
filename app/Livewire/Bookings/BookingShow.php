@@ -261,7 +261,7 @@ class BookingShow extends Component
     {
         // Add your authorization logic here
         // For example, only admins or booking owner can change status
-        return auth()->user()->hasRole('Super Admin') || 
+        return auth()->user()->hasRole(['Super Admin','Admin']) || 
                auth()->id() === $this->booking->booked_by;
     }
 

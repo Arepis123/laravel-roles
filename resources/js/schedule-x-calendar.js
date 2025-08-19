@@ -136,7 +136,7 @@ async function fetchEvents() {
             
             const assetTypeLabel = getAssetTypeLabel(event.extendedProps?.assetType || event.assetType);
             const assetName = event.title.replace(/^Asset\s*:\s*/i, '').trim();
-            const eventTitle = `${assetTypeLabel}: ${assetName}`;
+            const eventTitle = ` - ${assetTypeLabel} ${assetName}`;
             const calendarId = getCalendarId(event.extendedProps?.assetType || event.assetType);
             
             return {

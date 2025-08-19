@@ -7,7 +7,7 @@
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 mb-6 sm:mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 mb-4 sm:mb-6">
         <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4">
             <div class="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
                 <div class="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0">
@@ -80,20 +80,32 @@
     </div>
 
     <!-- Flash Messages -->
-    @if (session()->has('message'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6" role="alert">
-            <span class="block sm:inline">{{ session('message') }}</span>
-        </div>
+    @if (session()->has('success'))
+        <div x-data="{ visible: true }" x-show="visible" x-collapse>
+            <div x-show="visible" x-transition>
+                <flux:callout icon="check-circle" variant="success" heading="{{ session('success') }}">                  
+                    <x-slot name="controls">
+                        <flux:button icon="x-mark" variant="ghost" x-on:click="visible = false" />
+                    </x-slot>
+                </flux:callout>
+            </div>
+        </div>  
     @endif
 
     @if (session()->has('error'))
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6" role="alert">
-            <span class="block sm:inline">{{ session('error') }}</span>
-        </div>
+        <div x-data="{ visible: true }" x-show="visible" x-collapse>
+            <div x-show="visible" x-transition>
+                <flux:callout icon="x-circle" variant="danger" heading="{{ session('error') }}">                  
+                    <x-slot name="controls">
+                        <flux:button icon="x-mark" variant="ghost" x-on:click="visible = false" />
+                    </x-slot>
+                </flux:callout>
+            </div>
+        </div>   
     @endif
 
     <!-- Filters and Actions -->
-    <div class="border border-gray-200 rounded-xl p-4 dark:bg-neutral-800 dark:border-neutral-700 overflow-hidden mb-4">
+    <div class="border border-gray-200 rounded-xl p-4 dark:bg-neutral-800 dark:border-neutral-700 overflow-hidden my-4">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
             <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
                 <!-- Search -->
@@ -202,8 +214,14 @@
                                 </div>                                
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <flux:badge size="sm" icon="{{ $asset['type'] === 'vehicle' ? 'car' : ($asset['type'] === 'meeting_room' ? 'building-office' : 'computer-desktop') }}" color="{{ $asset['type'] === 'Vehicle' ? 'green' : ($asset['type'] === 'meeting_room' ? 'blue' : 'fuchsia') }}">
-                                    {{ $asset['type'] }}
+                                <flux:badge size="sm" icon="{{ $asset['type'] === 'vehicle' ? 'car' : ($asset['type'] === 'meeting_room' ? 'building-office' : 'computer-desktop') }}" color="{{ $asset['type'] === 'vehicle' ? 'green' : ($asset['type'] === 'meeting_room' ? 'blue' : 'fuchsia') }}">
+                                    @if($asset['type'] === 'vehicle')
+                                        {{ __('Vehicle') }}
+                                    @elseif($asset['type'] === 'meeting_room')
+                                        {{ __('Meeting Room') }}
+                                    @else
+                                        {{ __('IT Asset') }}
+                                    @endif
                                 </flux:badge>                                   
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -271,20 +289,20 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <flux:field>
                         <flux:label>Room Name</flux:label>
-                        <flux:input wire:model="name" placeholder="Enter room name" />
-                        <flux:error name="name" />
+                        <flux:input wire:model="meeting_room_name" type="text" placeholder="Enter room name" />
+                        <flux:error name="meeting_room_name" />
                     </flux:field>
 
                     <flux:field>
                         <flux:label>Location</flux:label>
-                        <flux:input wire:model="location" placeholder="Enter location" />
-                        <flux:error name="location" />
+                        <flux:input wire:model="meeting_room_location" type="text" placeholder="Enter location" />
+                        <flux:error name="meeting_room_location" />
                     </flux:field>
 
                     <flux:field>
                         <flux:label>Capacity</flux:label>
-                        <flux:input type="number" wire:model="capacity" placeholder="Enter capacity" min="1" />
-                        <flux:error name="capacity" />
+                        <flux:input type="number" wire:model="meeting_room_capacity" placeholder="Enter capacity" min="1" />
+                        <flux:error name="meeting_room_capacity" />
                     </flux:field>
 
                     <flux:field variant="inline">
@@ -298,8 +316,8 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <flux:field>
                         <flux:label>Model</flux:label>
-                        <flux:input wire:model="model" placeholder="Enter vehicle model" />
-                        <flux:error name="model" />
+                        <flux:input wire:model="vehicle_model" type="text" placeholder="Enter vehicle model" />
+                        <flux:error name="vehicle_model" />
                     </flux:field>
 
                     <flux:field>
@@ -310,14 +328,8 @@
 
                     <flux:field>
                         <flux:label>Passenger Capacity</flux:label>
-                        <flux:input type="number" wire:model="capacity" placeholder="Enter capacity" min="1" />
-                        <flux:error name="capacity" />
-                    </flux:field>
-
-                    <flux:field>
-                        <flux:label>Driver Name</flux:label>
-                        <flux:input wire:model="driver_name" placeholder="Enter driver name" />
-                        <flux:error name="driver_name" />
+                        <flux:input type="number" wire:model="vehicle_capacity" placeholder="Enter capacity" min="1" />
+                        <flux:error name="vehicle_capacity" />
                     </flux:field>
                 </div>
 
@@ -326,20 +338,20 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <flux:field>
                         <flux:label>Asset Name</flux:label>
-                        <flux:input wire:model="name" placeholder="Enter asset name" />
-                        <flux:error name="name" />
+                        <flux:input wire:model="it_asset_name" type="text" placeholder="Enter asset name" />
+                        <flux:error name="it_asset_name" />
                     </flux:field>
 
                     <flux:field>
                         <flux:label>Asset Tag</flux:label>
-                        <flux:input wire:model="asset_tag" placeholder="Enter asset tag" />
+                        <flux:input wire:model="asset_tag" type="text" placeholder="Enter asset tag" />
                         <flux:error name="asset_tag" />
                     </flux:field>
 
                     <flux:field>
                         <flux:label>Location</flux:label>
-                        <flux:input wire:model="location" placeholder="Enter location" />
-                        <flux:error name="location" />
+                        <flux:input wire:model="it_asset_location" type="text" placeholder="Enter location" />
+                        <flux:error name="it_asset_location" />
                     </flux:field>
 
                     <flux:field>
@@ -353,8 +365,16 @@
             <!-- Notes field for all asset types -->
             <flux:field>
                 <flux:label>Notes</flux:label>
-                <flux:textarea wire:model="notes" placeholder="Enter additional notes" rows="3" />
-                <flux:error name="notes" />
+                @if($assetType === 'meeting_room')
+                    <flux:textarea wire:model="meeting_room_notes" placeholder="Enter additional notes" rows="3" />
+                    <flux:error name="meeting_room_notes" />
+                @elseif($assetType === 'vehicle')
+                    <flux:textarea wire:model="vehicle_notes" placeholder="Enter additional notes" rows="3" />
+                    <flux:error name="vehicle_notes" />
+                @else
+                    <flux:textarea wire:model="it_asset_notes" placeholder="Enter additional notes" rows="3" />
+                    <flux:error name="it_asset_notes" />
+                @endif
             </flux:field>
 
             <!-- Modal Actions -->

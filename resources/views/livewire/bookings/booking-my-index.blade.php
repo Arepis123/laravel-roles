@@ -23,12 +23,32 @@
         </div>
         <flux:separator variant="subtle" class="mt-4" />        
     </div>
-   
-    @session('success')
+
+    @if (session()->has('success'))
         <div class="mb-4">
-            <flux:callout variant="success" icon="check-circle" heading="{{ $value }}" />
+            <div x-data="{ visible: true }" x-show="visible" x-collapse>
+                <div x-show="visible" x-transition>
+                    <flux:callout icon="check-circle" variant="success" heading="{{ session('success') }}">                  
+                        <x-slot name="controls">
+                            <flux:button icon="x-mark" variant="ghost" x-on:click="visible = false" />
+                        </x-slot>
+                    </flux:callout>
+                </div>
+            </div>  
         </div>
-    @endsession    
+    @endif   
+     
+    @if (session()->has('error'))
+        <div x-data="{ visible: true }" x-show="visible" x-collapse>
+            <div x-show="visible" x-transition>
+                <flux:callout icon="x-circle" variant="danger" heading="{{ session('error') }}">                  
+                    <x-slot name="controls">
+                        <flux:button icon="x-mark" variant="ghost" x-on:click="visible = false" />
+                    </x-slot>
+                </flux:callout>
+            </div>
+        </div>   
+    @endif    
 
     @session('error')
         <div class="mb-4">
@@ -258,7 +278,16 @@
                                     <flux:button size="sm" href="{{ route('bookings.show', $booking->id) }}" variant="ghost">
                                         <flux:icon name="eye" class="w-4 h-4" />
                                     </flux:button>
-                                    
+
+                                    <!-- Edit Button - Only for pending bookings -->
+                                    @if($booking->status == 'pending' && \Carbon\Carbon::parse($booking->start_time) > now())
+                                        @can('book.edit')
+                                        <flux:button size="sm" href="{{ route('bookings.edit.user', $booking->id) }}" variant="ghost">
+                                            <flux:icon name="pencil" class="w-4 h-4" />
+                                        </flux:button>
+                                        @endcan
+                                    @endif
+                                                                        
                                     <!-- Cancel Button - Only for pending/approved bookings that haven't started -->
                                     @if(in_array($booking->status, ['pending', 'approved']) && \Carbon\Carbon::parse($booking->start_time) > now())
                                         <flux:button 
@@ -272,14 +301,6 @@
                                         </flux:button>
                                     @endif
 
-                                    <!-- Edit Button - Only for pending bookings -->
-                                    @if($booking->status == 'pending' && \Carbon\Carbon::parse($booking->start_time) > now())
-                                        @can('book.edit')
-                                        <flux:button size="sm" href="{{ route('bookings.edit', $booking->id) }}" variant="ghost">
-                                            <flux:icon name="pencil" class="w-4 h-4" />
-                                        </flux:button>
-                                        @endcan
-                                    @endif
                                 </div>
                             </td>
                         </tr>

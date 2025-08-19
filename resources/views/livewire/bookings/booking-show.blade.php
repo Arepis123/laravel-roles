@@ -373,15 +373,15 @@
                         Back to Bookings
                     </flux:button>                    
                     
-                    @if(auth()->user()->hasRole(['Admin', 'Super Admin']))                       
+                    @if(auth()->user()->hasRole(['Super Admin']))                       
                         <flux:button href="{{ route('bookings.edit', $booking) }}" class="w-full" icon="pencil-square">                                                      
-                            Edit Booking Super Admin
+                            Edit Booking
                         </flux:button>                          
                     @endif
 
-                    @if(auth()->id() === $booking->booked_by)                       
+                    @if(auth()->id() === $booking->booked_by && $status !== 'cancelled' && $status !== 'rejected')                       
                         <flux:button href="{{ route('bookings.edit.user', $booking) }}" class="w-full" icon="pencil-square">                                                      
-                            Edit Booking User
+                            Edit Booking
                         </flux:button>                          
                     @endif                    
 
