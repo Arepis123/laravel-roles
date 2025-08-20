@@ -22,7 +22,13 @@
             <flux:navlist variant="outline">
                 <flux:navlist.group :heading="__('ADMIN')" class="grid">
                     @if(auth()->user()->hasRole(['Admin', 'Super Admin']))
-                    <flux:navlist.item icon="calendar" :href="route('bookings.index')" :current="request()->routeIs('bookings.index')" wire:navigate>{{ __('Booking') }}</flux:navlist.item>
+                    <flux:navlist.item icon="calendar" :href="route('bookings.index')" :current="request()->routeIs('bookings.index')" wire:navigate>
+                        <span class="flex items-center justify-between w-full">
+                            <span>{{ __('Booking') }}</span>
+                            {{-- Livewire component with real-time updates --}}
+                            <livewire:pending-bookings-badge wire:poll.30s="loadCount" />
+                        </span>
+                    </flux:navlist.item>
                     @endif                    
                     @if(auth()->user()->can('user.view') || auth()->user()->can('user.create') || auth()->user()->can('user.edit') || auth()->user()->can('user.delete'))
                     <flux:navlist.item icon="user" :href="route('users.index')" :current="request()->routeIs('users.index')" wire:navigate>{{ __('User') }}</flux:navlist.item>
@@ -42,16 +48,6 @@
 
             <flux:spacer />
 
-            <!-- <flux:navlist variant="outline">
-                <flux:navlist.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                {{ __('Repository') }}
-                </flux:navlist.item>
-
-                <flux:navlist.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                {{ __('Documentation') }}
-                </flux:navlist.item>
-            </flux:navlist> -->
-
             <!-- Desktop User Menu -->
             <flux:dropdown position="bottom" align="start">
                 <flux:profile
@@ -63,13 +59,6 @@
                     <flux:menu.radio.group>
                         <div class="p-0 text-sm font-normal">
                             <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-                                <!-- <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
-                                    <span
-                                        class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white"
-                                    >
-                                        {{ auth()->user()->initials() }}
-                                    </span>
-                                </span> -->
                                 <flux:avatar name="{{ auth()->user() ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', auth()->user()->name) : 'N/A' }}" />
                                 
                                 <div class="grid flex-1 text-start text-sm leading-tight">
@@ -113,18 +102,12 @@
                     : 'NA'"
                 icon-trailing="chevron-down"
             />
-                <!-- <flux:avatar name="{{ auth()->user() ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', auth()->user()->name) : 'N/A' }}" />                 -->
 
                 <flux:menu>
                     <flux:menu.radio.group>
                         <div class="p-0 text-sm font-normal">
                             <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
                                 <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
-                                    <!-- <span
-                                        class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white"
-                                    >
-                                        {{ auth()->user()->initials() }}
-                                    </span> -->
                                     <flux:avatar class="flex h-full w-full items-center justify-center" name="{{ auth()->user() ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', auth()->user()->name) : 'N/A' }}" />
                                 </span>
 

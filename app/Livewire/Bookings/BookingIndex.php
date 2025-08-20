@@ -129,7 +129,7 @@ class BookingIndex extends Component
 
             // Store the old status before updating
             $oldStatus = $this->booking->status;
-            \Log::info('📝 Status change confirmed', [
+            \Log::info('🔍 Status change confirmed', [
                 'from' => $oldStatus,
                 'to' => $newStatus
             ]);
@@ -170,6 +170,9 @@ class BookingIndex extends Component
             // ALWAYS send email notification (remove the condition check)
             \Log::info('📧 About to send notification...');
             $this->notifyBookingOwner($oldStatus, $newStatus);
+            
+            // Emit event to update the badge in real-time
+            $this->dispatch('bookingStatusUpdated');
             
             \Log::info('✅ changeStatus completed successfully');
             

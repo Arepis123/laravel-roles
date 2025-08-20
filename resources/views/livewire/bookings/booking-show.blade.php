@@ -8,9 +8,6 @@
         
         {{-- Status Badge --}}
         <div class="flex items-center space-x-0">
-            <!-- <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border {{ $this->statusColor }}">
-                {{ ucfirst($status) }}
-            </span> -->
             <div class="flex flex-col gap-1">
                 @if ($status == 'pending')
                     <flux:badge color="yellow" class="w-fit">
@@ -52,8 +49,10 @@
                     </x-slot>
                 </flux:callout>
             </div>
-        </div>        
-    @endif    
+        </div>               
+    @endif 
+
+  
 
     @if (session()->has('error'))
         <div x-data="{ visible: true }" x-show="visible" x-collapse>
@@ -119,6 +118,78 @@
         </div>
     @endif
 
+    {{-- Display Done Details if available --}}
+    @if($booking->hasDoneDetails() && $status === 'done')
+        <div class="border rounded-lg p-6 bg-green-50 dark:bg-green-900/20">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Completion Details</h3>
+            
+            @if($asset_type === 'vehicle')
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-300">Odometer Reading:</span>
+                        <span class="font-medium">{{ number_format($booking->done_details['odometer'] ?? 0) }} km</span>
+                    </div>
+                    
+                    {{-- Display Fuel Level --}}
+                    @if(isset($booking->done_details['fuel_level']))
+                        <div class="flex justify-between">
+                            <span class="text-gray-600 dark:text-gray-300">Fuel Level:</span>
+                            <span class="font-medium">{{ $booking->done_details['fuel_level'] }}/8</span>
+                        </div>
+                        
+                        {{-- Visual fuel level indicator --}}
+                        <div class="mt-2">
+                            <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                <span>Empty</span>
+                                <span>Full</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                @php
+                                    $fuelPercentage = ($booking->done_details['fuel_level'] / 8) * 100;
+                                    $fuelColor = match(true) {
+                                        $booking->done_details['fuel_level'] <= 2 => 'bg-red-500',
+                                        $booking->done_details['fuel_level'] <= 4 => 'bg-yellow-500',
+                                        $booking->done_details['fuel_level'] <= 6 => 'bg-orange-500',
+                                        default => 'bg-green-500'
+                                    };
+                                @endphp
+                                <div class="{{ $fuelColor }} h-2 rounded-full transition-all duration-300" style="width: {{ $fuelPercentage }}%"></div>
+                            </div>
+                        </div>
+                    @endif
+                    
+                    @if($booking->done_details['gas_filled'] ?? false)
+                        <div class="flex justify-between">
+                            <span class="text-gray-600 dark:text-gray-300">Fuel Filled:</span>
+                            <span class="font-medium">Yes</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600 dark:text-gray-300">Fuel Amount:</span>
+                            <span class="font-medium">RM {{ number_format($booking->done_details['gas_amount'] ?? 0, 2) }}</span>
+                        </div>
+                    @else
+                        <div class="flex justify-between">
+                            <span class="text-gray-600 dark:text-gray-300">Fuel Filled:</span>
+                            <span class="font-medium">No</span>
+                        </div>
+                    @endif
+                </div>
+            @else
+                <div class="text-sm">
+                    <p class="text-gray-600 dark:text-gray-300 mb-2">Remarks:</p>
+                    <p class="font-medium">{{ $booking->done_details['remarks'] ?? 'No remarks provided' }}</p>
+                </div>
+            @endif
+            
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div class="text-xs text-gray-500 dark:text-gray-400">
+                    Completed by {{ $booking->done_details['completed_by_name'] ?? 'Unknown' }} 
+                    on {{ \Carbon\Carbon::parse($booking->done_details['completed_at'] ?? now())->format('M d, Y, h:i A') }}
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- Main Content Grid --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {{-- Booking Details Section --}}
@@ -173,36 +244,6 @@
                     </flux:field>   
                 </div>                                            
             </div>
-
-            {{-- Time & Purpose --}}
-            {{-- <div class="border rounded-lg p-6">
-                <h2 class="text-lg font-medium text-gray-900 mb-4">Booking Details</h2>
-                
-                <div class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <flux:field>
-                            <flux:heading>Start Time</flux:heading>
-                            <flux:input wire:model="start_time" type="datetime-local" disabled/>
-                        </flux:field>
-                        <flux:field>
-                            <flux:heading>End Time</flux:heading>
-                            <flux:input wire:model="end_time" type="datetime-local" disabled/>
-                        </flux:field>
-                    </div>
-
-                    @if($capacity)
-                        <flux:field>
-                            <flux:heading>Capacity</flux:heading>
-                            <flux:input wire:model="capacity" type="number" disabled/>
-                        </flux:field>
-                    @endif
-
-                    <flux:field>
-                        <flux:heading>Purpose</flux:heading>
-                        <flux:textarea wire:model="purpose" rows="3" disabled/>
-                    </flux:field>
-                </div>
-            </div> --}}
 
             {{-- Additional Services --}}
             @if(!empty($additional_booking))
@@ -386,27 +427,12 @@
                     @endif                    
 
                     @if($status === 'approved' && auth()->user()->hasRole(['Admin', 'Super Admin']))
-                        <!-- <button wire:click="changeStatus('done')" 
-                                class="w-full inline-flex items-center justify-center px-4 py-2 border border-green-300 rounded-md shadow-sm text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Mark as Done
-                        </button> -->
-                        <flux:button wire:click="changeStatus('done')" class="w-full" icon="check">                                                      
+                        <flux:button wire:click="openDoneModal" class="w-full" icon="check">                                                      
                             Mark as Done
                         </flux:button>                         
                     @endif
 
                     @if(in_array($status, ['pending', 'approved']) && (auth()->id() === $booking->booked_by || auth()->user()->hasRole(['Admin', 'Super Admin'])))
-                        <!-- <button wire:click="changeStatus('cancelled')" 
-                                onclick="return confirm('Are you sure you want to cancel this booking?')"
-                                class="w-full inline-flex items-center justify-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                            Cancel Booking
-                        </button> -->
                         <flux:button wire:click="changeStatus('cancelled')" class="w-full" icon="x-mark">                                                      
                             Cancel Booking
                         </flux:button>                           
@@ -415,4 +441,204 @@
             </div>
         </div>
     </div>
+
+    {{-- Done Modal for Meeting Room and IT Assets --}}
+    @if($asset_type === 'meeting_room' || $asset_type === 'it_asset')
+        <flux:modal wire:model="showDoneModal" class="max-w-lg">
+            <div class="space-y-4">
+                <div>
+                    <flux:heading size="lg">Complete Booking</flux:heading>
+                    <flux:subheading>Please provide remarks for completing this {{ $asset_type === 'meeting_room' ? 'meeting room' : 'IT asset' }} booking.</flux:subheading>
+                </div>
+
+                <flux:separator />
+
+                <flux:field>
+                    <flux:label>Remarks *</flux:label>
+                    <flux:textarea 
+                        wire:model="doneRemarks" 
+                        rows="4" 
+                        placeholder="Enter your remarks about the booking completion..."
+                    />
+                    @error('doneRemarks')
+                        <flux:error>{{ $message }}</flux:error>
+                    @enderror
+                </flux:field>
+
+                <flux:separator />
+
+                <div class="flex gap-3 justify-end">
+                    <flux:button variant="ghost" wire:click="closeDoneModal">
+                        Cancel
+                    </flux:button>
+                    <flux:button variant="primary" wire:click="confirmMarkAsDone">
+                        Complete Booking
+                    </flux:button>
+                </div>
+            </div>
+        </flux:modal>
+    @endif
+
+{{-- Done Modal for Vehicle with Confetti --}}
+@if($asset_type === 'vehicle')
+    <flux:modal wire:model="showDoneModal" class="max-w-lg">
+        <div class="space-y-4">
+            <div>
+                <flux:heading size="lg">Complete Vehicle Booking</flux:heading>
+                <flux:subheading>Please provide the vehicle return details.</flux:subheading>
+            </div>
+
+            <flux:separator />
+
+            <div class="space-y-4">
+                <flux:field>
+                    <flux:label>Current Odometer Reading (km) *</flux:label>
+                    <flux:input 
+                        wire:model="currentOdometer" 
+                        type="number" 
+                        placeholder="Enter current odometer reading"
+                        min="0"
+                    />
+                    @error('currentOdometer')
+                        <flux:error>{{ $message }}</flux:error>
+                    @enderror
+                </flux:field>
+
+                {{-- Fuel Level Slider --}}
+                <flux:field>
+                    <flux:label>Fuel Level *</flux:label>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+                            <span>Empty (1)</span>
+                            <span>Current Level: {{ $fuelLevel }}/8</span>
+                            <span>Full (8)</span>
+                        </div>
+                        <input 
+                            type="range" 
+                            wire:model.live="fuelLevel" 
+                            min="1" 
+                            max="8" 
+                            step="1"
+                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 slider"
+                            style="background: linear-gradient(to right, #ef4444 0%, #f97316 25%, #eab308 50%, #22c55e 75%, #16a34a 100%);"
+                        />
+                        <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                            @for($i = 1; $i <= 8; $i++)
+                                <span class="{{ $fuelLevel == $i ? 'font-bold text-blue-600 dark:text-blue-400' : '' }}">{{ $i }}</span>
+                            @endfor
+                        </div>
+                    </div>
+                    @error('fuelLevel')
+                        <flux:error>{{ $message }}</flux:error>
+                    @enderror
+                </flux:field>
+
+                <flux:field>
+                    <flux:checkbox 
+                        wire:model.live="gasFilledUp" 
+                        label="Gas was filled up"
+                    />
+                </flux:field>
+
+                @if($gasFilledUp)
+                    <flux:field>
+                        <flux:label>Gas Amount (RM) *</flux:label>
+                        <flux:input 
+                            wire:model="gasAmount" 
+                            type="number" 
+                            placeholder="Enter amount spent on gas"
+                            min="0"
+                            step="0.01"
+                        />
+                        @error('gasAmount')
+                            <flux:error>{{ $message }}</flux:error>
+                        @enderror
+                    </flux:field>
+                @endif
+            </div>
+
+            <flux:separator />
+
+            <div class="flex gap-3 justify-end">
+                <flux:button variant="ghost" wire:click="closeDoneModal">
+                    Cancel
+                </flux:button>
+                <flux:button 
+                    variant="primary" 
+                    wire:click="confirmMarkAsDone"
+                    x-on:booking-completed.window="
+                        console.log('Confetti event triggered!');
+                        confetti({
+                            particleCount: 150,
+                            spread: 170,
+                            origin: { y: 0.6 }
+                        });
+                        
+                        confetti({
+                            particleCount: 50,
+                            angle: 60,
+                            spread: 55,
+                            origin: { x: 0 }
+                        });
+                        
+                        confetti({
+                            particleCount: 50,
+                            angle: 120,
+                            spread: 55,
+                            origin: { x: 1 }
+                        });
+                        
+                        setTimeout(function() {
+                            confetti({
+                                particleCount: 100,
+                                spread: 90,
+                                origin: { y: 0.4 }
+                            });
+                        }, 300);
+                    "
+                >
+                    Complete Booking
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    {{-- Include Canvas Confetti Library --}}
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+    {{-- Custom CSS for fuel level slider --}}
+    <style>
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .slider::-moz-range-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .slider::-webkit-slider-track {
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        .slider::-moz-range-track {
+            height: 8px;
+            border-radius: 4px;
+        }
+    </style>
+@endif
+
 </div>

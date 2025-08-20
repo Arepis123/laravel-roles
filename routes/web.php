@@ -18,6 +18,7 @@ use App\Livewire\Bookings\BookingShow;
 use App\Livewire\Bookings\BookingEdit;
 use App\Livewire\Bookings\BookingMyIndex;    // User: own bookings
 use App\Livewire\Bookings\BookingMyEdit;
+use App\Livewire\Bookings\BookingMyShow;
 use App\Livewire\Admin\AssetManagement;
 use App\Livewire\Admin\Reports;
 
@@ -55,6 +56,7 @@ Route::middleware(['auth'])->group(function () {
     // User route – sees only own bookings
     Route::get('bookings/my', BookingMyIndex::class)->name('bookings.index.user');
     Route::get('bookings/my/{booking}/edit', BookingMyEdit::class)->name('bookings.edit.user');
+    Route::get('bookings/my/{id}', BookingMyShow::class)->name('bookings.show.user');
 
     // All roles can use create if they have permission
     Route::get('bookings/create', BookingCreate::class)->name('bookings.create')->middleware('permission:book.create');

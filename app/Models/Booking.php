@@ -24,13 +24,15 @@ class Booking extends Model
         'status',
         'status_history',
         'passengers', 
-        'destination', 
+        'destination',
+        'done_details', // Add this field for storing completion details
     ];
     
     protected $casts = [
         'additional_booking' => 'array',
         'status_history' => 'array',
         'passengers' => 'array', // Cast passengers as array
+        'done_details' => 'array', // Cast done_details as array
         'start_time' => 'datetime',
         'end_time' => 'datetime',        
     ];
@@ -90,6 +92,38 @@ class Booking extends Model
     public function getStatusHistoryCountAttribute(): int
     {
         return count($this->status_history ?? []);
+    }
+
+    /**
+     * Check if booking has done details
+     */
+    public function hasDoneDetails(): bool
+    {
+        return !empty($this->done_details);
+    }
+
+    /**
+     * Get done details remarks (for meeting room and IT assets)
+     */
+    public function getDoneRemarksAttribute(): ?string
+    {
+        return $this->done_details['remarks'] ?? null;
+    }
+
+    /**
+     * Get vehicle specific done details
+     */
+    public function getVehicleDoneDetailsAttribute(): array
+    {
+        if (class_basename($this->asset_type) !== 'Vehicle') {
+            return [];
+        }
+
+        return [
+            'odometer' => $this->done_details['odometer'] ?? null,
+            'gas_filled' => $this->done_details['gas_filled'] ?? false,
+            'gas_amount' => $this->done_details['gas_amount'] ?? null,
+        ];
     }
 
     /**

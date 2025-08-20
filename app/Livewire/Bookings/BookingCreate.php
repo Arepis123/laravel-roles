@@ -345,55 +345,35 @@ class BookingCreate extends Component
     }
 
     /**
-     * Get available time slots (every 30 minutes from 8 AM to 6 PM)
+     * Get available time slots (every 30 minutes from 8 AM to 22 PM)
      */
     public function getAvailableTimeSlots()
     {
         $slots = [];
         $start = 8; // 8 AM
-        $end = 18;  // 6 PM
+        $end = 22;  // 10 PM
         
-        // For meeting rooms, check availability
-        if ($this->asset_type === 'meeting_room') {
-            // Return empty if asset not selected
-            if (!$this->asset_type || !$this->asset_id || !$this->booking_date) {
-                return $slots;
-            }
-
-            for ($hour = $start; $hour < $end; $hour++) {
-                for ($minute = 0; $minute < 60; $minute += 30) {
-                    $timeString = sprintf('%02d:%02d', $hour, $minute);
-                    $displayTime = Carbon::createFromFormat('H:i', $timeString)->format('g:i A');
-                    
-                    // Skip past times for today
-                    if ($this->booking_date === date('Y-m-d')) {
-                        $timeToCheck = Carbon::createFromFormat('Y-m-d H:i', $this->booking_date . ' ' . $timeString);
-                        if ($timeToCheck->isPast()) {
-                            continue;
-                        }
-                    }
-
-                    // Check if this time slot is available
-                    if ($this->isTimeSlotAvailable($timeString)) {
-                        $slots[$timeString] = $displayTime;
+        // Return empty if required fields not selected
+        if (!$this->asset_type || !$this->asset_id || !$this->booking_date) {
+            return $slots;
+        }
+        
+        // Generate time slots and check availability for ALL asset types
+        for ($hour = $start; $hour < $end; $hour++) {
+            for ($minute = 0; $minute < 60; $minute += 30) {
+                $timeString = sprintf('%02d:%02d', $hour, $minute);
+                $displayTime = Carbon::createFromFormat('H:i', $timeString)->format('g:i A');
+                
+                // Skip past times for today
+                if ($this->booking_date === date('Y-m-d')) {
+                    $timeToCheck = Carbon::createFromFormat('Y-m-d H:i', $this->booking_date . ' ' . $timeString);
+                    if ($timeToCheck->isPast()) {
+                        continue;
                     }
                 }
-            }
-        } else {
-            // For vehicles and IT assets (multi-day bookings)
-            for ($hour = $start; $hour < $end; $hour++) {
-                for ($minute = 0; $minute < 60; $minute += 30) {
-                    $timeString = sprintf('%02d:%02d', $hour, $minute);
-                    $displayTime = Carbon::createFromFormat('H:i', $timeString)->format('g:i A');
-                    
-                    // Skip past times for today's bookings
-                    if ($this->booking_date === date('Y-m-d')) {
-                        $timeToCheck = Carbon::createFromFormat('Y-m-d H:i', $this->booking_date . ' ' . $timeString);
-                        if ($timeToCheck->isPast()) {
-                            continue;
-                        }
-                    }
-                    
+
+                // Check availability for ALL asset types (not just meeting rooms)
+                if ($this->isTimeSlotAvailable($timeString)) {
                     $slots[$timeString] = $displayTime;
                 }
             }
@@ -415,7 +395,7 @@ class BookingCreate extends Component
         
         try {
             $startTime = Carbon::createFromFormat('H:i', $this->start_time);
-            $endOfDay = Carbon::createFromFormat('H:i', '18:00'); // 6 PM
+            $endOfDay = Carbon::createFromFormat('H:i', '22:00'); // 10 PM
             
             // For multi-day bookings or when no specific date checking is needed
             if ($this->allowsMultiDayBooking) {
@@ -473,12 +453,45 @@ class BookingCreate extends Component
         try {
             $checkDateTime = Carbon::createFromFormat('Y-m-d H:i', $this->booking_date . ' ' . $timeSlot);
             
+            // Get the model class for this asset type
+            $assetModel = $this->assetTypeConfig[$this->asset_type]['model'];
+            
             // Check if there's any booking that conflicts with this time slot
-            $conflictingBooking = Booking::where('asset_type', $this->assetTypeConfig[$this->asset_type]['model'])
+            $conflictingBooking = Booking::where('asset_type', $assetModel)
                 ->where('asset_id', $this->asset_id)
-                ->whereNotIn('status', ['cancelled', 'done'])
-                ->where('start_time', '<=', $checkDateTime)
-                ->where('end_time', '>', $checkDateTime)
+                ->whereIn('status', ['pending', 'approved']) // Only these statuses block time slots
+                ->where(function($query) use ($checkDateTime) {
+                    // For multi-day bookings, check if this date/time falls within the booking period
+                    if ($this->allowsMultiDayBooking) {
+                        // Check if the selected date falls within the booking period
+                        $query->whereDate('start_time', '<=', $this->booking_date)
+                            ->whereDate('end_time', '>=', $this->booking_date)
+                            ->where(function($timeQuery) use ($checkDateTime) {
+                                // If it's the start date, check if time is after booking start time
+                                $timeQuery->where(function($startQuery) use ($checkDateTime) {
+                                    $startQuery->whereDate('start_time', '<', $this->booking_date);
+                                })
+                                ->orWhere(function($startQuery) use ($checkDateTime) {
+                                    $startQuery->whereDate('start_time', '=', $this->booking_date)
+                                            ->whereTime('start_time', '<=', $checkDateTime->format('H:i:s'));
+                                });
+                            })
+                            ->where(function($timeQuery) use ($checkDateTime) {
+                                // If it's the end date, check if time is before booking end time
+                                $timeQuery->where(function($endQuery) use ($checkDateTime) {
+                                    $endQuery->whereDate('end_time', '>', $this->booking_date);
+                                })
+                                ->orWhere(function($endQuery) use ($checkDateTime) {
+                                    $endQuery->whereDate('end_time', '=', $this->booking_date)
+                                            ->whereTime('end_time', '>', $checkDateTime->format('H:i:s'));
+                                });
+                            });
+                    } else {
+                        // For single-day bookings (meeting rooms), use the original logic
+                        $query->where('start_time', '<=', $checkDateTime)
+                            ->where('end_time', '>', $checkDateTime);
+                    }
+                })
                 ->exists();
 
             return !$conflictingBooking;
@@ -508,29 +521,55 @@ class BookingCreate extends Component
             $startDateTime = Carbon::createFromFormat('Y-m-d H:i', $this->booking_date . ' ' . $startTime);
             $endDateTime = Carbon::createFromFormat('Y-m-d H:i', $this->booking_date . ' ' . $endTime);
             
+            // Get the model class for this asset type
+            $assetModel = $this->assetTypeConfig[$this->asset_type]['model'];
+            
             // Check if there's any booking that conflicts with this time range
-            $conflictingBooking = Booking::where('asset_type', $this->assetTypeConfig[$this->asset_type]['model'])
+            $conflictingBooking = Booking::where('asset_type', $assetModel)
                 ->where('asset_id', $this->asset_id)
-                ->where('status', '!=', 'cancelled')
+                ->whereIn('status', ['pending', 'approved'])
                 ->where(function ($query) use ($startDateTime, $endDateTime) {
-                    $query->where(function ($q) use ($startDateTime, $endDateTime) {
-                        // Existing booking starts during our requested time
-                        $q->whereBetween('start_time', [$startDateTime, $endDateTime->copy()->subSecond()]);
-                    })
-                    ->orWhere(function ($q) use ($startDateTime, $endDateTime) {
-                        // Existing booking ends during our requested time  
-                        $q->whereBetween('end_time', [$startDateTime->copy()->addSecond(), $endDateTime]);
-                    })
-                    ->orWhere(function ($q) use ($startDateTime, $endDateTime) {
-                        // Existing booking completely encompasses our requested time
-                        $q->where('start_time', '<=', $startDateTime)
-                          ->where('end_time', '>=', $endDateTime);
-                    })
-                    ->orWhere(function ($q) use ($startDateTime, $endDateTime) {
-                        // Our requested time completely encompasses existing booking
-                        $q->where('start_time', '>=', $startDateTime)
-                          ->where('end_time', '<=', $endDateTime);
-                    });
+                    if ($this->allowsMultiDayBooking) {
+                        // For multi-day bookings, check date overlap first
+                        $endDateStr = $this->end_date ?: $this->booking_date;
+                        
+                        $query->where(function($dateQuery) use ($endDateStr) {
+                            $dateQuery->where(function($q) use ($endDateStr) {
+                                // Existing booking starts during our period
+                                $q->whereDate('start_time', '>=', $this->booking_date)
+                                ->whereDate('start_time', '<=', $endDateStr);
+                            })
+                            ->orWhere(function($q) use ($endDateStr) {
+                                // Existing booking ends during our period
+                                $q->whereDate('end_time', '>=', $this->booking_date)
+                                ->whereDate('end_time', '<=', $endDateStr);
+                            })
+                            ->orWhere(function($q) use ($endDateStr) {
+                                // Existing booking encompasses our period
+                                $q->whereDate('start_time', '<=', $this->booking_date)
+                                ->whereDate('end_time', '>=', $endDateStr);
+                            });
+                        });
+                    } else {
+                        // For single-day bookings, use time-based overlap checking
+                        $query->where(function ($q) use ($startDateTime, $endDateTime) {
+                            $q->where(function ($overlap) use ($startDateTime, $endDateTime) {
+                                // Existing booking starts during our requested time
+                                $overlap->where('start_time', '>=', $startDateTime)
+                                    ->where('start_time', '<', $endDateTime);
+                            })
+                            ->orWhere(function ($overlap) use ($startDateTime, $endDateTime) {
+                                // Existing booking ends during our requested time  
+                                $overlap->where('end_time', '>', $startDateTime)
+                                    ->where('end_time', '<=', $endDateTime);
+                            })
+                            ->orWhere(function ($overlap) use ($startDateTime, $endDateTime) {
+                                // Existing booking completely encompasses our requested time
+                                $overlap->where('start_time', '<=', $startDateTime)
+                                    ->where('end_time', '>=', $endDateTime);
+                            });
+                        });
+                    }
                 })
                 ->exists();
 

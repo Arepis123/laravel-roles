@@ -23,6 +23,14 @@ class BookingShow extends Component
     // Status tracking properties
     public string $status = '';
     public bool $showStatusHistory = false;
+    
+    // Modal properties for marking as done
+    public bool $showDoneModal = false;
+    public string $doneRemarks = '';
+    public string $currentOdometer = '';
+    public bool $gasFilledUp = false;
+    public string $gasAmount = '';
+    public string $fuelLevel = '4';
 
     protected $assetTypeConfig = [
         'meeting_room' => [
@@ -55,6 +63,114 @@ class BookingShow extends Component
         $this->additional_booking = $this->booking->additional_booking ?? [];
         $this->refreshment_details = $this->booking->refreshment_details ?? '';
         $this->status = $this->booking->status ?? 'pending';
+        
+        // Load existing done details if available
+        if ($this->booking->done_details) {
+            $doneDetails = $this->booking->done_details;
+            $this->doneRemarks = $doneDetails['remarks'] ?? '';
+            $this->currentOdometer = $doneDetails['odometer'] ?? '';
+            $this->gasFilledUp = $doneDetails['gas_filled'] ?? false;
+            $this->gasAmount = $doneDetails['gas_amount'] ?? '';
+            $this->fuelLevel = $doneDetails['fuel_level'] ?? '4';
+        }
+    }
+
+    /**
+     * Open the done modal
+     */
+    public function openDoneModal()
+    {
+        $this->resetDoneFields();
+        $this->showDoneModal = true;
+    }
+
+    /**
+     * Reset done modal fields
+     */
+    public function resetDoneFields()
+    {
+        $this->doneRemarks = '';
+        $this->currentOdometer = '';
+        $this->gasFilledUp = false;
+        $this->gasAmount = '';
+        $this->fuelLevel = '4';
+    }
+
+    /**
+     * Close the done modal
+     */
+    public function closeDoneModal()
+    {
+        $this->showDoneModal = false;
+        $this->resetDoneFields();
+    }
+
+    /**
+     * Validate and save done details based on asset type
+     */
+    public function confirmMarkAsDone()
+    {
+        // Validation based on asset type
+        if ($this->asset_type === 'vehicle') {
+            $this->validate([
+                'currentOdometer' => 'required|numeric|min:0',
+                'fuelLevel' => 'required|integer|min:1|max:8',
+                'gasAmount' => $this->gasFilledUp ? 'required|numeric|min:0' : 'nullable',
+            ], [
+                'currentOdometer.required' => 'Current odometer reading is required.',
+                'currentOdometer.numeric' => 'Odometer must be a valid number.',
+                'fuelLevel.required' => 'Fuel level is required.',
+                'fuelLevel.integer' => 'Fuel level must be a valid number.',
+                'fuelLevel.min' => 'Fuel level must be at least 1.',
+                'fuelLevel.max' => 'Fuel level must be at most 8.',
+                'gasAmount.required' => 'Gas amount is required when gas filled up is checked.',
+                'gasAmount.numeric' => 'Gas amount must be a valid number.',
+            ]);
+        } else {
+            // For meeting room and IT assets
+            $this->validate([
+                'doneRemarks' => 'required|string|min:10',
+            ], [
+                'doneRemarks.required' => 'Remarks are required when marking as done.',
+                'doneRemarks.min' => 'Remarks must be at least 10 characters.',
+            ]);
+        }
+
+        // Prepare done details based on asset type
+        $doneDetails = [];
+        
+        if ($this->asset_type === 'vehicle') {
+            $doneDetails = [
+                'odometer' => $this->currentOdometer,
+                'fuel_level' => $this->fuelLevel,
+                'gas_filled' => $this->gasFilledUp,
+                'gas_amount' => $this->gasFilledUp ? $this->gasAmount : null,
+                'completed_at' => now()->toDateTimeString(),
+                'completed_by' => auth()->id(),
+                'completed_by_name' => auth()->user()->name,
+            ];
+        } else {
+            $doneDetails = [
+                'remarks' => $this->doneRemarks,
+                'completed_at' => now()->toDateTimeString(),
+                'completed_by' => auth()->id(),
+                'completed_by_name' => auth()->user()->name,
+            ];
+        }
+
+        // Save the done details and change status
+        $this->booking->update([
+            'done_details' => $doneDetails
+        ]);
+
+        // Close modal
+        $this->closeDoneModal();
+
+        // Change status to done
+        $this->changeStatus('done');
+        
+        // Trigger confetti animation via Alpine.js event
+        $this->dispatch('booking-completed');
     }
 
     /**
@@ -63,6 +179,12 @@ class BookingShow extends Component
     public function changeStatus($newStatus)
     {
         try {
+            // If trying to mark as done and modal not shown yet, show modal first
+            if ($newStatus === 'done' && !$this->booking->done_details && !$this->showDoneModal) {
+                $this->openDoneModal();
+                return;
+            }
+
             \Log::info('🔄 changeStatus called', [
                 'new_status' => $newStatus,
                 'current_status' => $this->booking->status,
@@ -89,7 +211,7 @@ class BookingShow extends Component
 
             // Store the old status before updating
             $oldStatus = $this->booking->status;
-            \Log::info('📝 Status change confirmed', [
+            \Log::info('🔍 Status change confirmed', [
                 'from' => $oldStatus,
                 'to' => $newStatus
             ]);

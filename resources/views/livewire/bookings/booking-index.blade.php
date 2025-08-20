@@ -51,19 +51,10 @@
     @endif    
 
     <!-- Action Bar -->
-    <div class="flex justify-between items-center mb-4">
-        @can('book.create')
-        <flux:button variant="primary" href="{{ route('bookings.create') }}">
-            <flux:icon name="plus" class="w-4 h-4 mr-2" />
-            New Booking
-        </flux:button>
-        @else
-        <div></div>
-        @endcan
+    <div class="flex flex-col md:flex-row md:justify-end gap-2 mb-4">
 
-        <!-- Filter and Search -->
-        <div class="flex gap-2">
-            <flux:select wire:model.live="statusFilter" placeholder="All Status" class="min-w-32">
+        <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2 w-full md:w-auto">
+            <flux:select wire:model.live="statusFilter" placeholder="All Status" class="min-w-32 w-full sm:w-auto">
                 <flux:select.option value="">All Status</flux:select.option>
                 <flux:select.option value="pending">Pending</flux:select.option>
                 <flux:select.option value="approved">Approved</flux:select.option>
@@ -72,7 +63,7 @@
                 <flux:select.option value="done">Done</flux:select.option>
             </flux:select>
             
-            <flux:select wire:model.live="assetTypeFilter" placeholder="All Assets" class="min-w-32">
+            <flux:select wire:model.live="assetTypeFilter" placeholder="All Assets" class="min-w-32 w-full sm:w-auto">
                 <flux:select.option value="">All Assets</flux:select.option>
                 <flux:select.option value="App\Models\Vehicle">Vehicle</flux:select.option>
                 <flux:select.option value="App\Models\MeetingRoom">Meeting Room</flux:select.option>
@@ -83,7 +74,7 @@
                 wire:model.live.debounce.500ms="search" 
                 placeholder="Search bookings..." 
                 icon="magnifying-glass"
-                class="min-w-48"
+                class="min-w-48 w-full sm:w-auto"
             />
 
             <flux:tooltip content="Reset Sort">

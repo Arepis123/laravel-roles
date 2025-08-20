@@ -275,7 +275,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-center">                              
                                 <div class="flex justify-center gap-1">
                                     <!-- View Details Button -->
-                                    <flux:button size="sm" href="{{ route('bookings.show', $booking->id) }}" variant="ghost">
+                                    <flux:button size="sm" href="{{ route('bookings.show.user', $booking->id) }}" variant="ghost">
                                         <flux:icon name="eye" class="w-4 h-4" />
                                     </flux:button>
 
