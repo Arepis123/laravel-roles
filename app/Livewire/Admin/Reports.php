@@ -88,6 +88,9 @@ class Reports extends Component
                 case 'assets':
                     $report = $this->reportService->generateAssetsReport($filters, $this->reportFormat);
                     break;
+                case 'vehicles':
+                    $report = $this->reportService->generateVehiclesReport($filters, $this->reportFormat);
+                    break;
                 case 'bookings':
                     $report = $this->reportService->generateBookingsReport($filters, $this->reportFormat);
                     break;
@@ -251,7 +254,7 @@ class Reports extends Component
             $filters['role'] = $this->role;
         }
 
-        if ($this->reportType === 'bookings') {
+        if ($this->reportType === 'bookings' || $this->reportType === 'vehicles') {
             if ($this->bookingDateFrom) {
                 $filters['booking_date_from'] = $this->bookingDateFrom;
             }

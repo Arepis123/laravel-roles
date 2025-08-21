@@ -9,6 +9,7 @@ use App\Models\Booking;
 use App\Models\User;
 use App\Models\ReportLog;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Writer\Csv;
@@ -70,6 +71,218 @@ class ReportService
             \Log::error('Stack trace: ' . $e->getTraceAsString());
             throw $e;
         }
+    }
+
+    public function generateVehiclesReport($filters = [], $format = 'excel')
+    {
+        try {
+            \Log::info('Starting vehicles report generation', ['format' => $format, 'filters' => $filters]);
+            
+            // Get all vehicles with their fuel and odometer data
+            $vehicles = $this->getVehiclesWithDetails($filters);
+            
+            \Log::info('Vehicles query completed', ['count' => $vehicles->count()]);
+
+            return $this->generateFile($vehicles, 'vehicles', $format, $filters);
+            
+        } catch (\Exception $e) {
+            \Log::error('Vehicles Report Error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            throw $e;
+        }
+    }
+
+    private function getVehiclesWithDetails($filters)
+    {
+        $query = Vehicle::query();
+        
+        // Apply basic vehicle filters
+        if (isset($filters['date_from']) && $filters['date_from']) {
+            $query->where('created_at', '>=', $filters['date_from']);
+        }
+        
+        if (isset($filters['date_to']) && $filters['date_to']) {
+            $query->where('created_at', '<=', $filters['date_to']);
+        }
+
+        if (isset($filters['status']) && $filters['status']) {
+            $query->where('status', $filters['status']);
+        }
+
+        $vehicles = $query->get();
+
+        // Enhance vehicles with fuel and odometer data from bookings
+        $vehiclesWithDetails = $vehicles->map(function ($vehicle) use ($filters) {
+            // Get fuel data for this vehicle
+            $fuelData = $this->getVehicleFuelData($vehicle->id, $filters);
+            
+            // Get odometer data for this vehicle
+            $odometerData = $this->getVehicleOdometerData($vehicle->id, $filters);
+            
+            // Get booking statistics
+            $bookingStats = $this->getVehicleBookingStats($vehicle->id, $filters);
+
+            return (object) [
+                'id' => $vehicle->id,
+                'model' => $vehicle->model ?? 'N/A',
+                'plate_number' => $vehicle->plate_number ?? 'N/A',
+                'capacity' => $vehicle->capacity ?? 'N/A',
+                'driver_name' => $vehicle->driver_name ?? 'N/A',
+                'notes' => $vehicle->notes ?? 'N/A',
+                'status' => $vehicle->status ?? 'available',
+                'created_at' => $vehicle->created_at,
+                'created_by' => $this->getCreatedByName($vehicle),
+                
+                // Fuel Data
+                'total_fuel_filled' => $fuelData['total_fuel'],
+                'fuel_sessions_count' => $fuelData['fuel_sessions'],
+                'avg_fuel_per_session' => $fuelData['avg_fuel'],
+                'last_fuel_date' => $fuelData['last_fuel_date'],
+                'last_fuel_amount' => $fuelData['last_fuel_amount'],
+                
+                // Odometer Data
+                'latest_odometer' => $odometerData['latest_odometer'],
+                'initial_odometer' => $odometerData['initial_odometer'],
+                'total_distance' => $odometerData['total_distance'],
+                'last_odometer_date' => $odometerData['last_odometer_date'],
+                
+                // Booking Statistics
+                'total_bookings' => $bookingStats['total_bookings'],
+                'completed_bookings' => $bookingStats['completed_bookings'],
+                'pending_bookings' => $bookingStats['pending_bookings'],
+                'approved_bookings' => $bookingStats['approved_bookings'],
+                'utilization_rate' => $bookingStats['utilization_rate'],
+            ];
+        });
+
+        return $vehiclesWithDetails;
+    }
+
+    private function getVehicleFuelData($vehicleId, $filters)
+    {
+        $query = Booking::where('asset_type', Vehicle::class)
+            ->where('asset_id', $vehicleId)
+            ->where('status', 'done')
+            ->whereNotNull('done_details');
+
+        // Apply booking date filters
+        if (isset($filters['booking_date_from']) && $filters['booking_date_from']) {
+            $query->where('start_time', '>=', $filters['booking_date_from']);
+        }
+        
+        if (isset($filters['booking_date_to']) && $filters['booking_date_to']) {
+            $query->where('end_time', '<=', $filters['booking_date_to']);
+        }
+
+        $bookings = $query->get();
+        
+        $totalFuel = 0;
+        $fuelSessions = 0;
+        $lastFuelDate = null;
+        $lastFuelAmount = 0;
+        
+        foreach ($bookings as $booking) {
+            $doneDetails = $booking->done_details;
+            
+            if (isset($doneDetails['gas_filled']) && $doneDetails['gas_filled'] && 
+                isset($doneDetails['gas_amount']) && $doneDetails['gas_amount'] > 0) {
+                
+                $totalFuel += (float) $doneDetails['gas_amount'];
+                $fuelSessions++;
+                
+                if (!$lastFuelDate || $booking->end_time > $lastFuelDate) {
+                    $lastFuelDate = $booking->end_time;
+                    $lastFuelAmount = (float) $doneDetails['gas_amount'];
+                }
+            }
+        }
+        
+        return [
+            'total_fuel' => $totalFuel,
+            'fuel_sessions' => $fuelSessions,
+            'avg_fuel' => $fuelSessions > 0 ? round($totalFuel / $fuelSessions, 2) : 0,
+            'last_fuel_date' => $lastFuelDate ? $lastFuelDate->format('Y-m-d') : null,
+            'last_fuel_amount' => $lastFuelAmount,
+        ];
+    }
+
+    private function getVehicleOdometerData($vehicleId, $filters)
+    {
+        $query = Booking::where('asset_type', Vehicle::class)
+            ->where('asset_id', $vehicleId)
+            ->where('status', 'done')
+            ->whereNotNull('done_details')
+            ->orderBy('end_time', 'asc');
+
+        // Apply booking date filters
+        if (isset($filters['booking_date_from']) && $filters['booking_date_from']) {
+            $query->where('start_time', '>=', $filters['booking_date_from']);
+        }
+        
+        if (isset($filters['booking_date_to']) && $filters['booking_date_to']) {
+            $query->where('end_time', '<=', $filters['booking_date_to']);
+        }
+
+        $bookings = $query->get();
+        
+        $latestOdometer = null;
+        $initialOdometer = null;
+        $lastOdometerDate = null;
+        
+        foreach ($bookings as $booking) {
+            $doneDetails = $booking->done_details;
+            
+            if (isset($doneDetails['odometer']) && $doneDetails['odometer'] > 0) {
+                if ($initialOdometer === null) {
+                    $initialOdometer = (float) $doneDetails['odometer'];
+                }
+                
+                $latestOdometer = (float) $doneDetails['odometer'];
+                $lastOdometerDate = $booking->end_time;
+            }
+        }
+        
+        $totalDistance = ($latestOdometer && $initialOdometer) ? 
+            $latestOdometer - $initialOdometer : 0;
+        
+        return [
+            'latest_odometer' => $latestOdometer,
+            'initial_odometer' => $initialOdometer,
+            'total_distance' => $totalDistance,
+            'last_odometer_date' => $lastOdometerDate ? $lastOdometerDate->format('Y-m-d') : null,
+        ];
+    }
+
+    private function getVehicleBookingStats($vehicleId, $filters)
+    {
+        $query = Booking::where('asset_type', Vehicle::class)
+            ->where('asset_id', $vehicleId);
+
+        // Apply booking date filters
+        if (isset($filters['booking_date_from']) && $filters['booking_date_from']) {
+            $query->where('start_time', '>=', $filters['booking_date_from']);
+        }
+        
+        if (isset($filters['booking_date_to']) && $filters['booking_date_to']) {
+            $query->where('end_time', '<=', $filters['booking_date_to']);
+        }
+
+        $totalBookings = $query->count();
+        $completedBookings = (clone $query)->where('status', 'done')->count();
+        $pendingBookings = (clone $query)->where('status', 'pending')->count();
+        $approvedBookings = (clone $query)->where('status', 'approved')->count();
+        
+        // Calculate utilization rate (completed bookings / total bookings)
+        $utilizationRate = $totalBookings > 0 ? 
+            round(($completedBookings / $totalBookings) * 100, 1) : 0;
+        
+        return [
+            'total_bookings' => $totalBookings,
+            'completed_bookings' => $completedBookings,
+            'pending_bookings' => $pendingBookings,
+            'approved_bookings' => $approvedBookings,
+            'utilization_rate' => $utilizationRate,
+        ];
     }
 
     private function getVehicleData($filters)
@@ -379,7 +592,25 @@ class ReportService
             ]);
             
             // Convert data to array to avoid any model-related issues
-            $dataArray = collect($data)->map(function ($item) {
+            $dataArray = collect($data)->map(function ($item) use ($type) {
+                if ($type === 'vehicles') {
+                    return (object) [
+                        'id' => $item->id ?? 'N/A',
+                        'model' => $item->model ?? 'N/A',
+                        'plate_number' => $item->plate_number ?? 'N/A',
+                        'capacity' => $item->capacity ?? 'N/A',
+                        'driver_name' => $item->driver_name ?? 'N/A',
+                        'status' => $item->status ?? 'N/A',
+                        'total_fuel_filled' => $item->total_fuel_filled ?? 0,
+                        'fuel_sessions_count' => $item->fuel_sessions_count ?? 0,
+                        'latest_odometer' => $item->latest_odometer ?? 'N/A',
+                        'total_distance' => $item->total_distance ?? 0,
+                        'total_bookings' => $item->total_bookings ?? 0,
+                        'utilization_rate' => $item->utilization_rate ?? 0,
+                        'created_at' => $item->created_at ?? now(),
+                    ];
+                }
+                
                 return (object) [
                     'id' => $item->id ?? 'N/A',
                     'name' => $item->name ?? 'N/A', 
@@ -467,6 +698,13 @@ class ReportService
         switch ($type) {
             case 'assets':
                 return ['ID', 'Name', 'Type', 'Category', 'Status', 'Description', 'Created By', 'Created At'];
+            case 'vehicles':
+                return [
+                    'ID', 'Model', 'Plate Number', 'Capacity', 'Driver Name', 'Status',
+                    'Total Fuel (L)', 'Fuel Sessions', 'Avg Fuel/Session', 'Last Fuel Date', 'Last Fuel Amount',
+                    'Latest Odometer', 'Total Distance', 'Total Bookings', 'Completed Bookings', 'Utilization Rate (%)',
+                    'Created By', 'Created At'
+                ];
             case 'bookings':
                 return ['ID', 'Asset', 'Asset Type', 'User', 'Start Date', 'End Date', 'Status', 'Notes', 'Created At'];
             case 'users':
@@ -490,6 +728,27 @@ class ReportService
                         $item->description ?? 'N/A',
                         $item->created_by ?? 'N/A',
                         $item->created_at->format('Y-m-d H:i:s')
+                    ];
+                case 'vehicles':
+                    return [
+                        $item->id,
+                        $item->model ?? 'N/A',
+                        $item->plate_number ?? 'N/A',
+                        $item->capacity ?? 'N/A',
+                        $item->driver_name ?? 'N/A',
+                        ucfirst($item->status ?? 'available'),
+                        $item->total_fuel_filled ?? 0,
+                        $item->fuel_sessions_count ?? 0,
+                        $item->avg_fuel_per_session ?? 0,
+                        $item->last_fuel_date ?? 'N/A',
+                        $item->last_fuel_amount ?? 0,
+                        $item->latest_odometer ?? 'N/A',
+                        $item->total_distance ?? 0,
+                        $item->total_bookings ?? 0,
+                        $item->completed_bookings ?? 0,
+                        $item->utilization_rate ?? 0,
+                        $item->created_by ?? 'N/A',
+                        $item->created_at ? $item->created_at->format('Y-m-d H:i:s') : 'N/A'
                     ];
                 case 'bookings':
                     // Get asset name and type from different possible relationships

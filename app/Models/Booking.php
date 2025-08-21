@@ -25,7 +25,7 @@ class Booking extends Model
         'status_history',
         'passengers', 
         'destination',
-        'done_details', // Add this field for storing completion details
+        'done_details',
     ];
     
     protected $casts = [

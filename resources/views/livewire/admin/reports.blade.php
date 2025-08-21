@@ -2,7 +2,7 @@
     <!-- Page Header -->
     <div class="relative mb-6 w-full">
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ __('Reports') }}</h1>
-        <p class="text-gray-600 mt-1 dark:text-gray-400">{{ __('Generate and download reports for assets, bookings, and users') }}</p>
+        <p class="text-gray-600 mt-1 dark:text-gray-400">{{ __('Generate and download reports for assets, vehicles, bookings, and users') }}</p>
         <flux:separator variant="subtle" class="my-4" />
     </div>
 
@@ -94,6 +94,7 @@
                     <flux:label>Report Type</flux:label>
                     <flux:select wire:model.live="reportType" placeholder="Select report type">
                         <flux:select.option value="assets">Assets Report</flux:select.option>
+                        <flux:select.option value="vehicles">Vehicles Report</flux:select.option>
                         <flux:select.option value="bookings">Bookings Report</flux:select.option>
                         <flux:select.option value="users">Users Report</flux:select.option>
                     </flux:select>
@@ -157,6 +158,11 @@
                                 <flux:select.option value="available">Available</flux:select.option>
                                 <flux:select.option value="booked">Booked</flux:select.option>
                                 <flux:select.option value="maintenance">Maintenance</flux:select.option>
+                            @elseif($reportType === 'vehicles')
+                                <flux:select.option value="available">Available</flux:select.option>
+                                <flux:select.option value="booked">Booked</flux:select.option>
+                                <flux:select.option value="maintenance">Maintenance</flux:select.option>
+                                <flux:select.option value="out_of_service">Out of Service</flux:select.option>
                             @elseif($reportType === 'bookings')
                                 <flux:select.option value="pending">Pending</flux:select.option>
                                 <flux:select.option value="approved">Approved</flux:select.option>
@@ -193,8 +199,8 @@
                         </flux:field>
                     @endif
 
-                    <!-- Booking Date Range (Bookings only) -->
-                    @if($reportType === 'bookings')
+                    <!-- Booking Date Range (Bookings and Vehicles) -->
+                    @if($reportType === 'bookings' || $reportType === 'vehicles')
                         <flux:field>
                             <flux:label>Booking From</flux:label>
                             <flux:input type="date" wire:model="bookingDateFrom" />
@@ -280,7 +286,7 @@
                         @forelse($reportLogs as $report)
                             <tr class="hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors duration-200 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <flux:badge color="{{ $report->report_type == 'assets' ? 'green' : ($report->report_type == 'bookings' ? 'blue' : 'fuchsia') }}">
+                                    <flux:badge color="{{ $report->report_type == 'assets' ? 'green' : ($report->report_type == 'vehicles' ? 'orange' : ($report->report_type == 'bookings' ? 'blue' : 'fuchsia')) }}">
                                         {{ ucfirst($report->report_type) }}
                                     </flux:badge> 
                                 </td>
@@ -322,53 +328,18 @@
                                 
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex items-center">
-                                        <!-- <button 
-                                            wire:click="downloadReport({{ $report->id }})"
-                                            class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded-md text-indigo-600 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
-                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg>
-                                            Download
-                                        </button> -->
                                         <flux:tooltip content="Download">
                                             <flux:button size="sm" wire:click="downloadReport({{ $report->id }})" variant="ghost">
                                                 <flux:icon name="arrow-down-tray" class="w-4 h-4"/>
                                             </flux:button>                                        
                                         </flux:tooltip>
 
-                                        <!-- <button 
-                                            wire:click="emailReport({{ $report->id }})"
-                                            wire:loading.attr="disabled"
-                                            class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded-md text-green-600 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors disabled:opacity-50">
-                                            <span wire:loading.remove wire:target="emailReport({{ $report->id }})">
-                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                                                </svg>
-                                                Email
-                                            </span>
-                                            <span wire:loading wire:target="emailReport({{ $report->id }})">
-                                                <svg class="animate-spin w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24">
-                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                                Sending...
-                                            </span>
-                                        </button> -->
                                         <flux:tooltip content="Sent to Email">
                                             <flux:button size="sm" wire:click="emailReport({{ $report->id }})" variant="ghost">
                                                 <flux:icon name="envelope"  class="w-4 h-4"/>
                                             </flux:button>                                           
                                         </flux:tooltip>
 
-                                        <!-- <button 
-                                            wire:click="deleteReport({{ $report->id }})"
-                                            wire:confirm="Are you sure you want to delete this report?"
-                                            class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded-md text-red-600 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
-                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                            </svg>
-                                            Delete
-                                        </button> -->
                                         @can('report.delete')
                                         <flux:tooltip content="Delete">
                                             <flux:button size="sm" wire:click="deleteReport({{ $report->id }})" variant="ghost">
