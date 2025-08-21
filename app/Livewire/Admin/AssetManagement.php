@@ -20,6 +20,11 @@ class AssetManagement extends Component
     public $editingAsset = null;
     public $assetType = '';
     
+    // Stats Modal properties
+    public $showStatsModal = false;
+    public $selectedStatType = '';
+    public $statsModalData = [];
+    
     // Meeting Room specific fields
     #[Validate('required|string|max:255')]
     public $meeting_room_name = '';
@@ -100,7 +105,9 @@ class AssetManagement extends Component
                     'name' => $room->name,
                     'details' => $room->location . ($room->capacity ? " (Cap: {$room->capacity})" : ''),
                     'status' => $this->getAssetStatus('App\Models\MeetingRoom', $room->id),
-                    'bookings_count' => $room->bookings()->count(),
+                    'bookings_count' => Booking::where('asset_type', 'App\Models\MeetingRoom')
+                        ->where('asset_id', $room->id)
+                        ->count(),
                     'model' => $room
                 ];
             });
@@ -121,7 +128,9 @@ class AssetManagement extends Component
                     'name' => $vehicle->model,
                     'details' => ($vehicle->driver_name ? "Driver: {$vehicle->driver_name}" : 'No driver assigned') . ($vehicle->capacity ? " (Cap: {$vehicle->capacity})" : ''),
                     'status' => $this->getAssetStatus('App\Models\Vehicle', $vehicle->id),
-                    'bookings_count' => $vehicle->bookings()->count(),
+                    'bookings_count' => Booking::where('asset_type', 'App\Models\Vehicle')
+                        ->where('asset_id', $vehicle->id)
+                        ->count(),
                     'model' => $vehicle
                 ];
             });
@@ -142,7 +151,9 @@ class AssetManagement extends Component
                     'name' => $asset->name . ($asset->asset_tag ? " ({$asset->asset_tag})" : ''),
                     'details' => $asset->location . ($asset->specs ? " - {$asset->specs}" : ''),
                     'status' => $this->getAssetStatus('App\Models\ItAsset', $asset->id),
-                    'bookings_count' => $asset->bookings()->count(),
+                    'bookings_count' => Booking::where('asset_type', 'App\Models\ItAsset')
+                        ->where('asset_id', $asset->id)
+                        ->count(),
                     'model' => $asset
                 ];
             });
@@ -162,6 +173,199 @@ class AssetManagement extends Component
             ->first();
 
         return $activeBooking ? 'In Use' : 'Available';
+    }
+
+    public function openStatsModal($type)
+    {
+        $this->selectedStatType = $type;
+        $this->loadStatsModalData();
+        $this->showStatsModal = true;
+    }
+
+    private function loadStatsModalData()
+    {
+        switch ($this->selectedStatType) {
+            case 'meeting_rooms':
+                $this->statsModalData = $this->getMeetingRoomsData();
+                break;
+            case 'vehicles':
+                $this->statsModalData = $this->getVehiclesData();
+                break;
+            case 'it_assets':
+                $this->statsModalData = $this->getItAssetsData();
+                break;
+            case 'available_assets':
+                $this->statsModalData = $this->getAvailableAssetsData();
+                break;
+            case 'active_bookings':
+                $this->statsModalData = $this->getActiveBookingsData();
+                break;
+            default:
+                $this->statsModalData = [];
+        }
+    }
+
+    private function getMeetingRoomsData()
+    {
+        return MeetingRoom::get()->map(function($room) {
+            return [
+                'id' => $room->id,
+                'type' => 'meeting_room',
+                'type_label' => 'Meeting Room',
+                'name' => $room->name,
+                'status' => $this->getAssetStatus('App\Models\MeetingRoom', $room->id),
+                'bookings_count' => Booking::where('asset_type', 'App\Models\MeetingRoom')
+                    ->where('asset_id', $room->id)
+                    ->count(),
+                'model' => $room
+            ];
+        })->toArray();
+    }
+
+    private function getVehiclesData()
+    {
+        return Vehicle::get()->map(function($vehicle) {
+            return [
+                'id' => $vehicle->id,
+                'type' => 'vehicle',
+                'type_label' => 'Vehicle',
+                'name' => $vehicle->model,
+                'status' => $this->getAssetStatus('App\Models\Vehicle', $vehicle->id),
+                'bookings_count' => Booking::where('asset_type', 'App\Models\Vehicle')
+                    ->where('asset_id', $vehicle->id)
+                    ->count(),
+                'model' => $vehicle
+            ];
+        })->toArray();
+    }
+
+    private function getItAssetsData()
+    {
+        return ItAsset::get()->map(function($asset) {
+            return [
+                'id' => $asset->id,
+                'type' => 'it_asset',
+                'type_label' => 'IT Asset',
+                'name' => $asset->name,
+                'status' => $this->getAssetStatus('App\Models\ItAsset', $asset->id),
+                'bookings_count' => Booking::where('asset_type', 'App\Models\ItAsset')
+                    ->where('asset_id', $asset->id)
+                    ->count(),
+                'model' => $asset
+            ];
+        })->toArray();
+    }
+
+    private function getAvailableAssetsData()
+    {
+        $availableAssets = collect();
+        
+        // Get available meeting rooms
+        $meetingRooms = MeetingRoom::get()->filter(function($room) {
+            return $this->getAssetStatus('App\Models\MeetingRoom', $room->id) === 'Available';
+        })->map(function($room) {
+            return [
+                'id' => $room->id,
+                'type' => 'meeting_room',
+                'type_label' => 'Meeting Room',
+                'name' => $room->name,
+                'status' => 'Available',
+                'bookings_count' => Booking::where('asset_type', 'App\Models\MeetingRoom')
+                    ->where('asset_id', $room->id)
+                    ->count(),
+                'model' => $room
+            ];
+        });
+        
+        // Get available vehicles
+        $vehicles = Vehicle::get()->filter(function($vehicle) {
+            return $this->getAssetStatus('App\Models\Vehicle', $vehicle->id) === 'Available';
+        })->map(function($vehicle) {
+            return [
+                'id' => $vehicle->id,
+                'type' => 'vehicle',
+                'type_label' => 'Vehicle',
+                'name' => $vehicle->model,
+                'status' => 'Available',
+                'bookings_count' => Booking::where('asset_type', 'App\Models\Vehicle')
+                    ->where('asset_id', $vehicle->id)
+                    ->count(),
+                'model' => $vehicle
+            ];
+        });
+        
+        // Get available IT assets
+        $itAssets = ItAsset::get()->filter(function($asset) {
+            return $this->getAssetStatus('App\Models\ItAsset', $asset->id) === 'Available';
+        })->map(function($asset) {
+            return [
+                'id' => $asset->id,
+                'type' => 'it_asset',
+                'type_label' => 'IT Asset',
+                'name' => $asset->name,
+                'status' => 'Available',
+                'bookings_count' => Booking::where('asset_type', 'App\Models\ItAsset')
+                    ->where('asset_id', $asset->id)
+                    ->count(),
+                'model' => $asset
+            ];
+        });
+        
+        return $availableAssets->merge($meetingRooms)
+            ->merge($vehicles)
+            ->merge($itAssets)
+            ->sortBy('name')
+            ->values()
+            ->toArray();
+    }
+
+    private function getActiveBookingsData()
+    {
+        return Booking::where('start_time', '<=', now())
+            ->where('end_time', '>=', now())
+            ->where('status', 'approved')
+            ->with('bookedBy')
+            ->get()
+            ->map(function($booking) {
+                $assetName = '';
+                $assetTypeLabel = '';
+                
+                switch ($booking->asset_type) {
+                    case 'App\Models\MeetingRoom':
+                        $asset = MeetingRoom::find($booking->asset_id);
+                        $assetName = $asset ? $asset->name : 'Unknown Meeting Room';
+                        $assetTypeLabel = 'Meeting Room';
+                        break;
+                    case 'App\Models\Vehicle':
+                        $asset = Vehicle::find($booking->asset_id);
+                        $assetName = $asset ? $asset->model : 'Unknown Vehicle';
+                        $assetTypeLabel = 'Vehicle';
+                        break;
+                    case 'App\Models\ItAsset':
+                        $asset = ItAsset::find($booking->asset_id);
+                        $assetName = $asset ? $asset->name : 'Unknown IT Asset';
+                        $assetTypeLabel = 'IT Asset';
+                        break;
+                }
+                
+                return [
+                    'id' => $booking->id,
+                    'asset_name' => $assetName,
+                    'asset_type_label' => $assetTypeLabel,
+                    'start_time' => $booking->start_time->format('M j, Y g:i A'),
+                    'end_time' => $booking->end_time->format('M j, Y g:i A'),
+                    'booked_by' => $booking->bookedBy ? $booking->bookedBy->name : 'Unknown User',
+                    'purpose' => $booking->purpose,
+                ];
+            })
+            ->toArray();
+    }
+
+    public function closeStatsModal()
+    {
+        $this->showStatsModal = false;
+        $this->selectedStatType = '';
+        $this->statsModalData = [];
     }
 
     public function createAsset($type)
@@ -332,7 +536,7 @@ class AssetManagement extends Component
             $activeBookings = Booking::where('asset_type', $modelClass)
                 ->where('asset_id', $id)
                 ->where('end_time', '>=', now())
-                ->where('status', '!=', 'cancelled')
+                ->whereNotIn('status', ['cancelled','rejected'])
                 ->count();
 
             if ($activeBookings > 0) {
@@ -445,11 +649,16 @@ class AssetManagement extends Component
 
     public function getAssetStats()
     {
+        $allAssets = $this->getAllAssets();
+        $availableAssets = $allAssets->filter(function($asset) {
+            return $asset['status'] === 'Available';
+        });
+
         return [
             'meeting_rooms' => MeetingRoom::count(),
             'vehicles' => Vehicle::count(),
             'it_assets' => ItAsset::count(),
-            'total_bookings' => Booking::count(),
+            'available_assets' => $availableAssets->count(),
             'active_bookings' => Booking::where('start_time', '<=', now())
                 ->where('end_time', '>=', now())
                 ->where('status', 'approved')

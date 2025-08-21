@@ -8,7 +8,11 @@
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 mb-4 sm:mb-6">
-        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4">
+        <!-- Meeting Rooms Card -->
+        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4 cursor-pointer hover:shadow-xs hover:scale-102 transition-all"
+             wire:click="$set('selectedStatType', 'meeting_rooms')" 
+             wire:click="loadStatsModalData" 
+             wire:click="$set('showStatsModal', true)">
             <div class="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
                 <div class="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -22,7 +26,9 @@
             </div>
         </div>
 
-        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4">
+        <!-- Vehicles Card -->
+        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4 cursor-pointer hover:shadow-xs hover:scale-102 transition-all"
+             wire:click="openStatsModal('vehicles')">
             <div class="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
                 <div class="p-1.5 sm:p-2 bg-green-100 rounded-lg flex-shrink-0">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -36,7 +42,9 @@
             </div>
         </div>
 
-        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4">
+        <!-- IT Assets Card -->
+        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4 cursor-pointer hover:shadow-xs hover:scale-102 transition-all"
+             wire:click="openStatsModal('it_assets')">
             <div class="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
                 <div class="p-1.5 sm:p-2 bg-fuchsia-100 rounded-lg flex-shrink-0">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-fuchsia-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,24 +58,28 @@
             </div>
         </div>
 
-        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4">
+        <!-- Available Assets Card -->
+        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4 cursor-pointer hover:shadow-xs hover:scale-102 transition-all"
+             wire:click="openStatsModal('available_assets')">
             <div class="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
-                <div class="p-1.5 sm:p-2 bg-yellow-100 rounded-lg flex-shrink-0">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                <div class="p-1.5 sm:p-2 bg-lime-200 dark:bg-lime-100 rounded-lg flex-shrink-0">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-lime-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </div>
                 <div class="min-w-0 flex-1">
-                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Total Bookings</p>
-                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-yellow-400">{{ $stats['total_bookings'] }}</p>
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Available Assets</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-emerald-400">{{ $stats['available_assets'] }}</p>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4">
+        <!-- Active Bookings Card -->
+        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4 cursor-pointer hover:shadow-xs hover:scale-102 transition-all"
+             wire:click="openStatsModal('active_bookings')">
             <div class="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
-                <div class="p-1.5 sm:p-2 bg-red-100 rounded-lg flex-shrink-0">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="p-1.5 sm:p-2 bg-amber-100 rounded-lg flex-shrink-0">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </div>
@@ -264,7 +276,7 @@
         </div>
     </div>    
 
-    <!-- FluxUI Modal -->
+    <!-- Asset Modal -->
     <flux:modal wire:model="showModal" class="space-y-6">
         <div>
             <flux:heading size="lg">
@@ -387,6 +399,158 @@
                 </flux:button>
             </div>
         </form>
+    </flux:modal>
+
+    <!-- Stats Modal -->
+    <flux:modal wire:model="showStatsModal" class="space-y-6" variant="flyout" position="right">
+        <div>
+            <flux:heading size="lg">
+                @if($selectedStatType === 'meeting_rooms') Meeting Rooms
+                @elseif($selectedStatType === 'vehicles') Vehicles
+                @elseif($selectedStatType === 'it_assets') IT Assets
+                @elseif($selectedStatType === 'available_assets') Available Assets
+                @elseif($selectedStatType === 'active_bookings') Active Bookings
+                @endif
+            </flux:heading>
+            <flux:subheading>
+                @if($selectedStatType === 'active_bookings')
+                    Assets currently being used
+                @else
+                    List of all {{ $selectedStatType === 'available_assets' ? 'available' : '' }} assets
+                @endif
+            </flux:subheading>
+        </div>
+
+        <div class="h-full overflow-y-auto">
+            @if($selectedStatType === 'active_bookings')
+                <!-- Active Bookings List -->
+                @if(!empty($statsModalData) && count($statsModalData) > 0)
+                    <div class="space-y-3">
+                        @foreach($statsModalData as $booking)
+                            <div class="bg-gray-100 dark:bg-neutral-700 rounded-lg p-4">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        @php
+                                            $start = \Carbon\Carbon::parse($booking['start_time']);
+                                            $end = \Carbon\Carbon::parse($booking['end_time']);
+                                            $totalMinutes = $start->diffInMinutes($end);
+                                            $totalHours = floor($totalMinutes / 60);
+                                            $days = (int) $start->diffInDays($end);
+                                            
+                                            // Enhanced date display logic
+                                            if ($days > 1) {
+                                                // Multi-day booking
+                                                if ($start->month === $end->month) {
+                                                    // Same month: "Aug 14 - 17, 2025"
+                                                    $dateDisplay = $start->format('M j') . ' - ' . $end->format('j, Y');
+                                                } else {
+                                                    // Different months: "Aug 29 - Sept 2, 2025"
+                                                    $dateDisplay = $start->format('M j') . ' - ' . $end->format('M j, Y');
+                                                }
+                                            } else {
+                                                // Same day booking
+                                                $dateDisplay = $start->format('M d, Y');
+                                            }
+                                            
+                                            // Duration calculation
+                                            if ($totalMinutes < 60) {
+                                                $durationText = $totalMinutes . 'm';
+                                            } elseif ($totalHours < 24) {
+                                                $hours = $totalHours;
+                                                $minutes = $totalMinutes % 60;
+                                                $durationText = $hours . 'h' . ($minutes > 0 ? ' ' . $minutes . 'm' : '');
+                                            } else {
+                                                $hours = $totalHours % 24;
+                                                $durationText = $days . 'd' . ($hours > 0 ? ' ' . $hours . 'h' : '');
+                                            }
+                                        @endphp                                        
+                                        <h4 class="font-semibold text-gray-900 dark:text-white">
+                                            {{ $booking['asset_name'] }}
+                                        </h4>
+                                        <p class="text-sm text-gray-600 dark:text-gray-300">
+                                            {{ $booking['asset_type_label'] }}
+                                        </p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            {{ $dateDisplay }}
+                                        </p>
+                                        @if($days === 0)
+                                            {{-- Single day booking - show time range --}}
+                                            <div class="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                                    {{ $start->format('h:i A') }} - {{ $end->format('h:i A') }} ({{ $durationText }})
+                                                </p>                                                 
+                                            </div>
+                                        @else
+                                            {{-- Multi-day booking - show start and end times --}}
+                                            <div class="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                                    {{ $start->format('h:i A') }} → {{ $end->format('h:i A') }}
+                                                </p>                                                
+                                            </div>
+                                        @endif                                                                          
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            Booked by: {{ $booking['booked_by'] }}
+                                        </p>
+                                    </div>
+                                    <flux:badge size="sm" color="red">In Use</flux:badge>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-8">
+                        <flux:icon name="clock" class="w-8 h-8 text-gray-400 mx-auto mb-3" />
+                        <p class="text-gray-500">No active bookings at the moment</p>
+                    </div>
+                @endif
+            @else
+                <!-- Assets List -->
+                @if(!empty($statsModalData) && count($statsModalData) > 0)
+                    <div class="space-y-3">
+                        @foreach($statsModalData as $asset)
+                            <div class="bg-gray-50 dark:bg-neutral-700 rounded-lg p-4">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h4 class="font-semibold text-gray-900 dark:text-white">
+                                            {{ $asset['name'] }}
+                                        </h4>
+                                        @if($asset['type'] === 'vehicle' && !empty($asset['model']->plate_number))
+                                            <p class="text-sm text-gray-600 dark:text-gray-300">
+                                                Plate: {{ $asset['model']->plate_number }}
+                                            </p>
+                                        @endif
+                                        @if($asset['type'] === 'meeting_room' && !empty($asset['model']->location))
+                                            <p class="text-sm text-gray-600 dark:text-gray-300">
+                                                Location: {{ $asset['model']->location }}
+                                            </p>
+                                        @endif
+                                        @if($asset['type'] === 'it_asset' && !empty($asset['model']->asset_tag))
+                                            <p class="text-sm text-gray-600 dark:text-gray-300">
+                                                Tag: {{ $asset['model']->asset_tag }}
+                                            </p>
+                                        @endif
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            Total bookings: {{ $asset['bookings_count'] }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-8">
+                        <flux:icon name="inbox" class="w-8 h-8 text-gray-400 mx-auto mb-3" />
+                        <p class="text-gray-500">No assets found</p>
+                    </div>
+                @endif
+            @endif
+        </div>
+
+        <div class="flex justify-end">
+            <flux:button wire:click="closeStatsModal" variant="ghost">
+                Close
+            </flux:button>
+        </div>
     </flux:modal>
 </div>
 

@@ -479,166 +479,166 @@
         </flux:modal>
     @endif
 
-{{-- Done Modal for Vehicle with Confetti --}}
-@if($asset_type === 'vehicle')
-    <flux:modal wire:model="showDoneModal" class="max-w-lg">
-        <div class="space-y-4">
-            <div>
-                <flux:heading size="lg">Complete Vehicle Booking</flux:heading>
-                <flux:subheading>Please provide the vehicle return details.</flux:subheading>
-            </div>
-
-            <flux:separator />
-
+    {{-- Done Modal for Vehicle with Confetti --}}
+    @if($asset_type === 'vehicle')
+        <flux:modal wire:model="showDoneModal" class="max-w-lg">
             <div class="space-y-4">
-                <flux:field>
-                    <flux:label>Current Odometer Reading (km) *</flux:label>
-                    <flux:input 
-                        wire:model="currentOdometer" 
-                        type="number" 
-                        placeholder="Enter current odometer reading"
-                        min="0"
-                    />
-                    @error('currentOdometer')
-                        <flux:error>{{ $message }}</flux:error>
-                    @enderror
-                </flux:field>
+                <div>
+                    <flux:heading size="lg">Complete Vehicle Booking</flux:heading>
+                    <flux:subheading>Please provide the vehicle return details.</flux:subheading>
+                </div>
 
-                {{-- Fuel Level Slider --}}
-                <flux:field>
-                    <flux:label>Fuel Level *</flux:label>
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-                            <span>Empty (1)</span>
-                            <span>Current Level: {{ $fuelLevel }}/8</span>
-                            <span>Full (8)</span>
-                        </div>
-                        <input 
-                            type="range" 
-                            wire:model.live="fuelLevel" 
-                            min="1" 
-                            max="8" 
-                            step="1"
-                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 slider"
-                            style="background: linear-gradient(to right, #ef4444 0%, #f97316 25%, #eab308 50%, #22c55e 75%, #16a34a 100%);"
-                        />
-                        <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                            @for($i = 1; $i <= 8; $i++)
-                                <span class="{{ $fuelLevel == $i ? 'font-bold text-blue-600 dark:text-blue-400' : '' }}">{{ $i }}</span>
-                            @endfor
-                        </div>
-                    </div>
-                    @error('fuelLevel')
-                        <flux:error>{{ $message }}</flux:error>
-                    @enderror
-                </flux:field>
+                <flux:separator />
 
-                <flux:field>
-                    <flux:checkbox 
-                        wire:model.live="gasFilledUp" 
-                        label="Gas was filled up"
-                    />
-                </flux:field>
-
-                @if($gasFilledUp)
+                <div class="space-y-4">
                     <flux:field>
-                        <flux:label>Gas Amount (RM) *</flux:label>
+                        <flux:label>Current Odometer Reading (km) *</flux:label>
                         <flux:input 
-                            wire:model="gasAmount" 
+                            wire:model="currentOdometer" 
                             type="number" 
-                            placeholder="Enter amount spent on gas"
+                            placeholder="Enter current odometer reading"
                             min="0"
-                            step="0.01"
                         />
-                        @error('gasAmount')
+                        @error('currentOdometer')
                             <flux:error>{{ $message }}</flux:error>
                         @enderror
                     </flux:field>
-                @endif
-            </div>
 
-            <flux:separator />
+                    {{-- Fuel Level Slider --}}
+                    <flux:field>
+                        <flux:label>Fuel Level *</flux:label>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+                                <span>Empty (1)</span>
+                                <span>Current Level: {{ $fuelLevel }}/8</span>
+                                <span>Full (8)</span>
+                            </div>
+                            <input 
+                                type="range" 
+                                wire:model.live="fuelLevel" 
+                                min="1" 
+                                max="8" 
+                                step="1"
+                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 slider"
+                                style="background: linear-gradient(to right, #ef4444 0%, #f97316 25%, #eab308 50%, #22c55e 75%, #16a34a 100%);"
+                            />
+                            <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                                @for($i = 1; $i <= 8; $i++)
+                                    <span class="{{ $fuelLevel == $i ? 'font-bold text-blue-600 dark:text-blue-400' : '' }}">{{ $i }}</span>
+                                @endfor
+                            </div>
+                        </div>
+                        @error('fuelLevel')
+                            <flux:error>{{ $message }}</flux:error>
+                        @enderror
+                    </flux:field>
 
-            <div class="flex gap-3 justify-end">
-                <flux:button variant="ghost" wire:click="closeDoneModal">
-                    Cancel
-                </flux:button>
-                <flux:button 
-                    variant="primary" 
-                    wire:click="confirmMarkAsDone"
-                    x-on:booking-completed.window="
-                        console.log('Confetti event triggered!');
-                        confetti({
-                            particleCount: 150,
-                            spread: 170,
-                            origin: { y: 0.6 }
-                        });
-                        
-                        confetti({
-                            particleCount: 50,
-                            angle: 60,
-                            spread: 55,
-                            origin: { x: 0 }
-                        });
-                        
-                        confetti({
-                            particleCount: 50,
-                            angle: 120,
-                            spread: 55,
-                            origin: { x: 1 }
-                        });
-                        
-                        setTimeout(function() {
+                    <flux:field>
+                        <flux:checkbox 
+                            wire:model.live="gasFilledUp" 
+                            label="Gas was filled up"
+                        />
+                    </flux:field>
+
+                    @if($gasFilledUp)
+                        <flux:field>
+                            <flux:label>Gas Amount (RM) *</flux:label>
+                            <flux:input 
+                                wire:model="gasAmount" 
+                                type="number" 
+                                placeholder="Enter amount spent on gas"
+                                min="0"
+                                step="0.01"
+                            />
+                            @error('gasAmount')
+                                <flux:error>{{ $message }}</flux:error>
+                            @enderror
+                        </flux:field>
+                    @endif
+                </div>
+
+                <flux:separator />
+
+                <div class="flex gap-3 justify-end">
+                    <flux:button variant="ghost" wire:click="closeDoneModal">
+                        Cancel
+                    </flux:button>
+                    <flux:button 
+                        variant="primary" 
+                        wire:click="confirmMarkAsDone"
+                        x-on:booking-completed.window="
+                            console.log('Confetti event triggered!');
                             confetti({
-                                particleCount: 100,
-                                spread: 90,
-                                origin: { y: 0.4 }
+                                particleCount: 150,
+                                spread: 170,
+                                origin: { y: 0.6 }
                             });
-                        }, 300);
-                    "
-                >
-                    Complete Booking
-                </flux:button>
+                            
+                            confetti({
+                                particleCount: 50,
+                                angle: 60,
+                                spread: 55,
+                                origin: { x: 0 }
+                            });
+                            
+                            confetti({
+                                particleCount: 50,
+                                angle: 120,
+                                spread: 55,
+                                origin: { x: 1 }
+                            });
+                            
+                            setTimeout(function() {
+                                confetti({
+                                    particleCount: 100,
+                                    spread: 90,
+                                    origin: { y: 0.4 }
+                                });
+                            }, 300);
+                        "
+                    >
+                        Complete Booking
+                    </flux:button>
+                </div>
             </div>
-        </div>
-    </flux:modal>
+        </flux:modal>
 
-    {{-- Include Canvas Confetti Library --}}
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+        {{-- Include Canvas Confetti Library --}}
+        <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
-    {{-- Custom CSS for fuel level slider --}}
-    <style>
-        .slider::-webkit-slider-thumb {
-            appearance: none;
-            height: 20px;
-            width: 20px;
-            border-radius: 50%;
-            background: #3b82f6;
-            cursor: pointer;
-            border: 2px solid #ffffff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
+        {{-- Custom CSS for fuel level slider --}}
+        <style>
+            .slider::-webkit-slider-thumb {
+                appearance: none;
+                height: 20px;
+                width: 20px;
+                border-radius: 50%;
+                background: #3b82f6;
+                cursor: pointer;
+                border: 2px solid #ffffff;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
 
-        .slider::-moz-range-thumb {
-            height: 20px;
-            width: 20px;
-            border-radius: 50%;
-            background: #3b82f6;
-            cursor: pointer;
-            border: 2px solid #ffffff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
+            .slider::-moz-range-thumb {
+                height: 20px;
+                width: 20px;
+                border-radius: 50%;
+                background: #3b82f6;
+                cursor: pointer;
+                border: 2px solid #ffffff;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
 
-        .slider::-webkit-slider-track {
-            height: 8px;
-            border-radius: 4px;
-        }
+            .slider::-webkit-slider-track {
+                height: 8px;
+                border-radius: 4px;
+            }
 
-        .slider::-moz-range-track {
-            height: 8px;
-            border-radius: 4px;
-        }
-    </style>
-@endif
+            .slider::-moz-range-track {
+                height: 8px;
+                border-radius: 4px;
+            }
+        </style>
+    @endif
 
 </div>
