@@ -175,6 +175,29 @@ class AssetManagement extends Component
         return $activeBooking ? 'In Use' : 'Available';
     }
 
+    private function getLatestBooking($modelType, $assetId)
+    {
+        $latestBooking = Booking::where('asset_type', $modelType)
+            ->where('asset_id', $assetId)
+            ->where('end_time', '<=', now()) // Only past bookings
+            ->whereIn('status', ['approved', 'done'])
+            ->with('bookedBy')
+            ->latest('end_time') // Order by most recent end time
+            ->first();
+
+        if (!$latestBooking) {
+            return null;
+        }
+
+        return [
+            'user_name' => $latestBooking->bookedBy ? $latestBooking->bookedBy->name : 'Unknown User',
+            'start_time' => $latestBooking->start_time->format('M j, Y'),
+            'end_time' => $latestBooking->end_time->format('M j, Y'),
+            'status' => $latestBooking->status,
+            'purpose' => $latestBooking->purpose ?? 'No purpose specified'
+        ];
+    }
+
     public function openStatsModal($type)
     {
         $this->selectedStatType = $type;
@@ -208,6 +231,8 @@ class AssetManagement extends Component
     private function getMeetingRoomsData()
     {
         return MeetingRoom::get()->map(function($room) {
+            $latestBooking = $this->getLatestBooking('App\Models\MeetingRoom', $room->id);
+            
             return [
                 'id' => $room->id,
                 'type' => 'meeting_room',
@@ -217,6 +242,7 @@ class AssetManagement extends Component
                 'bookings_count' => Booking::where('asset_type', 'App\Models\MeetingRoom')
                     ->where('asset_id', $room->id)
                     ->count(),
+                'latest_booking' => $latestBooking,
                 'model' => $room
             ];
         })->toArray();
@@ -225,6 +251,8 @@ class AssetManagement extends Component
     private function getVehiclesData()
     {
         return Vehicle::get()->map(function($vehicle) {
+            $latestBooking = $this->getLatestBooking('App\Models\Vehicle', $vehicle->id);
+            
             return [
                 'id' => $vehicle->id,
                 'type' => 'vehicle',
@@ -234,6 +262,7 @@ class AssetManagement extends Component
                 'bookings_count' => Booking::where('asset_type', 'App\Models\Vehicle')
                     ->where('asset_id', $vehicle->id)
                     ->count(),
+                'latest_booking' => $latestBooking,
                 'model' => $vehicle
             ];
         })->toArray();
@@ -242,6 +271,8 @@ class AssetManagement extends Component
     private function getItAssetsData()
     {
         return ItAsset::get()->map(function($asset) {
+            $latestBooking = $this->getLatestBooking('App\Models\ItAsset', $asset->id);
+            
             return [
                 'id' => $asset->id,
                 'type' => 'it_asset',
@@ -251,6 +282,7 @@ class AssetManagement extends Component
                 'bookings_count' => Booking::where('asset_type', 'App\Models\ItAsset')
                     ->where('asset_id', $asset->id)
                     ->count(),
+                'latest_booking' => $latestBooking,
                 'model' => $asset
             ];
         })->toArray();
@@ -264,6 +296,8 @@ class AssetManagement extends Component
         $meetingRooms = MeetingRoom::get()->filter(function($room) {
             return $this->getAssetStatus('App\Models\MeetingRoom', $room->id) === 'Available';
         })->map(function($room) {
+            $latestBooking = $this->getLatestBooking('App\Models\MeetingRoom', $room->id);
+            
             return [
                 'id' => $room->id,
                 'type' => 'meeting_room',
@@ -273,6 +307,7 @@ class AssetManagement extends Component
                 'bookings_count' => Booking::where('asset_type', 'App\Models\MeetingRoom')
                     ->where('asset_id', $room->id)
                     ->count(),
+                'latest_booking' => $latestBooking,
                 'model' => $room
             ];
         });
@@ -281,6 +316,8 @@ class AssetManagement extends Component
         $vehicles = Vehicle::get()->filter(function($vehicle) {
             return $this->getAssetStatus('App\Models\Vehicle', $vehicle->id) === 'Available';
         })->map(function($vehicle) {
+            $latestBooking = $this->getLatestBooking('App\Models\Vehicle', $vehicle->id);
+            
             return [
                 'id' => $vehicle->id,
                 'type' => 'vehicle',
@@ -290,6 +327,7 @@ class AssetManagement extends Component
                 'bookings_count' => Booking::where('asset_type', 'App\Models\Vehicle')
                     ->where('asset_id', $vehicle->id)
                     ->count(),
+                'latest_booking' => $latestBooking,
                 'model' => $vehicle
             ];
         });
@@ -298,6 +336,8 @@ class AssetManagement extends Component
         $itAssets = ItAsset::get()->filter(function($asset) {
             return $this->getAssetStatus('App\Models\ItAsset', $asset->id) === 'Available';
         })->map(function($asset) {
+            $latestBooking = $this->getLatestBooking('App\Models\ItAsset', $asset->id);
+            
             return [
                 'id' => $asset->id,
                 'type' => 'it_asset',
@@ -307,6 +347,7 @@ class AssetManagement extends Component
                 'bookings_count' => Booking::where('asset_type', 'App\Models\ItAsset')
                     ->where('asset_id', $asset->id)
                     ->count(),
+                'latest_booking' => $latestBooking,
                 'model' => $asset
             ];
         });

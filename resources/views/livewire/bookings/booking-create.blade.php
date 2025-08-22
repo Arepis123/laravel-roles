@@ -72,22 +72,22 @@
                     </label>
                     
                     <div class="border border-gray-300 dark:border-gray-600 rounded-lg p-3 max-h-48 overflow-y-auto bg-white dark:bg-gray-800">
-                        @forelse ($availablePassengers as $user)
-                            <div class="flex items-center py-2 px-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">
-                                <input type="checkbox" 
-                                       wire:model="passengers"
-                                       value="{{ $user->id }}"
-                                       @if(!in_array($user->id, $passengers) && count($passengers) >= $this->maxPassengers) disabled @endif
-                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer">
-                                <label for="passenger-{{ $user->id }}" class="ml-3 text-sm text-gray-700 dark:text-gray-300 cursor-pointer flex-1"
-                                       wire:click="togglePassenger({{ $user->id }})">
-                                    {{ $user->name }}
-                                    @if($user->email)
-                                        <span class="text-gray-500 dark:text-gray-400 text-xs">({{ $user->email }})</span>
-                                    @endif
-                                </label>
-                            </div>
-                        @empty
+                    @forelse ($availablePassengers as $user)
+    <div class="flex items-center py-2 px-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer"
+         wire:click="togglePassenger({{ $user->id }})">
+        <input type="checkbox" 
+               value="{{ $user->id }}"
+               @checked(in_array($user->id, $passengers))
+               @if(!in_array($user->id, $passengers) && count($passengers) >= $this->maxPassengers) disabled @endif
+               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded pointer-events-none">
+        <label class="ml-3 text-sm text-gray-700 dark:text-gray-300 flex-1">
+            {{ $user->name }}
+            @if($user->email)
+                <span class="text-gray-500 dark:text-gray-400 text-xs">({{ $user->email }})</span>
+            @endif
+        </label>
+    </div>
+@empty
                             <p class="text-gray-500 dark:text-gray-400 text-sm">No other users available</p>
                         @endforelse
                     </div>

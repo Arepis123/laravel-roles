@@ -24,9 +24,9 @@ class BookingCreate extends Component
     public string $end_time = '';     
     public string $purpose = '';
     public string $capacity = '';     
-    public array $passengers = []; // New property for vehicle passengers
-    public string $destination = ''; // Add destination for vehicles
-    public $availablePassengers; // Property for available passengers
+    public array $passengers = [];
+    public string $destination = ''; 
+    public $availablePassengers;
 
     public array $additional_booking = [];
     public string $refreshment_details = '';
@@ -331,17 +331,12 @@ class BookingCreate extends Component
     public function togglePassenger($userId)
     {
         if (in_array($userId, $this->passengers)) {
-            $this->passengers = array_filter($this->passengers, function($id) use ($userId) {
-                return $id != $userId;
-            });
+            $this->passengers = array_filter($this->passengers, fn($id) => $id != $userId);
         } else {
             if (count($this->passengers) < $this->maxPassengers) {
                 $this->passengers[] = $userId;
             }
         }
-        
-        // Re-index array
-        $this->passengers = array_values($this->passengers);
     }
 
     /**

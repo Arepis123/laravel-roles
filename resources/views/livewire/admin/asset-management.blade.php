@@ -529,6 +529,38 @@
                                                 Tag: {{ $asset['model']->asset_tag }}
                                             </p>
                                         @endif
+                                        <!-- Latest Booking Information -->
+                                        @if(!empty($asset['latest_booking']))
+                                            <div class="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded border-l-4 border-blue-400">
+                                                <p class="text-xs text-blue-800 dark:text-blue-300 font-medium">
+                                                    <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                                    </svg>
+                                                    Last used by: {{ $asset['latest_booking']['user_name'] }}
+                                                </p>
+                                                <p class="text-xs text-blue-600 dark:text-blue-400">
+                                                    @if($asset['latest_booking']['start_time'] === $asset['latest_booking']['end_time'])
+                                                        {{ $asset['latest_booking']['start_time'] }} • {{ ucfirst($asset['latest_booking']['status']) }}
+                                                    @else
+                                                        {{ $asset['latest_booking']['start_time'] }} - {{ $asset['latest_booking']['end_time'] }} • {{ ucfirst($asset['latest_booking']['status']) }}
+                                                    @endif
+                                                </p>
+                                                @if(!empty($asset['latest_booking']['purpose']))
+                                                    <p class="text-xs text-blue-600 dark:text-blue-400 truncate">
+                                                        {{ Str::limit($asset['latest_booking']['purpose'], 40) }}
+                                                    </p>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <div class="mt-2 p-2 bg-gray-100 dark:bg-gray-700 rounded">
+                                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                                    <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                                                    </svg>
+                                                    No past usage found
+                                                </p>
+                                            </div>
+                                        @endif                                        
                                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                             Total bookings: {{ $asset['bookings_count'] }}
                                         </p>
