@@ -1,12 +1,14 @@
 <div>
-    <div class="relative mb-6 w-full">
-        <div class="flex justify-between items-start">
+<div class="relative mb-6 w-full">
+        <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
+            <!-- Header Section -->
             <div>
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white dark:text-white">{{ __('My Bookings') }}</h1>
-                <p class="text-gray-600 mt-1 dark:text-gray-400 dark:text-gray-400">{{ __('Manage your booking requests') }}</p>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ __('My Bookings') }}</h1>
+                <p class="text-gray-600 mt-1 dark:text-gray-400">{{ __('Manage all bookings here') }}</p>
             </div>
-            <!-- Quick Stats for User -->
-            <div class="flex gap-4 text-sm">
+            
+            <!-- Quick Stats -->
+            <div class="flex gap-4 text-sm lg:gap-6">
                 <div class="text-center">
                     <div class="font-semibold text-yellow-600">{{ $bookings->where('status', 'pending')->count() }}</div>
                     <div class="text-gray-500">Pending</div>
@@ -57,19 +59,10 @@
     @endsession
 
     <!-- Action Bar -->
-    <div class="flex justify-between items-center mb-4">
-        @can('book.create')
-        <flux:button variant="primary" href="{{ route('bookings.create') }}">
-            <flux:icon name="plus" class="w-4 h-4 mr-2" />
-            New Booking
-        </flux:button>
-        @else
-        <div></div>
-        @endcan
+    <div class="flex flex-col md:flex-row md:justify-end gap-2 mb-4">
 
-        <!-- Filter and Search -->
-        <div class="flex gap-2">
-            <flux:select wire:model.live="statusFilter" placeholder="All Status" class="min-w-32">
+        <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2 w-full md:w-auto">
+            <flux:select wire:model.live="statusFilter" placeholder="All Status" class="min-w-32 w-full sm:w-auto">
                 <flux:select.option value="">All Status</flux:select.option>
                 <flux:select.option value="pending">Pending</flux:select.option>
                 <flux:select.option value="approved">Approved</flux:select.option>
@@ -78,7 +71,7 @@
                 <flux:select.option value="done">Done</flux:select.option>
             </flux:select>
             
-            <flux:select wire:model.live="assetTypeFilter" placeholder="All Assets" class="min-w-32">
+            <flux:select wire:model.live="assetTypeFilter" placeholder="All Assets" class="min-w-32 w-full sm:w-auto">
                 <flux:select.option value="">All Assets</flux:select.option>
                 <flux:select.option value="App\Models\Vehicle">Vehicle</flux:select.option>
                 <flux:select.option value="App\Models\MeetingRoom">Meeting Room</flux:select.option>
@@ -87,18 +80,33 @@
 
             <flux:input 
                 wire:model.live.debounce.500ms="search" 
-                placeholder="Search my bookings" 
+                placeholder="Search bookings..." 
                 icon="magnifying-glass"
-                class="min-w-48"
+                class="min-w-48 w-full sm:w-auto"
             />
 
-            <flux:tooltip content="Reset Sort">
-                <flux:button wire:click="resetFilters" icon="arrow-path" icon:variant="outline" />
-            </flux:tooltip>  
+            <!-- Reset Button - Icon on desktop, Text on mobile -->
+            <flux:tooltip content="Reset Filters" class="hidden sm:block">
+                <flux:button 
+                    wire:click="resetFilters" 
+                    icon="arrow-path"
+                    class="hidden"
+                />
+            </flux:tooltip>
+            
+            <!-- Reset Button for Mobile - Full width with text -->
+            <flux:button 
+                wire:click="resetFilters" 
+                icon="arrow-path"
+                class="sm:hidden w-full" 
+                variant="filled"
+            >
+                Reset Filters
+            </flux:button>           
         </div>
     </div>
 
-    <div class="border border-gray-200 rounded-xl shadow-2xs overflow-hidden dark:bg-neutral-800 dark:border-neutral-700">
+    <div class="hidden md:block sm:block border border-gray-200 rounded-xl shadow-2xs overflow-hidden dark:bg-neutral-800 dark:border-neutral-700">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
                 <thead class="bg-gray-50 dark:bg-neutral-700">
@@ -329,4 +337,205 @@
         </div>
         @endif
     </div>
+
+    <!-- Mobile Card View (hidden on desktop) -->
+    <div class="md:hidden sm:hidden space-y-4">
+        @forelse ($bookings as $booking)
+            <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg p-4 shadow-sm">
+                <!-- Card Header -->
+                <div class="flex items-start justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <flux:badge size="sm" icon="{{ $booking->asset_type_label == 'Vehicle' ? 'car' : ($booking->asset_type_label == 'Meeting Room' ? 'building-office' : 'computer-desktop') }}" color="{{ $booking->asset_type_label == 'Vehicle' ? 'green' : ($booking->asset_type_label == 'Meeting Room' ? 'blue' : 'fuchsia') }}">
+                            {{ $booking->asset_type_label }}
+                        </flux:badge>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">#{{ $loop->iteration }}</span>
+                    </div>
+                    
+                    <!-- Status Badge -->
+                    @if ($booking->status == 'pending')
+                        <flux:badge color="yellow" size="sm">
+                            <flux:icon name="clock" class="w-3 h-3 mr-1" />
+                            {{ ucwords($booking->status) }}
+                        </flux:badge>
+                    @elseif ($booking->status == 'approved')     
+                        <flux:badge color="sky" size="sm">
+                            <flux:icon name="check" class="w-3 h-3 mr-1" />
+                            {{ ucwords($booking->status) }}
+                        </flux:badge>  
+                    @elseif ($booking->status == 'rejected')     
+                        <flux:badge color="red" size="sm">
+                            <flux:icon name="x-mark" class="w-3 h-3 mr-1" />
+                            {{ ucwords($booking->status) }}
+                        </flux:badge>                                                                                                
+                    @elseif ($booking->status == 'cancelled')
+                        <flux:badge color="zinc" size="sm">
+                            <flux:icon name="arrow-turn-down-left" class="w-3 h-3 mr-1" />
+                            {{ ucwords($booking->status) }}
+                        </flux:badge> 
+                    @elseif ($booking->status == 'done')
+                        <flux:badge color="green" size="sm">
+                            <flux:icon name="check-circle" class="w-3 h-3 mr-1" />
+                            {{ ucwords($booking->status) }}
+                        </flux:badge>
+                    @endif
+                </div>
+
+                <!-- Asset Details -->
+                <div class="mb-3">
+                    <h3 class="font-semibold text-gray-900 dark:text-white">
+                        @if ($booking->asset_type_label == 'Vehicle')
+                            {{ $booking->asset?->model ?? 'N/A' }}
+                            @if($booking->asset?->plate_number)
+                                <span class="text-sm text-gray-500 font-normal">({{ $booking->asset->plate_number }})</span>
+                            @endif
+                        @else
+                            {{ $booking->asset?->name ?? 'N/A' }}
+                        @endif
+                    </h3>
+                </div>
+
+                <!-- Date & Duration Info -->
+                <div class="mb-3 text-sm">
+                    @php
+                        $start = \Carbon\Carbon::parse($booking->start_time);
+                        $end = \Carbon\Carbon::parse($booking->end_time);
+                        $totalMinutes = $start->diffInMinutes($end);
+                        $totalHours = floor($totalMinutes / 60);
+                        $days = (int) $start->diffInDays($end);
+                        
+                        // Enhanced date display logic
+                        if ($days > 1) {
+                            // Multi-day booking
+                            if ($start->month === $end->month) {
+                                // Same month: "Aug 14 - 17, 2025"
+                                $dateDisplay = $start->format('M j') . ' - ' . $end->format('j, Y');
+                            } else {
+                                // Different months: "Aug 29 - Sept 2, 2025"
+                                $dateDisplay = $start->format('M j') . ' - ' . $end->format('M j, Y');
+                            }
+                        } else {
+                            // Same day booking
+                            $dateDisplay = $start->format('M d, Y');
+                        }
+                        
+                        // Duration calculation
+                        if ($totalMinutes < 60) {
+                            $durationText = $totalMinutes . 'm';
+                        } elseif ($totalHours < 24) {
+                            $hours = $totalHours;
+                            $minutes = $totalMinutes % 60;
+                            $durationText = $hours . 'h' . ($minutes > 0 ? ' ' . $minutes . 'm' : '');
+                        } else {
+                            $hours = $totalHours % 24;
+                            $durationText = $days . 'd' . ($hours > 0 ? ' ' . $hours . 'h' : '');
+                        }
+                    @endphp
+
+                    <div class="flex items-center gap-1 text-gray-900 dark:text-white mb-1">
+                        <flux:icon name="calendar" class="w-4 h-4 text-gray-500" />
+                        <span class="font-medium">{{ $dateDisplay }}</span>
+                    </div>
+                    
+                    @if($days === 0)
+                        {{-- Single day booking - show time range --}}
+                        <div class="flex items-center gap-1 text-gray-600 dark:text-gray-400 ml-5">
+                            <span class="text-sm">{{ $start->format('h:i A') }} - {{ $end->format('h:i A') }} ({{ $durationText }})</span>
+                        </div>
+                    @else
+                        {{-- Multi-day booking - show start and end times --}}
+                        <div class="flex items-center gap-1 text-gray-600 dark:text-gray-400 ml-5">
+                            <span class="text-sm">{{ $start->format('h:i A') }} → {{ $end->format('h:i A') }} ({{ $durationText }})</span>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Booking Created Info -->
+                <div class="mb-4">
+                    <div class="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                        <flux:icon name="clock" class="w-3 h-3" />
+                        <span>Booked {{ \Carbon\Carbon::parse($booking->created_at)->diffForHumans() }}</span>
+                    </div>
+                    <div class="text-xs text-gray-400 ml-4">
+                        {{ \Carbon\Carbon::parse($booking->created_at)->format('M d, h:i A') }}
+                    </div>
+                </div>
+
+                <!-- Status Details & Urgency -->
+                <div class="mb-4">
+                    @if ($booking->status == 'pending')
+                        <div class="text-xs text-yellow-600 dark:text-yellow-400">Awaiting approval</div>
+                    @elseif ($booking->status == 'approved')
+                        @if(\Carbon\Carbon::parse($booking->start_time)->isToday())
+                            <flux:badge color="orange" size="sm">
+                                <flux:icon name="exclamation-triangle" class="w-3 h-3 mr-1" />
+                                Starts Today
+                            </flux:badge>
+                        @elseif(\Carbon\Carbon::parse($booking->start_time)->isTomorrow())
+                            <flux:badge color="blue" size="sm">
+                                <flux:icon name="clock" class="w-3 h-3 mr-1" />
+                                Starts Tomorrow
+                            </flux:badge>
+                        @endif
+                    @elseif ($booking->status == 'rejected')
+                        <div class="text-xs text-red-600 dark:text-red-400">Request denied</div>
+                    @elseif ($booking->status == 'cancelled')
+                        <div class="text-xs text-gray-500 dark:text-gray-400">You cancelled this</div>
+                    @elseif ($booking->status == 'done')
+                        <div class="text-xs text-green-600 dark:text-green-400">Booking completed</div>
+                    @endif
+                </div>
+
+                <!-- Card Actions -->
+                <div class="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-neutral-700">
+                    <flux:button size="sm" href="{{ route('bookings.show.user', $booking->id) }}" variant="ghost">
+                        <flux:icon name="eye" class="w-4 h-4 mr-1" />
+                        View More
+                    </flux:button>
+                    
+                    <div class="flex gap-2">
+                        <!-- Edit Button - Only for pending bookings that haven't started -->
+                        @if($booking->status == 'pending' && \Carbon\Carbon::parse($booking->start_time) > now())
+                            @can('book.edit')
+                            <flux:button size="sm" href="{{ route('bookings.edit.user', $booking->id) }}" variant="ghost">
+                                <flux:icon name="pencil" class="w-4 h-4" />
+                            </flux:button>
+                            @endcan
+                        @endif
+                        
+                        <!-- Cancel Button - Only for pending/approved bookings that haven't started -->
+                        @if(in_array($booking->status, ['pending', 'approved']) && \Carbon\Carbon::parse($booking->start_time) > now())
+                            <flux:button 
+                                size="sm" 
+                                variant="ghost"
+                                wire:click="cancelBooking({{ $booking->id }})"
+                                wire:confirm="Are you sure you want to cancel this booking?"
+                                class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                            >
+                                <flux:icon name="x-mark" class="w-4 h-4" />
+                            </flux:button>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @empty
+            <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg p-8 text-center">
+                <div class="flex flex-col items-center gap-2">
+                    <flux:icon name="calendar-days" class="w-8 h-8 text-gray-400" />
+                    <div class="text-gray-500">No bookings found</div>
+                    @can('book.create')
+                    <flux:button size="sm" href="{{ route('bookings.create') }}" variant="ghost" class="mt-2">
+                        Create first booking
+                    </flux:button>
+                    @endcan
+                </div>
+            </div>
+        @endforelse
+
+        <!-- Mobile Pagination -->
+        @if($bookings->hasPages())
+        <div class="pt-4 border-t border-gray-200 dark:border-neutral-700">
+            {{ $bookings->links() }}
+        </div>
+        @endif
+    </div>    
 </div>

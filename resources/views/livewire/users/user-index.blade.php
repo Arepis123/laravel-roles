@@ -108,7 +108,7 @@
     </div>
 
     {{-- Users Table --}}
-    <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden">
+    <div class="hidden md:block sm:block bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
                 <thead class="bg-gray-50 dark:bg-neutral-900">
@@ -389,4 +389,191 @@
             </div>
         @endif
     </div>
+
+{{-- Desktop Table View (hidden on mobile) --}}
+<div class="hidden md:block bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
+                <!-- Keep existing table structure here -->
+                <thead class="bg-gray-50 dark:bg-neutral-900">
+                    <!-- Keep existing table headers -->
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200 dark:bg-neutral-800 dark:divide-neutral-700" wire:loading.class="opacity-50">
+                    <!-- Keep existing table rows -->
+                </tbody>
+            </table>
+        </div>
+        
+        @if($users->hasPages())
+            <div class="px-6 py-4 border-t border-gray-200 dark:border-neutral-700">
+                {{ $users->links() }}
+            </div>
+        @endif
+    </div>
+
+    {{-- Mobile Card View (hidden on desktop) --}}
+    <div class="md:hidden space-y-4">
+        @forelse ($users as $user)
+            <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg p-4 shadow-sm">
+                <!-- Card Header -->
+                <div class="flex items-start justify-between mb-3">
+                    <div class="flex items-center gap-3 min-w-0 flex-1">
+                        <flux:avatar circle color="auto" name="{{ $user->name ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $user->name) : 'N/A' }}" />
+                        <div class="min-w-0 flex-1">
+                            <h3 class="font-semibold text-gray-900 dark:text-white truncate" title="{{ $user->name }}">
+                                {{ Str::limit($user->name, 20) }}
+                            </h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">ID: #{{ $user->id }}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Status Badge -->
+                    @if($user->status === 'active')
+                        <flux:badge variant="success" size="sm">
+                            <flux:icon name="check-circle" class="w-3 h-3 mr-1" />
+                            Active
+                        </flux:badge>
+                    @else
+                        <flux:badge size="sm">
+                            <flux:icon name="x-circle" class="w-3 h-3 mr-1" />
+                            Inactive
+                        </flux:badge>
+                    @endif
+                </div>
+
+                <!-- Email -->
+                <div class="mb-3">
+                    <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <flux:icon name="envelope" class="w-4 h-4" />
+                        <span class="truncate">{{ $user->email }}</span>
+                    </div>
+                </div>
+
+                <!-- Roles -->
+                <div class="mb-3">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Roles:</p>
+                    <div class="flex flex-wrap gap-1">
+                        @forelse ($user->roles as $role)
+                            <flux:badge variant="outline" size="sm">
+                                @if($role->name === 'Super Admin')
+                                    <flux:icon.shield-user class="text-sky-500 me-1 size-3"/>
+                                @elseif($role->name === 'Admin')
+                                    <flux:icon.shield-user class="text-amber-500 me-1 size-3"/>
+                                @else
+                                    <flux:icon.shield-user class="text-green-500 me-1 size-3"/>
+                                @endif
+                                {{ $role->name }}
+                            </flux:badge>
+                        @empty
+                            <span class="text-sm text-gray-500">No roles assigned</span>
+                        @endforelse
+                    </div>
+                </div>
+
+                <!-- Joined Date -->
+                <div class="mb-4">
+                    <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                        <flux:icon name="calendar" class="w-3 h-3" />
+                        <span>Joined {{ $user->created_at->format('M d, Y') }}</span>
+                    </div>
+                </div>
+
+                <!-- Card Actions -->
+                <div class="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-neutral-700">
+                    <div class="flex gap-2">
+                        @can('user.view')
+                        <flux:button size="sm" href="{{ route('users.show', $user->id) }}" variant="ghost">
+                            <flux:icon name="eye" class="w-4 h-4 mr-1" />
+                            View More
+                        </flux:button>
+                        @endcan
+                        
+                        @can('user.edit')
+                        <flux:button size="sm" href="{{ route('users.edit', $user->id) }}" variant="ghost">
+                            <flux:icon name="pencil" class="w-4 h-4 mr-1" />
+                            Edit
+                        </flux:button>
+                        @endcan
+                    </div>
+                    
+                    @can('user.edit')
+                    <flux:dropdown>
+                        <flux:button icon="ellipsis-horizontal" size="sm" variant="ghost"></flux:button>                                           
+                        <flux:menu>
+                            <flux:menu.submenu heading="Change Status" icon="cog-6-tooth">
+                                <flux:menu.radio.group>
+                                    <flux:menu.radio :checked="$user->status === 'active'" wire:click="toggleStatus({{ $user->id }})">                                                        
+                                        Active
+                                    </flux:menu.radio>
+                                    <flux:menu.radio :checked="$user->status == 'inactive'" wire:click="toggleStatus({{ $user->id }})">                                                        
+                                        Inactive
+                                    </flux:menu.radio>
+                                </flux:menu.radio.group>
+                            </flux:menu.submenu>
+                            @if(auth()->user()->hasRole(['Super Admin']))
+                            <flux:menu.separator />
+                            @if($user->id !== auth()->id())
+                                <flux:modal.trigger name="delete-user-{{ $user->id }}">
+                                    <flux:menu.item icon="trash" variant="danger">
+                                        Delete User
+                                    </flux:menu.item>
+                                </flux:modal.trigger>
+                            @endif
+                            @endif 
+                        </flux:menu>
+                    </flux:dropdown>
+                    @endcan
+                </div>
+            </div>
+
+            {{-- Delete Modal for Mobile --}}
+            @can('user.delete')
+                @if($user->id !== auth()->id())
+                    <flux:modal name="delete-user-{{ $user->id }}" class="min-w-[22rem]">
+                        <div class="space-y-6">
+                            <div>
+                                <flux:heading size="lg">Delete User?</flux:heading>
+                                <flux:text class="mt-2">
+                                    <p>You're about to delete <strong>{{ $user->name }}</strong>.</p>
+                                    <p class="text-red-600 mt-2">This action cannot be reversed.</p>
+                                </flux:text>
+                            </div>
+                            <div class="flex gap-2">
+                                <flux:spacer />
+                                <flux:modal.close>
+                                    <flux:button variant="ghost">Cancel</flux:button>
+                                </flux:modal.close>
+                                <flux:button wire:click="delete({{ $user->id }})" variant="danger">
+                                    Delete User
+                                </flux:button>
+                            </div>
+                        </div>
+                    </flux:modal>
+                @endif
+            @endcan
+            
+        @empty
+            <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg p-8 text-center">
+                <div class="flex flex-col items-center gap-2">
+                    <svg class="size-8 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                    </svg>
+                    <p class="text-gray-500 dark:text-gray-400">No users found</p>
+                    <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Try adjusting your search or filters</p>
+                    @can('user.create')
+                    <flux:button size="sm" href="{{ route('users.create') }}" variant="ghost" class="mt-2">
+                        Create first user
+                    </flux:button>
+                    @endcan
+                </div>
+            </div>
+        @endforelse
+
+        <!-- Mobile Pagination -->
+        @if($users->hasPages())
+        <div class="pt-4 border-t border-gray-200 dark:border-neutral-700">
+            {{ $users->links() }}
+        </div>
+        @endif
+    </div> 
 </div>

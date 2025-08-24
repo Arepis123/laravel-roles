@@ -16,17 +16,17 @@
                     </flux:badge>
                 @elseif ($status == 'approved')     
                     <flux:badge color="sky" class="w-fit">
-                        <flux:icon name="check" class="w-4 h-4 mr-1" />
+                        <flux:icon name="square-check" class="w-4 h-4 mr-1" />
                         {{ ucfirst($status) }}
                     </flux:badge>  
                 @elseif ($status == 'rejected')     
                     <flux:badge color="red" class="w-fit">
-                        <flux:icon name="x-mark" class="w-4 h-4 mr-1" />
+                        <flux:icon name="circle-x" class="w-4 h-4 mr-1" />
                         {{ ucfirst($status) }}
                     </flux:badge>                                                                                                
                 @elseif ($status == 'cancelled')
                     <flux:badge color="zinc" class="w-fit">
-                        <flux:icon name="arrow-turn-down-left" class="w-4 h-4 mr-1" />
+                        <flux:icon name="ban" class="w-4 h-4 mr-1" />
                         {{ ucfirst($status) }}
                     </flux:badge> 
                 @elseif ($status == 'done')
