@@ -765,7 +765,6 @@ class ReportService
                         $assetName = $item->meetingRoom->name;
                         $assetType = 'Meeting Room';
                     } elseif (isset($item->asset)) {
-                        // Fallback if you have a generic asset relationship
                         $assetName = $item->asset->name ?? 'N/A';
                         $assetType = 'Asset';
                     }

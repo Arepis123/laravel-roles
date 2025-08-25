@@ -59,8 +59,17 @@
     @endsession
 
     <!-- Action Bar -->
-    <div class="flex flex-col md:flex-row md:justify-end gap-2 mb-4">
-
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
+        <div class="">
+            <!-- Create Button -->
+            @can('book.create')
+                <div class="flex justify-between items-center">
+                    <flux:button variant="primary" href="{{ route('bookings.create') }}" icon="plus" class="w-full sm:w-auto">
+                        Create New Book
+                    </flux:button>
+                </div>
+            @endcan
+        </div>
         <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2 w-full md:w-auto">
             <flux:select wire:model.live="statusFilter" placeholder="All Status" class="min-w-32 w-full sm:w-auto">
                 <flux:select.option value="">All Status</flux:select.option>

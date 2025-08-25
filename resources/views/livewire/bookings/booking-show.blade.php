@@ -52,8 +52,6 @@
         </div>               
     @endif 
 
-  
-
     @if (session()->has('error'))
         <div x-data="{ visible: true }" x-show="visible" x-collapse>
             <div x-show="visible" x-transition>
@@ -237,6 +235,14 @@
                             <flux:input wire:model="capacity" type="number" disabled/>
                         </flux:field>
                     @endif     
+
+                    {{-- Vehicle Destination --}}
+                    @if($asset_type === 'vehicle' && $booking->destination)
+                        <flux:field>
+                            <flux:heading>Destination</flux:heading>
+                            <flux:input value="{{ $booking->destination }}" type="text" disabled/>
+                        </flux:field>
+                    @endif
                     
                     <flux:field>
                         <flux:heading>Purpose</flux:heading>
@@ -244,6 +250,86 @@
                     </flux:field>   
                 </div>                                            
             </div>
+
+            {{-- Passengers Section for Vehicles --}}
+            @if($asset_type === 'vehicle' && $booking->passengers && count($booking->passengers) > 0)
+                <div class="border rounded-lg p-6">
+                    <div class="mb-4">
+                        <!-- <flux:icon name="user-group" class="w-5 h-5 inline mr-2" /> -->
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 inline">
+                            Passengers ({{ count($booking->passengers) }})
+                        </h3>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        @foreach($booking->passengers as $passengerId)
+                            @php
+                                $passenger = \App\Models\User::find($passengerId);
+                            @endphp
+                            
+                            @if($passenger)
+                                <div class="flex items-center p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                                    <div class="flex-shrink-0">                                            
+                                        <flux:avatar size="xs" color="auto" name="{{ preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $passenger->name) }}" />                                        
+                                    </div>
+                                    <div class="ml-3 min-w-0 flex-1">
+                                        <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                            {{ $passenger->name }}
+                                        </p>
+                                        @if($passenger->email)
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                                {{ $passenger->email }}
+                                            </p>
+                                        @endif
+                                    </div>
+                                </div>
+                            @else
+                                <div class="flex items-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
+                                            <flux:icon name="user-x" class="w-4 h-4 text-red-600 dark:text-red-400" />
+                                        </div>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-red-900 dark:text-red-400">
+                                            User not found (ID: {{ $passengerId }})
+                                        </p>
+                                        <p class="text-xs text-red-600 dark:text-red-500">
+                                            This user may have been deleted
+                                        </p>
+                                    </div>
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+
+                    {{-- Summary Info --}}
+                    <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <div class="flex items-center">
+                            <flux:icon name="information-circle" class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
+                            <div class="text-sm">
+                                <p class="text-blue-900 dark:text-blue-300">
+                                    <strong>Total Capacity:</strong> {{ $capacity ?? 'Not specified' }} 
+                                    ({{ $booking->user->name }} + {{ count($booking->passengers) }} passenger{{ count($booking->passengers) === 1 ? '' : 's' }})
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @elseif($asset_type === 'vehicle' && (!$booking->passengers || count($booking->passengers) === 0))
+                <div class="border rounded-lg p-6">
+                    <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                        <flux:icon name="user-group" class="w-5 h-5 inline mr-2" />
+                        Passengers
+                    </h2>
+                    
+                    <div class="text-center py-6">
+                        <flux:icon name="user-minus" class="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                        <p class="text-gray-500 dark:text-gray-400">No passengers selected for this vehicle booking</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Only the driver ({{ $booking->user->name }}) will be using the vehicle</p>
+                    </div>
+                </div>
+            @endif
 
             {{-- Additional Services --}}
             @if(!empty($additional_booking))

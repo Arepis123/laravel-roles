@@ -67,27 +67,41 @@
             {{-- Passengers Selection for Vehicles using Tailwind --}}
             @if($this->shouldShowPassengers)
                 <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Select Passengers ({{ count($passengers) }}/{{ $this->maxPassengers }})
-                    </label>
+                    <div class="flex items-center justify-between">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 my-2">
+                            Select Passengers ({{ count($passengers) }}/{{ $this->maxPassengers }})
+                        </label>
+                        
+                        {{-- Deselect All Button - Only show when passengers are selected --}}
+                        @if(count($passengers) > 0)
+                            <flux:button 
+                                wire:click="deselectAllPassengers" 
+                                variant="ghost" 
+                                size="sm"
+                                class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 py-0 my-0"
+                            >
+                                Deselect All
+                            </flux:button>
+                        @endif
+                    </div>
                     
                     <div class="border border-gray-300 dark:border-gray-600 rounded-lg p-3 max-h-48 overflow-y-auto bg-white dark:bg-gray-800">
-                    @forelse ($availablePassengers as $user)
-    <div class="flex items-center py-2 px-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer"
-         wire:click="togglePassenger({{ $user->id }})">
-        <input type="checkbox" 
-               value="{{ $user->id }}"
-               @checked(in_array($user->id, $passengers))
-               @if(!in_array($user->id, $passengers) && count($passengers) >= $this->maxPassengers) disabled @endif
-               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded pointer-events-none">
-        <label class="ml-3 text-sm text-gray-700 dark:text-gray-300 flex-1">
-            {{ $user->name }}
-            @if($user->email)
-                <span class="text-gray-500 dark:text-gray-400 text-xs">({{ $user->email }})</span>
-            @endif
-        </label>
-    </div>
-@empty
+                        @forelse ($availablePassengers as $user)
+                            <div class="flex items-center py-2 px-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer"
+                                wire:click="togglePassenger({{ $user->id }})">
+                                <input type="checkbox" 
+                                    value="{{ $user->id }}"
+                                    @checked(in_array($user->id, $passengers))
+                                    @if(!in_array($user->id, $passengers) && count($passengers) >= $this->maxPassengers) disabled @endif
+                                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded pointer-events-none">
+                                <label class="ml-3 text-sm text-gray-700 dark:text-gray-300 flex-1">
+                                    {{ $user->name }}
+                                    @if($user->email)
+                                        <span class="text-gray-500 dark:text-gray-400 text-xs">({{ $user->email }})</span>
+                                    @endif
+                                </label>
+                            </div>
+                        @empty
                             <p class="text-gray-500 dark:text-gray-400 text-sm">No other users available</p>
                         @endforelse
                     </div>
