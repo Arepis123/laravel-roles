@@ -193,128 +193,124 @@
         {{-- Booking Details Section --}}
         <div class="lg:col-span-2 space-y-6">
             {{-- Asset Information --}}
-            <div class="border rounded-lg p-6">
-                <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Booking Details</h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <flux:field>
-                        <flux:heading>Type</flux:heading>
-                        <flux:select wire:model.live="asset_type" placeholder="Select booking type" disabled>
-                            @foreach ($this->assetTypeOptions as $option)
-                                <flux:select.option value="{{ $option['value'] }}">{{ $option['label'] }}</flux:select.option>
-                            @endforeach
-                        </flux:select>            
-                    </flux:field>
-                            
-                    <flux:field>
-                        <flux:heading>Asset</flux:heading>
-                        <flux:select wire:model="asset_id" placeholder="Select asset" disabled>
-                            @foreach ($this->assetOptions as $asset)
-                                <flux:select.option value="{{ $asset->id }}">{{ $asset->name }}</flux:select.option>
-                            @endforeach
-                        </flux:select>
-                    </flux:field>
-                </div> 
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <flux:field>
-                        <flux:heading>Start Time</flux:heading>
-                        <flux:input wire:model="start_time" type="datetime-local" disabled/>
-                    </flux:field>
-                    <flux:field>
-                        <flux:heading>End Time</flux:heading>
-                        <flux:input wire:model="end_time" type="datetime-local" disabled/>
-                    </flux:field>
-                </div>                  
-                  
-                    
-                <div class="grid gap-4 mt-3">
-                    @if($capacity)
+            <div class="rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden">               
+                <div class="px-6 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-neutral-700">           
+                    <flux:icon name="identification" class="w-5 h-5 inline text-gray-500 dark:text-white me-1" />
+                    <div class="text-left text-xs font-medium text-gray-500 dark:text-white tracking-wider uppercase inline">Booking Details</div>
+                </div>               
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <flux:field>
-                            <flux:heading>Capacity</flux:heading>
-                            <flux:input wire:model="capacity" type="number" disabled/>
+                            <flux:heading>Type</flux:heading>
+                            <flux:select wire:model.live="asset_type" placeholder="Select booking type" disabled>
+                                @foreach ($this->assetTypeOptions as $option)
+                                    <flux:select.option value="{{ $option['value'] }}">{{ $option['label'] }}</flux:select.option>
+                                @endforeach
+                            </flux:select>            
                         </flux:field>
-                    @endif     
-
-                    {{-- Vehicle Destination --}}
-                    @if($asset_type === 'vehicle' && $booking->destination)
+                                
                         <flux:field>
-                            <flux:heading>Destination</flux:heading>
-                            <flux:input value="{{ $booking->destination }}" type="text" disabled/>
+                            <flux:heading>Asset</flux:heading>
+                            <flux:select wire:model="asset_id" placeholder="Select asset" disabled>
+                                @foreach ($this->assetOptions as $asset)
+                                    <flux:select.option value="{{ $asset->id }}">{{ $asset->name }}</flux:select.option>
+                                @endforeach
+                            </flux:select>
                         </flux:field>
-                    @endif
-                    
-                    <flux:field>
-                        <flux:heading>Purpose</flux:heading>
-                        <flux:textarea wire:model="purpose" rows="3" disabled/>
-                    </flux:field>   
-                </div>                                            
+                    </div> 
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <flux:field>
+                            <flux:heading>Start Time</flux:heading>
+                            <flux:input wire:model="start_time" type="datetime-local" readonly/>
+                        </flux:field>
+                        <flux:field>
+                            <flux:heading>End Time</flux:heading>
+                            <flux:input wire:model="end_time" type="datetime-local" readonly/>
+                        </flux:field>
+                    </div>                  
+                                        
+                    <div class="grid gap-4 mt-3">
+                        @if($capacity)
+                            <flux:field>
+                                <flux:heading>Capacity</flux:heading>
+                                <flux:input wire:model="capacity" type="number" readonly/>
+                            </flux:field>
+                        @endif     
+
+                        {{-- Vehicle Destination --}}
+                        @if($asset_type === 'vehicle' && $booking->destination)
+                            <flux:field>
+                                <flux:heading>Destination</flux:heading>
+                                <flux:input value="{{ $booking->destination }}" type="text" readonly/>
+                            </flux:field>
+                        @endif
+                        
+                        <flux:field>
+                            <flux:heading>Purpose</flux:heading>
+                            <flux:textarea wire:model="purpose" rows="3" readonly/>
+                        </flux:field>   
+                    </div> 
+                </div>                             
+                                           
             </div>
 
             {{-- Passengers Section for Vehicles --}}
             @if($asset_type === 'vehicle' && $booking->passengers && count($booking->passengers) > 0)
-                <div class="border rounded-lg p-6">
-                    <div class="mb-4">
-                        <!-- <flux:icon name="user-group" class="w-5 h-5 inline mr-2" /> -->
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 inline">
-                            Passengers ({{ count($booking->passengers) }})
-                        </h3>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        @foreach($booking->passengers as $passengerId)
-                            @php
-                                $passenger = \App\Models\User::find($passengerId);
-                            @endphp
-                            
-                            @if($passenger)
-                                <div class="flex items-center p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                                    <div class="flex-shrink-0">                                            
-                                        <flux:avatar size="xs" color="auto" name="{{ preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $passenger->name) }}" />                                        
-                                    </div>
-                                    <div class="ml-3 min-w-0 flex-1">
-                                        <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                            {{ $passenger->name }}
-                                        </p>
-                                        @if($passenger->email)
-                                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                                {{ $passenger->email }}
+                <div class="rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden">                    
+                    <div class="px-6 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-neutral-700">           
+                        <flux:icon name="users" class="w-4 h-4 inline text-gray-500 dark:text-white me-1" />
+                        <div class="text-left text-xs font-medium text-gray-500 dark:text-white tracking-wider uppercase inline">Passengers ({{ count($booking->passengers) }})</div>
+                    </div>                                          
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            @foreach($booking->passengers as $passengerId)
+                                @php
+                                    $passenger = \App\Models\User::find($passengerId);
+                                @endphp
+                                
+                                @if($passenger)
+                                    <div class="flex items-center p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                                        <div class="flex-shrink-0">                                            
+                                            <flux:avatar size="xs" color="auto" name="{{ preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $passenger->name) }}" />                                        
+                                        </div>
+                                        <div class="ml-3 min-w-0 flex-1">
+                                            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                                {{ $passenger->name }}
                                             </p>
-                                        @endif
-                                    </div>
-                                </div>
-                            @else
-                                <div class="flex items-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                                    <div class="flex-shrink-0">
-                                        <div class="w-8 h-8 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
-                                            <flux:icon name="user-x" class="w-4 h-4 text-red-600 dark:text-red-400" />
+                                            @if($passenger->email)
+                                                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                                    {{ $passenger->email }}
+                                                </p>
+                                            @endif
                                         </div>
                                     </div>
-                                    <div class="ml-3">
-                                        <p class="text-sm font-medium text-red-900 dark:text-red-400">
-                                            User not found (ID: {{ $passengerId }})
-                                        </p>
-                                        <p class="text-xs text-red-600 dark:text-red-500">
-                                            This user may have been deleted
-                                        </p>
+                                @else
+                                    <div class="flex items-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                                        <div class="flex-shrink-0">
+                                            <div class="w-8 h-8 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
+                                                <flux:icon name="user-x" class="w-4 h-4 text-red-600 dark:text-red-400" />
+                                            </div>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm font-medium text-red-900 dark:text-red-400">
+                                                User not found (ID: {{ $passengerId }})
+                                            </p>
+                                            <p class="text-xs text-red-600 dark:text-red-500">
+                                                This user may have been deleted
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
-                            @endif
-                        @endforeach
+                                @endif
+                            @endforeach
+                        </div>
+
+                        {{-- Summary Info --}}
+                        <flux:callout icon="information-circle" color="purple" class="mt-3" >
+                            <flux:callout.heading class="flex gap-2 @max-md:flex-col items-start">Total Capacity: <flux:text>{{ $capacity ?? 'Not specified' }} ({{ $booking->user->name }} + {{ count($booking->passengers) }} passenger{{ count($booking->passengers) === 1 ? '' : 's' }})</flux:text></flux:callout.heading>                            
+                        </flux:callout>                        
                     </div>
 
-                    {{-- Summary Info --}}
-                    <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                        <div class="flex items-center">
-                            <flux:icon name="information-circle" class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
-                            <div class="text-sm">
-                                <p class="text-blue-900 dark:text-blue-300">
-                                    <strong>Total Capacity:</strong> {{ $capacity ?? 'Not specified' }} 
-                                    ({{ $booking->user->name }} + {{ count($booking->passengers) }} passenger{{ count($booking->passengers) === 1 ? '' : 's' }})
-                                </p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             @elseif($asset_type === 'vehicle' && (!$booking->passengers || count($booking->passengers) === 0))
                 <div class="border rounded-lg p-6">
@@ -341,12 +337,12 @@
                             label="Refreshment" 
                             value="refreshment" 
                             description="Meals such as breakfast, lunch, or snacks can be arranged before or during the session."
-                            disabled
+                            readonly
                         />
 
                         @if (in_array('refreshment', $additional_booking) && $refreshment_details)
                             <div class="ml-6 mb-4">
-                                <flux:textarea wire:model.live="refreshment_details" placeholder="Refreshment details" disabled/>
+                                <flux:textarea wire:model.live="refreshment_details" placeholder="Refreshment details" readonly/>
                             </div>
                         @endif
 
@@ -354,24 +350,24 @@
                             label="Smart Monitor" 
                             value="smart_monitor" 
                             description="A smart monitor will be set up in the room before the meeting starts."
-                            disabled
+                            readonly
                         />
 
                         <flux:checkbox 
                             label="Laptop" 
                             value="laptop" 
                             description="A laptop will be prepared and set up for use during your session."
-                            disabled
+                            readonly
                         />
 
                         <flux:checkbox 
                             label="Technical Support" 
                             value="technical" 
                             description="IT will help in giving technical support." 
-                            disabled
+                            readonly
                         />                                                             
 
-                        <flux:checkbox label="Email & Other Setup" value="email" description="IT technician will help setup email in the Outlook and other things requested by user." disabled/>
+                        <flux:checkbox label="Email & Other Setup" value="email" description="IT technician will help setup email in the Outlook and other things requested by user." readonly/>
                     </flux:checkbox.group>
                 </div>
             @endif
@@ -439,10 +435,12 @@
             @endif
 
             {{-- Booking Information --}}
-            <div class="border rounded-lg p-6">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Booking Information</h3>
-                
-                <div class="space-y-3 text-sm">
+            <div class="border rounded-lg overflow-hidden">
+                <div class="p-4 border-b border-gray-200 dark:border-white bg-gray-50 dark:bg-gray-700">           
+                    <flux:icon name="book-text" class="w-4 h-4 inline text-gray-500 dark:text-white me-1" />
+                    <div class="text-left text-xs font-medium text-gray-500 dark:text-white tracking-wider uppercase inline">Booking Information</div>
+                </div>                 
+                <div class="space-y-3 text-sm p-6">
                     <div class="flex justify-between">
                         <span class="text-gray-600 dark:text-gray-300">Booked by:</span>
                         <span class="font-medium text-end">{{ $booking->user->name }}</span>
@@ -492,10 +490,12 @@
             </div>
 
             {{-- Quick Actions --}}
-            <div class="border rounded-lg p-6">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Quick Actions</h3>
-                
-                <div class="space-y-3">
+            <div class="border rounded-lg overflow-hidden">               
+                <div class="p-4 border-b border-gray-200 dark:border-white bg-gray-50 dark:bg-gray-700">           
+                    <flux:icon name="wrench-screwdriver" class="w-4 h-4 inline text-gray-500 dark:text-white me-1" />
+                    <div class="text-left text-xs font-medium text-gray-500 dark:text-white tracking-wider uppercase inline">Quick Actions</div>
+                </div>               
+                <div class="space-y-3 p-6">
                     <flux:button href="{{ route('bookings.index') }}" class="w-full" icon="chevron-left">                                                      
                         Back to Bookings
                     </flux:button>                    
