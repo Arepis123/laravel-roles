@@ -48,6 +48,11 @@
 
             <flux:spacer />
 
+
+            <flux:navlist variant="outline">
+                <flux:navlist.item icon="book-open-text" href="/user-manual" target="_blank">User Manual</flux:navlist.item>
+            </flux:navlist>            
+
             <!-- Desktop User Menu -->
             <flux:dropdown position="bottom" align="start">
                 <flux:profile

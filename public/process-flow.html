@@ -256,7 +256,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>🏢 e-Booking CLAB Process Flow</h1>
+    <h1>📅 e-Booking CLAB Process Flow</h1>
     
     <div class="controls">
       <button class="btn" onclick="startAnimation()">▶️ Start Process</button>
@@ -441,57 +441,57 @@
     }
 
     function resetAnimation() {
-      clearInterval(autoPlayInterval);
-      currentStep = 0;
-      const steps = document.querySelectorAll('.step');
-      steps.forEach(step => {
+        clearInterval(autoPlayInterval);
+        currentStep = 0;
+        const steps = document.querySelectorAll('.step');
+        steps.forEach(step => {
         step.classList.remove('active', 'completed', 'pulse');
-      });
-      updateProgress();
+        });
+        updateProgress();
     }
 
     function toggleAutoPlay() {
-      isAutoPlay = !isAutoPlay;
-      const button = document.querySelector('.controls button:last-child');
-      button.textContent = isAutoPlay ? '⏸️ Manual' : '⏸️ Auto Play';
+        isAutoPlay = !isAutoPlay;
+        const button = document.querySelector('.controls button:last-child');
+        button.textContent = isAutoPlay ? '⏸️ Manual' : '⏸️ Auto Play';
     }
 
     document.querySelectorAll('.step').forEach((step, index) => {
-      step.addEventListener('click', () => {
-        if (!isAutoPlay) {
-          showStep(index + 1);
-        }
-      });
-      
-      step.style.cursor = 'pointer';
-      step.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        if (!isAutoPlay) {
-          showStep(index + 1);
-        }
-      });
+        step.addEventListener('click', () => {
+            if (!isAutoPlay) {
+            showStep(index + 1);
+            }
+        });
+        
+        step.style.cursor = 'pointer';
+        step.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (!isAutoPlay) {
+            showStep(index + 1);
+            }
+        });
     });
 
     document.addEventListener('keydown', (e) => {
-      if (!isAutoPlay) {
-        if (e.key === 'ArrowRight' && currentStep < 11) {
-          showStep(currentStep + 1);
-        } else if (e.key === 'ArrowLeft' && currentStep > 1) {
-          showStep(currentStep - 1);
+        if (!isAutoPlay) {
+            if (e.key === 'ArrowRight' && currentStep < 11) {
+            showStep(currentStep + 1);
+            } else if (e.key === 'ArrowLeft' && currentStep > 1) {
+            showStep(currentStep - 1);
+            }
         }
-      }
     });
 
     let touchStartX = 0;
     let touchEndX = 0;
 
     document.addEventListener('touchstart', e => {
-      touchStartX = e.changedTouches[0].screenX;
+        touchStartX = e.changedTouches[0].screenX;
     });
 
     document.addEventListener('touchend', e => {
-      touchEndX = e.changedTouches[0].screenX;
-      handleSwipe();
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
     });
 
     function handleSwipe() {

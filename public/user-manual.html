@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">    
+    <title>e-Booking CLAB - User Manual</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        nav {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 2px solid #e9ecef;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        nav a {
+            color: #667eea;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            display: block;
+            font-weight: 500;
+        }
+
+        nav a:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        main {
+            padding: 40px;
+        }
+
+        section {
+            margin-bottom: 60px;
+            animation: fadeIn 0.8s ease;
+        }
+
+        h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            position: relative;
+        }
+
+        h3 {
+            color: #764ba2;
+            font-size: 1.5em;
+            margin: 30px 0 15px 0;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+
+        .feature-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .step {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .step:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+
+        .tip {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #fdcb6e;
+        }
+
+        .tip strong {
+            color: #e17055;
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .warning {
+            background: linear-gradient(135deg, #fab1a0 0%, #ff7675 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #d63031;
+        }
+
+        .code-block {
+            background: #2d3436;
+            color: #74b9ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+
+        .button-demo {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            font-size: 1em;
+        }
+
+        .button-demo:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        footer {
+            background: #2d3436;
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+
+        footer p {
+            opacity: 0.8;
+        }
+
+        /* New styles for the tabbed booking guide */
+        .booking-tabs-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .booking-tabs {
+            display: flex;
+            background: #e9ecef;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .booking-tab {
+            background: transparent;
+            border: none;
+            padding: 20px 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #6c757d;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .booking-tab:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .booking-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .booking-tab-icon {
+            font-size: 1.2rem;
+        }
+
+        .booking-tab-content {
+            display: none;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .booking-tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .booking-guide-section h3 {
+            color: #667eea;
+            font-size: 1.4rem;
+            margin: 25px 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .booking-step-number {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .booking-guide-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .booking-guide-content ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .booking-guide-content li {
+            padding: 8px 0;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .booking-guide-content li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .booking-important-note {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #fdcb6e;
+        }
+
+        .booking-important-note strong {
+            color: #856404;
+        }
+
+        .booking-tips-box {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .booking-tips-box h4 {
+            color: #0c5460;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2em;
+            }
+            
+            main {
+                padding: 20px;
+            }
+            
+            nav ul {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .booking-tabs {
+                flex-direction: column;
+            }
+            
+            .booking-tab {
+                text-align: center;
+                border-bottom: 1px solid #dee2e6;
+                border-right: none;
+            }
+            
+            .booking-tab.active {
+                border-bottom: 1px solid #dee2e6;
+                border-left: 4px solid #667eea;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📅 e-Booking CLAB User Manual</h1>
+            <p>Complete guide to use an advanced booking management system</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#getting-started">Getting Started</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#booking-guide">Booking Guide</a></li>
+                <li><a href="#admin">Admin Panel</a></li>
+                <li><a href="#troubleshooting">Troubleshooting</a></li>
+            </ul>
+        </nav>
+
+        <main>
+            <section id="overview">
+                <h2>System Overview</h2>
+                <p>Welcome to our comprehensive e-booking system! This platform allows you to manage bookings, resources, and schedules efficiently. Whether you're booking appointments, or reserving resources, this system will provides all the tools you need.</p>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>🚀 Quick & Easy</h4>
+                        <p>Intuitive interface designed for efficiency. Book appointments in just a few clicks.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📱 Responsive Design</h4>
+                        <p>Access the system from any device - desktop, tablet, or mobile phone.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🔒 Secure</h4>
+                        <p>Your data is protected with industry-standard security measures.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="getting-started">
+                <h2>Getting Started</h2>
+                
+                <h3>First Time Logging In To Your Account</h3>
+                <div class="step">
+                    <span class="step-number">1</span>
+                    Navigate to the login page by clicking "Log In" on the homepage.
+                </div>
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <div style="display: inline-block; vertical-align: top; width: calc(100% - 50px);">
+                        Fill in your email and password.<br/>
+                        <div style="margin-top: 15px; padding: 15px; background: rgba(102, 126, 234, 0.1); border-radius: 8px;">
+                            <span style="display: block; margin-bottom: 10px; color: #667eea; font-weight: 500;">Your password consists of:</span>
+                            <ul style="margin-left: 25px; margin-bottom: 15px;">
+                                <li style="margin: 5px 0;">Your password consists of your email address from the first character up to the '@' symbol</li>
+                                <li style="margin: 5px 0;">followed by "@1234"</li>
+                            </ul>
+                            <div style="padding: 12px; background: white; border-radius: 6px; border-left: 3px solid #667eea;">
+                                <span style="color: #2d3436;">Example:</span><br/>
+                                <span style="color: #667eea; font-weight: 600;">Email:</span> example@clab.com.my<br/>
+                                <span style="color: #667eea; font-weight: 600;">Password:</span> example@1234
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="step">
+                    <span class="step-number">3</span>
+                    Log in with your credentials to access the dashboard.
+                </div>
+                <div class="step">
+                    <span class="step-number">4</span>
+                    Find the sidebar menu. On a web browser, it's at the bottom left. On a mobile device, it's at the top right.
+                </div>
+                <div class="step">
+                    <span class="step-number">5</span>
+                    Click on your name, then go to <span style="color: #667eea; font-weight: 600;">"Settings"</span>.
+                </div>   
+                <div class="step">
+                    <span class="step-number">6</span>
+                    Navigate to <span style="color: #667eea; font-weight: 600;">"Password"</span> setting and update a new strong password (minimum 8 characters, including numbers and special characters).
+                </div>
+                <div class="step">
+                    <span class="step-number">7</span>
+                    Log in using your new credentials.
+                </div>                                                         
+
+                <div class="tip">
+                    <strong>💡 Pro Tip:</strong>
+                    Save your login credentials in a secure password manager for easy access.
+                </div>
+            </section>
+
+            <section id="features">
+                <h2>Key Features</h2>
+                
+                <h3>Dashboard Overview</h3>
+                <p>Your dashboard provides a comprehensive view of all your bookings and activities:</p>
+                <ul style="margin-left: 30px; margin-top: 15px;">
+                    <li><strong>Today's Schedule:</strong> View all bookings for the current day</li>
+                    <li><strong>Upcoming Bookings:</strong> See your next 7 days of bookings</li>
+                    <li><strong>Quick Actions:</strong> Create new bookings or modify existing ones</li>
+                    <li><strong>Statistics:</strong> Track your booking patterns and history</li>
+                </ul>
+
+                <h3>Calendar View</h3>
+                <p>The calendar interface offers multiple viewing options:</p>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>📅 Month View</h4>
+                        <p>Get a bird's eye view of your entire month's schedule.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📆 Week View</h4>
+                        <p>Focus on your weekly commitments with detailed time slots.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📋 Day View</h4>
+                        <p>Manage your daily schedule hour by hour.</p>
+                    </div>
+                </div>
+
+                <h3>Search and Filter</h3>
+                <p>Find bookings quickly with our advanced search features:</p>
+                <div class="code-block">
+                    Search by: Date | Time | Type | Status | Booked By
+                </div>
+            </section>
+
+            <section id="booking-guide">
+                <h2>How to Make a Booking</h2>
+                
+                <div class="booking-tabs-container">
+                    <div class="booking-tabs">
+                        <button class="booking-tab active" data-tab="meeting-room">
+                            <span class="booking-tab-icon">🏢</span>
+                            Meeting Room
+                        </button>
+                        <button class="booking-tab" data-tab="vehicle">
+                            <span class="booking-tab-icon">🚗</span>
+                            Vehicle
+                        </button>
+                        <button class="booking-tab" data-tab="it-assets">
+                            <span class="booking-tab-icon">💻</span>
+                            IT Assets
+                        </button>
+                    </div>
+
+                    <div id="meeting-room" class="booking-tab-content active">
+                        <div class="booking-guide-section">
+                            <h3><span class="booking-step-number">1</span>Access the Booking System</h3>
+                            <div class="booking-guide-content">
+                                <ul>
+                                    <!-- <li>Open your company intranet portal</li>
+                                    <li>Navigate to "Resources" → "Meeting Room Booking"</li> -->
+                                    <li>Use the direct link: <a href="https://e-booking.e-clab.online" style="color: #667eea; font-weight: 600;">https://e-booking.e-clab.online</a></li>
+                                    <li>Log in with your credentials</li>
+                                    <li>Navigate to "Booking" → "Create New Book"</li>
+                                    <li>Choose booking type 'Meeting Room'</li>
+                                </ul>
+                            </div>
+
+                            <h3><span class="booking-step-number">2</span>Choose Meeting Room</h3>
+                            <div class="booking-guide-content">
+                                <ul>
+                                    <li>Browse available rooms under "Location"</li>
+                                    <li>Specify number of attendees under 'Capacity'</li>
+                                </ul>
+                            </div>
+
+                            <h3><span class="booking-step-number">3</span>Select Date and Time</h3>
+                            <div class="booking-guide-content">
+                                <ul>
+                                    <li>Choose your preferred date from the calendar</li>
+                                    <li>Select start and end times</li>
+                                    <li>Check real-time availability</li>
+                                    <li>Only available times will be displayed in the dropdown menu</li>
+                                </ul>
+                            </div>
+
+                            <h3><span class="booking-step-number">4</span>Fill Booking Details</h3>
+                            <div class="booking-guide-content">
+                                <ul>
+                                    <li>Enter meeting purpose or description</li>
+                                    <li>Specify number of attendees</li>
+                                    <li>List any refreshment needs</li>
+                                    <li>Tick the Technical Support checkbox if needed</li>
+                                </ul>
+                            </div>
+
+                            <!-- <div class="booking-important-note">
+                                <strong>Important:</strong> Meeting rooms must be booked at least 2 hours in advance. For recurring meetings, book the entire series at once.
+                            </div> -->
+
+                            <div class="booking-tips-box">
+                                <h4>💡 Pro Tips for Meeting Room Booking:</h4>
+                                <ul>
+                                    <li>Book popular rooms (boardroom) well in advance</li>
+                                    <li>Cancel unused bookings to free up space for others</li>
+                                    <li>Check room capacity - book 20% larger than your group size</li>
+                                    <li>Test AV equipment 15 minutes before important meetings</li>
+                                    <li>Clean up after use - next meeting starts promptly</li>
+                                    <li>Please be sure to turn off the Smart Monitor after use</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="vehicle" class="booking-tab-content">
+                        <div class="booking-guide-section">
+                            <h3><span class="booking-step-number">1</span>Check Eligibility</h3>
+                            <div class="booking-guide-content">
+                                <ul>
+                                    <li>Verify you have a valid driver's license</li>
+                                    <li>Ensure your application is validated by your superior before booking</li>
+                                    <li>Confirm your insurance coverage is up to date</li>
+                                </ul>
+                            </div>
+
+                            <h3><span class="booking-step-number">2</span>Access Vehicle Booking Portal</h3>
+                            <div class="booking-guide-content">
+                                <ul>
+                                    <li>Use the direct link: <a href="https://e-booking.e-clab.online" style="color: #667eea; font-weight: 600;">https://e-booking.e-clab.online</a></li>
+                                    <li>Log in with your credentials</li>
+                                    <li>Navigate to "Booking" → "Create New Book"</li>
+                                    <li>Choose booking type 'Vehicle'</li>                                    
+                                </ul>
+                            </div>
+
+                            <h3><span class="booking-step-number">3</span>Select Vehicle Type</h3>
+                            <div class="booking-guide-content">
+                                <ul>
+                                    <li><strong>CRV:</strong> Manager Level</li>
+                                    <li><strong>Aruz:</strong> Executive Level</li>
+                                    <li><strong>Bezza:</strong> Non-executive</li>
+                                </ul>
+                            </div>
+
+                            <h3><span class="booking-step-number">4</span>Enter Capacity and Destination</h3>
+                            <div class="booking-guide-content">
+                                <ul>
+                                    <li>Specify number of passenger and driver under 'Capacity' field</li>
+                                    <li>Fill in the distination</li>
+                                    <li>For a capacity of more than one person, select each passenger's name from the list</li>
+                                </ul>
+                            </div>                            
+
+                           <h3><span class="booking-step-number">5</span>Select Date and Time</h3>
+                            <div class="booking-guide-content">
+                                <ul>
+                                    <li>Choose your preferred date from the calendar</li>
+                                    <li>Select start and end times</li>
+                                    <li>For multi-day booking, enter end date</li>
+                                    <li>Check real-time availability</li>
+                                    <li>Only available times will be displayed in the dropdown menu</li>
+                                </ul>
+                            </div>                            
+
+                            <h3><span class="booking-step-number">6</span>Booking Details</h3>
+                            <div class="booking-guide-content">
+                                <ul>
+                                    <li>Enter purpose of trip</li>
+                                </ul>
+                            </div>
+
+                            <h3><span class="booking-step-number">7</span>Submit and Approval</h3>
+                            <div class="booking-guide-content">
+                                <ul>
+                                    <li>Submit request with business justification</li>
+                                    <li>Wait for Admin approval</li>
+                                    <li>Receive confirmation email with vehicle details</li>
+                                    <li>Collect all the required items, including keys and cards, from the Admin</li>
+                                </ul>
+                            </div>
+
+                            <div class="booking-important-note">
+                                <strong>Vehicle Policy:</strong> Personal use is prohibited. Return with same fuel level or more and report any issues immediately.
+                            </div>
+
+                            <div class="booking-tips-box">
+                                <h4>🚗 Vehicle Booking Best Practices:</h4>
+                                <ul>
+                                    <li>Book vehicles as early as possible</li>
+                                    <li>Inspect vehicle before departure and document issues</li>
+                                    <li>Keep all receipts for fuel and parking</li>
+                                    <li>Return on time</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="it-assets" class="booking-tab-content">
+                        <div class="booking-guide-section">
+                            <h3><span class="booking-step-number">1</span>Identify Required Equipment</h3>
+                            <div class="booking-guide-content">
+                                <ul>
+                                    <li><strong>Laptops:</strong> Temporary workstations, presentations, work from home</li>
+                                    <li><strong>Projectors:</strong> Meetings, training sessions</li>
+                                    <li><strong>Tablets:</strong> Demonstrations, mobile presentations</li>
+                                    <li><strong>Audio Equipment:</strong> Microphones, speakers</li>
+                                    <li><strong>Video Equipment:</strong> Cameras, tripods</li>
+                                    <li><strong>Accessories:</strong> Adapters, cables, chargers</li>
+                                </ul>
+                            </div>
+
+                            <h3><span class="booking-step-number">2</span>Access Vehicle Booking Portal</h3>
+                            <div class="booking-guide-content">
+                                <ul>
+                                    <li>Use the direct link: <a href="https://e-booking.e-clab.online" style="color: #667eea; font-weight: 600;">https://e-booking.e-clab.online</a></li>
+                                    <li>Log in with your credentials</li>
+                                    <li>Navigate to "Booking" → "Create New Book"</li>
+                                    <li>Choose booking type 'IT Asset' and choose equipment</li>                                    
+                                </ul>
+                            </div>                            
+
+                           <h3><span class="booking-step-number">3</span>Select Date and Time</h3>
+                            <div class="booking-guide-content">
+                                <ul>
+                                    <li>Choose your preferred date from the calendar</li>
+                                    <li>Select start and end times</li>
+                                    <li>For multi-day booking, enter end date</li>
+                                    <li>Check real-time availability</li>
+                                    <li>Only available times will be displayed in the dropdown menu</li>
+                                </ul>
+                            </div>
+
+                            <h3><span class="booking-step-number">4</span>Booking Details</h3>
+                            <div class="booking-guide-content">
+                                <ul>
+                                    <li>Enter purpose of trip</li>
+                                    <li>If you need the IT team to set up the equipment, tick the 'Email & Other Setup' checkbox</li>
+                                </ul>
+                            </div>
+
+                            <h3><span class="booking-step-number">5</span>IT Team Approval</h3>
+                            <div class="booking-guide-content">
+                                <ul>
+                                    <li>Submit request for IT team review</li>
+                                    <li>Receive confirmation within 2-4 hours</li>
+                                    <li>Get pickup instructions and contact details</li>
+                                    <li>Note any usage restrictions or guidelines</li>
+                                </ul>
+                            </div>
+
+                            <div class="booking-important-note">
+                                <strong>Equipment Care:</strong> You are responsible for the safe handling and return of all borrowed equipment. Report damage immediately and avoid eating/drinking near electronics.
+                            </div>
+
+                            <div class="booking-tips-box">
+                                <h4>💻 IT Equipment Booking Tips:</h4>
+                                <ul>
+                                    <li>Book high-demand items (latest laptops) early</li>
+                                    <li>Test equipment before important events</li>
+                                    <li>Return equipment clean and in original packaging</li>
+                                    <li>Consider compatibility with your existing setup</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="warning">
+                    <strong>⚠️ Important:</strong> Bookings must be made at least 24 hours in advance. For urgent bookings, please contact support.
+                </div>
+            </section>
+
+            <section id="admin">
+                <h2>Admin Panel (For Administrators)</h2>
+                
+                <h3>Admin Dashboard</h3>
+                <p>The admin panel provides powerful tools for managing the entire booking system:</p>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>👥 User Management</h4>
+                        <p>Add, edit, or remove users. Set permissions and access levels.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📊 Analytics</h4>
+                        <p>View detailed reports on booking trends, usage statistics, and usage patterns.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🔧 Resource Management</h4>
+                        <p>Add or modify available services, rooms, equipment, or staff.</p>
+                    </div>
+                </div>
+
+                <h3>Managing Assets</h3>
+                <div class="step">
+                    <span class="step-number">1</span>
+                    Navigate to "Asset" in the admin menu
+                </div>
+                <div class="step">
+                    <span class="step-number">2</span>
+                    Click "Add Asset" to create a new bookable item
+                </div>
+                <div class="step">
+                    <span class="step-number">3</span>
+                    Fill in the details required
+                </div>
+                <div class="step">
+                    <span class="step-number">5</span>
+                    Save and publish the asset
+                </div>
+                <div class="step">
+                    <span class="step-number">5</span>
+                    Click 'Pencil' icon to edit or 'Trash Bin' to delete the asset
+                </div>                
+            </section>
+
+            <section id="troubleshooting">
+                <h2>Troubleshooting & FAQ</h2>
+                
+                <h3>Common Issues and Solutions</h3>
+                
+                <div class="step">
+                    <strong>Q: I can't log into my account</strong><br>
+                    A: Try resetting your password using the "Forgot Password" link. Check that caps lock is off and you're using the correct email address Your account must be active to log in.
+                </div>
+                
+                <div class="step">
+                    <strong>Q: My booking isn't showing up</strong><br>
+                    A: Refresh the page and check your email for a confirmation. If the issue persists, check "My Bookings" or contact support.
+                </div>
+                
+                <!-- <div class="step">
+                    <strong>Q: I need to book outside regular hours</strong><br>
+                    A: Contact an administrator who can create custom time slots or override standard booking rules.
+                </div> -->
+                
+                <!-- <div class="step">
+                    <strong>Q: Payment failed but booking was created</strong><br>
+                    A: The booking is held for 24 hours. Complete payment from "My Bookings" or the booking will be automatically cancelled.
+                </div> -->
+
+                <h3>Contact Support</h3>
+                <div class="tip">
+                    <strong>Need Help?</strong>
+                    <p>Email: e-booking@clab.com</p>
+                    <p>Phone: 03-2095 9599 (Monday-Friday, 8:30 AM - 5:30 PM)</p>
+                </div>
+
+                <h3>Quick Actions</h3>
+                <div style="text-align: center; margin: 40px 0;">
+                    <a class="button-demo" href="https://e-booking.e-clab.online/" target="_blank">Create New Booking</a>
+                    <a class="button-demo" href="https://e-booking.e-clab.online/process-flow.html" target="_blank">View Process Flow</a>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 e-Booking CLAB. All rights reserved.</p>
+            <p style="margin-top: 10px;">Version 1.0 | Last Updated: August 2025</p>
+        </footer>
+    </div>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('nav a').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.feature-card, .step').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'all 0.6s ease';
+            observer.observe(el);
+        });
+
+        // Tab switching functionality for booking guide
+        document.addEventListener('DOMContentLoaded', function() {
+            const bookingTabs = document.querySelectorAll('.booking-tab');
+            const bookingTabContents = document.querySelectorAll('.booking-tab-content');
+
+            bookingTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs and contents
+                    bookingTabs.forEach(t => t.classList.remove('active'));
+                    bookingTabContents.forEach(content => content.classList.remove('active'));
+
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+
+                    // Show corresponding content
+                    const targetTab = this.getAttribute('data-tab');
+                    document.getElementById(targetTab).classList.add('active');
+
+                    // Add smooth scroll to top of content
+                    document.querySelector('.booking-tab-content.active').scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                });
+            });
+
+            // Add keyboard navigation for booking tabs
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                    const activeTab = document.querySelector('.booking-tab.active');
+                    if (activeTab) {
+                        const allTabs = Array.from(bookingTabs);
+                        const currentIndex = allTabs.indexOf(activeTab);
+                        
+                        let nextIndex;
+                        if (e.key === 'ArrowRight') {
+                            nextIndex = (currentIndex + 1) % allTabs.length;
+                        } else {
+                            nextIndex = (currentIndex - 1 + allTabs.length) % allTabs.length;
+                        }
+                        
+                        allTabs[nextIndex].click();
+                    }
+                }
+            });
+
+            // Add hover effects for booking guide elements
+            const bookingGuideContents = document.querySelectorAll('.booking-guide-content');
+            bookingGuideContents.forEach(content => {
+                content.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateX(5px)';
+                    this.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.15)';
+                });
+                
+                content.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateX(0)';
+                    this.style.boxShadow = '0 5px 15px rgba(0,0,0,0.1)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
