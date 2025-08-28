@@ -34,6 +34,10 @@ Route::get('/user-manual', function () {
     return response()->file(public_path('user-manual.html'));
 });
 
+Route::get('/process-flow', function () {
+    return response()->file(public_path('process-flow.html'));
+});
+
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
