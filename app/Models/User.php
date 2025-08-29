@@ -20,6 +20,7 @@ class User extends Authenticatable implements CanResetPassword
         'password',
         'font_size',
         'status',
+        'position',
     ];
 
     protected $hidden = [
@@ -33,6 +34,7 @@ class User extends Authenticatable implements CanResetPassword
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'status' => 'string',
+            'position' => 'string',
         ];
     }
 
@@ -73,5 +75,29 @@ class User extends Authenticatable implements CanResetPassword
     {
         $this->status = $this->status === 'active' ? 'inactive' : 'active';
         $this->save();
+    }
+
+    // Helper method to get available positions
+    public static function getPositions(): array
+    {
+        return ['CEO', 'Manager', 'Executive', 'Non-executive'];
+    }
+
+    // Helper method to check if user is in management position
+    public function isManagement(): bool
+    {
+        return in_array($this->position, ['CEO', 'Manager']);
+    }
+
+    // Helper method to get position badge color for UI
+    public function getPositionBadgeColor(): string
+    {
+        return match($this->position) {
+            'CEO' => 'bg-purple-100 text-purple-800',
+            'Manager' => 'bg-blue-100 text-blue-800',
+            'Executive' => 'bg-green-100 text-green-800',
+            'Non-executive' => 'bg-gray-100 text-gray-800',
+            default => 'bg-gray-100 text-gray-800'
+        };
     }
 }

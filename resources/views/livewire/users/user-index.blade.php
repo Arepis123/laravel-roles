@@ -59,7 +59,7 @@
     {{-- Filters and Actions --}}
     <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4 mb-6">
         <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-            <div class="md:col-span-4">
+            <div class="md:col-span-3">
                 <flux:input 
                     wire:model.live.debounce.300ms="search" 
                     type="search" 
@@ -84,11 +84,20 @@
                     @endforeach
                 </flux:select>
             </div>
-            
+
             <div class="md:col-span-2">
+                <flux:select wire:model.live="positionFilter" placeholder="All Positions">
+                    <flux:select.option value="">All Positions</flux:select.option>
+                    @foreach($positions as $position)
+                        <flux:select.option value="{{ $position }}">{{ $position }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+            </div>
+            
+            <div class="md:col-span-1">
                 <flux:button wire:click="resetFilters" variant="filled" class="w-full">
                     <flux:icon.arrow-path class="w-4 h-4 mr-1 inline-block me-2 transform transition-transform duration-200 rotate-180" />
-                    <span>{{__('Reset Filters')}}</span>
+                    <span>{{__('Reset')}}</span>
                 </flux:button>                
             </div>
             
@@ -98,10 +107,6 @@
                     <flux:icon.plus class="w-4 h-4 me-1" />
                     Create User
                 </flux:button>
-                {{-- <flux:button variant="primary" href="{{ route('bookings.create') }}">
-                    <flux:icon name="plus" class="w-4 h-4 mr-2" />
-                    New Booking
-                </flux:button>                 --}}
             </div>
             @endcan
         </div>
@@ -146,6 +151,31 @@
                                 Email
                                 <span class="ml-2 flex-none rounded">
                                     @if($sortField === 'email')
+                                        @if($sortDirection === 'asc')
+                                            <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+                                            </svg>
+                                        @else
+                                            <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                                            </svg>
+                                        @endif
+                                    @else
+                                        <svg class="size-3 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                                        </svg>
+                                    @endif
+                                </span>
+                            </button>
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left">
+                            <button 
+                                wire:click="sort('position')" 
+                                class="group inline-flex items-center text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200 transition-colors cursor-pointer"
+                            >
+                                Position
+                                <span class="ml-2 flex-none rounded">
+                                    @if($sortField === 'position')
                                         @if($sortDirection === 'asc')
                                             <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
@@ -265,6 +295,11 @@
                                 <div class="text-sm text-gray-900 dark:text-gray-200">{{ $user->email }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $user->getPositionBadgeColor() }}">
+                                    {{ $user->position }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex flex-wrap gap-1">
                                     @forelse ($user->roles as $role)
                                         <flux:badge variant="outline">
@@ -368,7 +403,7 @@
                         @endcan
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-12 text-center">
+                            <td colspan="7" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center">
                                     <svg class="size-12 text-gray-400 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
@@ -390,29 +425,8 @@
         @endif
     </div>
 
-{{-- Desktop Table View (hidden on mobile) --}}
-<div class="hidden md:block bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-                <!-- Keep existing table structure here -->
-                <thead class="bg-gray-50 dark:bg-neutral-900">
-                    <!-- Keep existing table headers -->
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200 dark:bg-neutral-800 dark:divide-neutral-700" wire:loading.class="opacity-50">
-                    <!-- Keep existing table rows -->
-                </tbody>
-            </table>
-        </div>
-        
-        @if($users->hasPages())
-            <div class="px-6 py-4 border-t border-gray-200 dark:border-neutral-700">
-                {{ $users->links() }}
-            </div>
-        @endif
-    </div>
-
     {{-- Mobile Card View (hidden on desktop) --}}
-    <div class="md:hidden space-y-4">
+    <div class="sm:hidden md:hidden space-y-4">
         @forelse ($users as $user)
             <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg p-4 shadow-sm">
                 <!-- Card Header -->
@@ -446,6 +460,16 @@
                     <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <flux:icon name="envelope" class="w-4 h-4" />
                         <span class="truncate">{{ $user->email }}</span>
+                    </div>
+                </div>
+
+                <!-- Position -->
+                <div class="mb-3">
+                    <div class="flex items-center gap-2">
+                        <flux:icon name="briefcase" class="w-4 h-4 text-gray-500" />
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $user->getPositionBadgeColor() }}">
+                            {{ $user->position }}
+                        </span>
                     </div>
                 </div>
 

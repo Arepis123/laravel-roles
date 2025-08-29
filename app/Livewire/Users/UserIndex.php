@@ -13,13 +13,14 @@ class UserIndex extends Component
     public $search = '';
     public $statusFilter = '';
     public $roleFilter = '';
+    public $positionFilter = ''; // Added position filter
     public $perPage = 15;
     
     // Sorting properties
     public $sortField = 'created_at';
     public $sortDirection = 'desc';
 
-    protected $queryString = ['search', 'statusFilter', 'roleFilter', 'sortField', 'sortDirection'];
+    protected $queryString = ['search', 'statusFilter', 'roleFilter', 'positionFilter', 'sortField', 'sortDirection'];
 
     public function updatingSearch()
     {
@@ -42,6 +43,9 @@ class UserIndex extends Component
                 $q->whereHas('roles', function ($query) {
                     $query->where('name', $this->roleFilter);
                 });
+            })
+            ->when($this->positionFilter, function ($q) {
+                $q->where('position', $this->positionFilter);
             });
 
         // Apply sorting
@@ -56,8 +60,9 @@ class UserIndex extends Component
         $users = $query->paginate($this->perPage);
         
         $roles = \Spatie\Permission\Models\Role::pluck('name');
+        $positions = User::getPositions();
 
-        return view('livewire.users.user-index', compact('users', 'roles'));
+        return view('livewire.users.user-index', compact('users', 'roles', 'positions'));
     }
     
     public function sort($field)
@@ -100,6 +105,7 @@ class UserIndex extends Component
         $this->search = '';
         $this->statusFilter = '';
         $this->roleFilter = '';
+        $this->positionFilter = ''; // Reset position filter
         $this->sortField = 'created_at';
         $this->sortDirection = 'desc';
         $this->resetPage();
