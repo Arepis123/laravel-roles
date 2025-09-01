@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Livewire\Users;
 
 use Livewire\Component;
@@ -10,8 +9,9 @@ use Spatie\Permission\Models\Role;
 class UserEdit extends Component
 {
     public $user, $name, $email, $password, $confirm_password, $allRoles;
-    public $roles = [];
-    public $status; // Added status field
+    public $selectedRole;
+    public $status;
+    public $position;
 
     public function mount($id)
     {
@@ -19,13 +19,17 @@ class UserEdit extends Component
         $this->name = $this->user->name;
         $this->email = $this->user->email;
         $this->status = $this->user->status;
+        $this->position = $this->user->position;
         $this->allRoles = Role::all();
-        $this->roles = $this->user->roles()->pluck('name')->toArray();
+        
+        // Get the first role (since user can only have one now)
+        $this->selectedRole = $this->user->roles()->first()?->name;
     }
 
     public function render()
     {
-        return view('livewire.users.user-edit');
+        $positions = User::getPositions();
+        return view('livewire.users.user-edit', compact('positions'));
     }
 
     public function submit()
@@ -34,12 +38,15 @@ class UserEdit extends Component
             "name" => "required",
             "email" => "required|email|unique:users,email,{$this->user->id}",
             "password" => "nullable|min:8|same:confirm_password",
-            "status" => "required|in:active,inactive"
+            "status" => "required|in:active,inactive",
+            "position" => "required|in:CEO,Manager,Executive,Non-executive",
+            "selectedRole" => "required"
         ]);
         
         $this->user->name = $this->name;
-        $this->user->email = $this->email;
+        $this->user->email = $this->user->email;
         $this->user->status = $this->status;
+        $this->user->position = $this->position;
 
         if($this->password){
             $this->user->password = Hash::make($this->password);
@@ -47,7 +54,8 @@ class UserEdit extends Component
 
         $this->user->save();
 
-        $this->user->syncRoles($this->roles);
+        // Sync the single selected role
+        $this->user->syncRoles([$this->selectedRole]);
 
         return to_route("users.index")->with("success", "User successfully updated.");
     }
