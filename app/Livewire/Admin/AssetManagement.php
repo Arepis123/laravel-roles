@@ -566,7 +566,7 @@ class AssetManagement extends Component
     public function deleteAsset($type, $id)
     {
         // Check permission for deleting assets
-        if (!auth()->user()->hasPermissionTo('delete assets')) {
+        if (!auth()->user()->hasPermissionTo('asset.delete')) {
             session()->flash('error', 'You do not have permission to delete assets.');
             return;
         }
