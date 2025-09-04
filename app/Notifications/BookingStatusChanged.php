@@ -73,7 +73,7 @@ class BookingStatusChanged extends Notification
             ->when($statusMessage, function ($mail) use ($statusMessage) {
                 return $mail->line($statusMessage);
             })
-            ->action('View Booking Details', url('/bookings/' . $this->booking->id))
+            ->action('View Booking Details', url('/bookings/my/' . $this->booking->id))
             ->line('Thank you for using our booking system!')
             ->salutation('Best regards, ' . config('app.name') . ' Team');
     }
