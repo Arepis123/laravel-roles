@@ -37,6 +37,10 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+Route::get('/dashboard/chart-data', [App\Http\Controllers\Api\CalendarController::class, 'getChartData'])
+    ->middleware(['auth'])
+    ->name('dashboard.chart-data');
+
 Route::get('/user-manual', function () {
     return response()->file(public_path('user-manual.html'));
 });
@@ -110,6 +114,9 @@ Route::middleware(['auth'])->group(function () {
         
         Route::get('calendar-stats', [App\Http\Controllers\Api\CalendarController::class, 'getStats'])
              ->name('calendar.stats');
+        
+        Route::get('chart-data', [App\Http\Controllers\Api\CalendarController::class, 'getChartData'])
+             ->name('chart.data');
              
         // Enhanced calendar endpoints with vehicle management integration
         Route::get('calendar-enhanced', [App\Http\Controllers\Api\CalendarController::class, 'getEnhancedBookings'])

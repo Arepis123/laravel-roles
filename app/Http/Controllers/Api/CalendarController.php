@@ -294,6 +294,43 @@ class CalendarController extends Controller
     }
 
     /**
+     * Get chart data for booking trends by month
+     */
+    public function getChartData(Request $request)
+    {
+        $month = $request->get('month', now()->month);
+        $year = $request->get('year', now()->year);
+        
+        // Create date range for the specified month
+        $startOfMonth = Carbon::create($year, $month, 1)->startOfDay();
+        $endOfMonth = $startOfMonth->copy()->endOfMonth()->endOfDay();
+        $daysInMonth = $startOfMonth->daysInMonth;
+        
+        // Generate data for each day of the month
+        $chartData = [];
+        
+        for ($day = 1; $day <= $daysInMonth; $day++) {
+            $date = $startOfMonth->copy()->day($day);
+            
+            // Get total bookings created on this date
+            $totalBookings = Booking::whereDate('created_at', $date)->count();
+            
+            // Get approved bookings created on this date
+            $approvedBookings = Booking::whereDate('created_at', $date)
+                ->where('status', 'approved')
+                ->count();
+            
+            $chartData[] = [
+                'date' => $date->format('M j'),
+                'bookings' => $totalBookings,
+                'approved' => $approvedBookings,
+            ];
+        }
+        
+        return response()->json($chartData);
+    }
+
+    /**
      * Generate event title for calendar display
      */
     private function generateEventTitle($booking)
