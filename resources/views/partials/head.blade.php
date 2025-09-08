@@ -12,3 +12,27 @@
 
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 @fluxAppearance
+
+<style>
+/* Hide scrollbar for sidebar while keeping scroll functionality */
+[data-flux-sidebar] {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+[data-flux-sidebar]::-webkit-scrollbar {
+    width: 0; /* WebKit browsers */
+    background: transparent;
+}
+
+/* Alternative approach - hide scrollbar for any scrollable content in sidebar */
+[data-flux-sidebar] * {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+[data-flux-sidebar] *::-webkit-scrollbar {
+    width: 0; /* WebKit browsers */
+    background: transparent;
+}
+</style>

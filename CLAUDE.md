@@ -1,0 +1,102 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+This is a Laravel 12 application with Livewire for building a role-based booking system (e-Booking). The system manages users, roles, permissions, and bookings for various assets (meeting rooms, IT assets, vehicles).
+
+## Development Commands
+
+### Local Development
+- `composer dev` - Starts concurrent Laravel server, queue worker, and Vite dev server
+- `php artisan serve` - Start Laravel development server only
+- `npm run dev` - Start Vite development server for asset compilation
+- `npm run build` - Build production assets
+
+### Testing
+- `composer test` - Clear config cache and run PHPUnit tests
+- `php artisan test` - Run tests using Laravel's test runner
+- Tests use **Pest PHP** framework, not standard PHPUnit syntax
+
+### Code Quality
+- `php artisan pint` - Laravel Pint code formatter (available via composer)
+- Tests are configured to use SQLite in-memory database
+
+## Architecture Overview
+
+### Core Technologies
+- **Laravel 12** with PHP 8.2+
+- **Livewire** with Volt for reactive components
+- **Spatie Laravel Permission** for role-based access control
+- **Laravel Flux** UI components
+- **TailwindCSS 4** for styling
+- **Vite** for asset building
+
+### Key Models & Relationships
+- `User` - Users with roles and permissions
+- `Booking` - Central booking entity with polymorphic relationships to assets
+- `Asset` (abstract) - Base class for bookable resources
+  - `MeetingRoom` - Meeting room assets
+  - `ItAsset` - IT equipment
+  - `Vehicle` - Vehicle assets
+- `ReportLog` - Generated reports storage
+
+### Livewire Component Structure
+Components are organized by domain:
+- `Users/` - User management (UserIndex, UserCreate, UserEdit, UseShow)
+- `Roles/` - Role management (RoleIndex, RoleCreate, RoleEdit, RoleShow)
+- `Bookings/` - Booking management with admin/user separation
+  - Admin views: `BookingIndex`, `BookingCreate`, `BookingEdit`, `BookingShow`
+  - User views: `BookingMyIndex`, `BookingMyEdit`, `BookingMyShow`
+- `Settings/` - User settings (Profile, Password, Appearance)
+- `Admin/` - Administrative functions (AssetManagement, Reports)
+
+### Permission System
+Uses Spatie Laravel Permission with granular permissions:
+- User permissions: `user.view`, `user.create`, `user.edit`, `user.delete`
+- Role permissions: `role.view`, `role.create`, `role.edit`, `role.delete`
+- Booking permissions: `book.view`, `book.create`, `book.edit`, `book.delete`
+- Asset permissions: `asset.view`, `asset.create`, `asset.edit`, `asset.delete`
+
+### Routing Strategy
+- Role-based route protection using middleware
+- Separate admin and user booking routes
+- Dynamic routing based on user roles (Super Admin/Admin see all bookings, users see only their own)
+
+### Frontend Assets
+- TailwindCSS 4 with Vite plugin
+- Preline UI components
+- Schedule-X calendar integration
+- Canvas Confetti for animations
+- Vanilla Calendar Pro
+
+### API Endpoints
+- `/api/calendar-bookings` - Calendar data for booking display
+- `/api/calendar-stats` - Dashboard statistics
+
+### File Storage
+- Reports stored in `storage/app/` directory
+- Support for PDF, CSV, and Excel report formats
+- Download routes with proper MIME type handling
+
+## Development Notes
+
+### Database
+- Uses SQLite for development/testing
+- Migrations include role and permission seeding
+- Models use proper relationships and polymorphism
+
+### Asset Management
+- Assets are handled through polymorphic relationships
+- Different asset types (meeting rooms, IT assets, vehicles) extend base Asset model
+
+### Report System
+- Generates downloadable reports in multiple formats
+- Reports are logged in ReportLog model with file path tracking
+- Uses Laravel's response()->download() for file serving
+
+### Authentication
+- Standard Laravel Breeze authentication
+- Role-based access control throughout application
+- Middleware protection on all authenticated routes

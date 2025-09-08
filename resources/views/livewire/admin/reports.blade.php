@@ -21,7 +21,7 @@
          x-on:report-generated.window="showToastNotification('success', $event.detail.message)"
          x-on:report-error.window="showToastNotification('error', $event.detail.message)"
          x-on:report-deleted.window="showToastNotification('success', $event.detail.message)"
-         x-on:report-emailed.window="showToastNotification('success', $event.detail.message)">
+         x-on:report-emailed.window="showToastNotification('success', $event.detail.message)"
         
         <!-- Toast Container -->
         <div x-show="showToast" 
@@ -109,6 +109,10 @@
                         <flux:select.option value="excel">Excel (.xlsx)</flux:select.option>
                         <flux:select.option value="csv">CSV (.csv)</flux:select.option>
                         <flux:select.option value="pdf">PDF (.pdf)</flux:select.option>
+                        <flux:select.option value="json">JSON (.json)</flux:select.option>
+                        <flux:select.option value="xml">XML (.xml)</flux:select.option>
+                        <flux:select.option value="html">HTML (.html)</flux:select.option>
+                        <flux:select.option value="txt">Text (.txt)</flux:select.option>
                     </flux:select>
                 </flux:field>
             </div>
@@ -328,6 +332,14 @@
                                 
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex items-center">
+                                        <flux:tooltip content="View Report">
+                                            <a href="{{ url('/reports/view/' . $report->id) }}" target="_blank" rel="noopener noreferrer">
+                                                <flux:button size="sm" variant="ghost">
+                                                    <flux:icon name="eye" class="w-4 h-4"/>
+                                                </flux:button>
+                                            </a>                                      
+                                        </flux:tooltip>
+
                                         <flux:tooltip content="Download">
                                             <flux:button size="sm" wire:click="downloadReport({{ $report->id }})" variant="ghost">
                                                 <flux:icon name="arrow-down-tray" class="w-4 h-4"/>

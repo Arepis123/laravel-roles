@@ -76,12 +76,12 @@ class ReportService
     public function generateVehiclesReport($filters = [], $format = 'excel')
     {
         try {
-            \Log::info('Starting vehicles report generation', ['format' => $format, 'filters' => $filters]);
+            \Log::info('Starting enhanced vehicles report generation', ['format' => $format, 'filters' => $filters]);
             
-            // Get all vehicles with their fuel and odometer data
-            $vehicles = $this->getVehiclesWithDetails($filters);
+            // Get all vehicles with enhanced analytics using new normalized models
+            $vehicles = $this->getVehiclesWithEnhancedDetails($filters);
             
-            \Log::info('Vehicles query completed', ['count' => $vehicles->count()]);
+            \Log::info('Enhanced vehicles query completed', ['count' => $vehicles->count()]);
 
             return $this->generateFile($vehicles, 'vehicles', $format, $filters);
             
@@ -162,8 +162,12 @@ class ReportService
     {
         $query = Booking::where('asset_type', Vehicle::class)
             ->where('asset_id', $vehicleId)
-            ->where('status', 'done')
-            ->whereNotNull('done_details');
+            ->where('status', 'done');
+            
+        // Only add done_details filter if the column exists
+        if ($this->columnExists('bookings', 'done_details')) {
+            $query->whereNotNull('done_details');
+        }
 
         // Apply booking date filters
         if (isset($filters['booking_date_from']) && $filters['booking_date_from']) {
@@ -182,7 +186,7 @@ class ReportService
         $lastFuelAmount = 0;
         
         foreach ($bookings as $booking) {
-            $doneDetails = $booking->done_details;
+            $doneDetails = $booking->done_details ?? [];
             
             if (isset($doneDetails['gas_filled']) && $doneDetails['gas_filled'] && 
                 isset($doneDetails['gas_amount']) && $doneDetails['gas_amount'] > 0) {
@@ -211,8 +215,12 @@ class ReportService
         $query = Booking::where('asset_type', Vehicle::class)
             ->where('asset_id', $vehicleId)
             ->where('status', 'done')
-            ->whereNotNull('done_details')
             ->orderBy('end_time', 'asc');
+            
+        // Only add done_details filter if the column exists
+        if ($this->columnExists('bookings', 'done_details')) {
+            $query->whereNotNull('done_details');
+        }
 
         // Apply booking date filters
         if (isset($filters['booking_date_from']) && $filters['booking_date_from']) {
@@ -230,7 +238,7 @@ class ReportService
         $lastOdometerDate = null;
         
         foreach ($bookings as $booking) {
-            $doneDetails = $booking->done_details;
+            $doneDetails = $booking->done_details ?? [];
             
             if (isset($doneDetails['odometer']) && $doneDetails['odometer'] > 0) {
                 if ($initialOdometer === null) {
@@ -485,6 +493,14 @@ class ReportService
                 return $this->generatePDF($data, $type, $filePath, $filters);
             case 'csv':
                 return $this->generateCSV($data, $type, $filePath);
+            case 'json':
+                return $this->generateJSON($data, $type, $filePath, $filters);
+            case 'xml':
+                return $this->generateXML($data, $type, $filePath, $filters);
+            case 'html':
+                return $this->generateHTML($data, $type, $filePath, $filters);
+            case 'txt':
+                return $this->generateTXT($data, $type, $filePath);
             default:
                 return $this->generateExcel($data, $type, $filePath);
         }
@@ -813,6 +829,309 @@ class ReportService
         }
     }
 
+    private function generateJSON($data, $type, $filePath, $filters)
+    {
+        try {
+            \Log::info('Starting JSON generation', ['type' => $type, 'count' => $data->count()]);
+            
+            // Format data for JSON export
+            $jsonData = [
+                'report_info' => [
+                    'type' => $type,
+                    'generated_at' => now()->toISOString(),
+                    'generated_by' => auth()->user()->name ?? 'System',
+                    'filters' => $filters,
+                    'total_records' => $data->count()
+                ],
+                'data' => collect($data)->map(function ($item) use ($type) {
+                    return $this->formatItemForStructuredExport($item, $type);
+                })->toArray()
+            ];
+
+            $jsonContent = json_encode($jsonData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+            
+            file_put_contents(storage_path('app/' . $filePath), $jsonContent);
+            
+            \Log::info('JSON file saved successfully');
+
+            return $this->logReport($type, 'json', $filePath, basename($filePath), $data->count(), $filters);
+            
+        } catch (\Exception $e) {
+            \Log::error('JSON generation error: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function generateXML($data, $type, $filePath, $filters)
+    {
+        try {
+            \Log::info('Starting XML generation', ['type' => $type, 'count' => $data->count()]);
+            
+            $xml = new \SimpleXMLElement('<report/>');
+            
+            // Add metadata
+            $info = $xml->addChild('report_info');
+            $info->addChild('type', $type);
+            $info->addChild('generated_at', now()->toISOString());
+            $info->addChild('generated_by', htmlspecialchars(auth()->user()->name ?? 'System'));
+            $info->addChild('total_records', $data->count());
+            
+            // Add filters
+            $filtersNode = $info->addChild('filters');
+            foreach ($filters as $key => $value) {
+                if ($value !== null && $value !== '') {
+                    $filtersNode->addChild($key, htmlspecialchars($value));
+                }
+            }
+            
+            // Add data
+            $dataNode = $xml->addChild('data');
+            foreach ($data as $item) {
+                $itemData = $this->formatItemForStructuredExport($item, $type);
+                $itemNode = $dataNode->addChild('record');
+                
+                foreach ($itemData as $key => $value) {
+                    $itemNode->addChild($key, htmlspecialchars($value ?? ''));
+                }
+            }
+
+            $dom = new \DOMDocument('1.0', 'UTF-8');
+            $dom->formatOutput = true;
+            $dom->loadXML($xml->asXML());
+            
+            file_put_contents(storage_path('app/' . $filePath), $dom->saveXML());
+            
+            \Log::info('XML file saved successfully');
+
+            return $this->logReport($type, 'xml', $filePath, basename($filePath), $data->count(), $filters);
+            
+        } catch (\Exception $e) {
+            \Log::error('XML generation error: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function generateHTML($data, $type, $filePath, $filters)
+    {
+        try {
+            \Log::info('Starting HTML generation', ['type' => $type, 'count' => $data->count()]);
+            
+            $headers = $this->getHeaders($type);
+            
+            $html = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>' . ucfirst($type) . ' Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; font-weight: bold; }
+        tr:hover { background-color: #f5f5f5; }
+        .footer { margin-top: 20px; padding: 10px; background: #f8f9fa; border-radius: 5px; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>' . ucfirst($type) . ' Report</h1>
+        <p><strong>Generated:</strong> ' . now()->format('Y-m-d H:i:s') . '</p>
+        <p><strong>Generated By:</strong> ' . (auth()->user()->name ?? 'System') . '</p>
+        <p><strong>Total Records:</strong> ' . $data->count() . '</p>';
+        
+            if (!empty($filters)) {
+                $html .= '<p><strong>Applied Filters:</strong> ' . collect($filters)->map(function($value, $key) {
+                    return "$key: $value";
+                })->implode(', ') . '</p>';
+            }
+            
+            $html .= '
+    </div>
+    <table>
+        <thead>
+            <tr>';
+            
+            foreach ($headers as $header) {
+                $html .= '<th>' . htmlspecialchars($header) . '</th>';
+            }
+            
+            $html .= '
+            </tr>
+        </thead>
+        <tbody>';
+        
+            foreach ($data as $item) {
+                $rowData = $this->formatRowData($item, $type);
+                $html .= '<tr>';
+                foreach ($rowData as $cell) {
+                    $html .= '<td>' . htmlspecialchars($cell ?? '') . '</td>';
+                }
+                $html .= '</tr>';
+            }
+            
+            $html .= '
+        </tbody>
+    </table>
+    <div class="footer">
+        <p>Report generated by Laravel Booking System</p>
+    </div>
+</body>
+</html>';
+
+            file_put_contents(storage_path('app/' . $filePath), $html);
+            
+            \Log::info('HTML file saved successfully');
+
+            return $this->logReport($type, 'html', $filePath, basename($filePath), $data->count(), $filters);
+            
+        } catch (\Exception $e) {
+            \Log::error('HTML generation error: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function generateTXT($data, $type, $filePath)
+    {
+        try {
+            \Log::info('Starting TXT generation', ['type' => $type, 'count' => $data->count()]);
+            
+            $headers = $this->getHeaders($type);
+            $content = '';
+            
+            // Add header
+            $content .= str_repeat('=', 80) . "\n";
+            $content .= strtoupper($type) . " REPORT\n";
+            $content .= str_repeat('=', 80) . "\n";
+            $content .= "Generated: " . now()->format('Y-m-d H:i:s') . "\n";
+            $content .= "Generated By: " . (auth()->user()->name ?? 'System') . "\n";
+            $content .= "Total Records: " . $data->count() . "\n";
+            $content .= str_repeat('=', 80) . "\n\n";
+            
+            // Calculate column widths
+            $widths = array_fill(0, count($headers), 15);
+            foreach ($headers as $index => $header) {
+                $widths[$index] = max($widths[$index], strlen($header));
+            }
+            
+            foreach ($data as $item) {
+                $rowData = $this->formatRowData($item, $type);
+                foreach ($rowData as $index => $cell) {
+                    if (isset($widths[$index])) {
+                        $widths[$index] = max($widths[$index], strlen($cell ?? ''));
+                    }
+                }
+            }
+            
+            // Add headers
+            foreach ($headers as $index => $header) {
+                $content .= str_pad($header, $widths[$index] + 2);
+            }
+            $content .= "\n";
+            $content .= str_repeat('-', array_sum($widths) + count($widths) * 2) . "\n";
+            
+            // Add data rows
+            foreach ($data as $item) {
+                $rowData = $this->formatRowData($item, $type);
+                foreach ($rowData as $index => $cell) {
+                    if (isset($widths[$index])) {
+                        $content .= str_pad($cell ?? '', $widths[$index] + 2);
+                    }
+                }
+                $content .= "\n";
+            }
+            
+            file_put_contents(storage_path('app/' . $filePath), $content);
+            
+            \Log::info('TXT file saved successfully');
+
+            return $this->logReport($type, 'txt', $filePath, basename($filePath), $data->count(), []);
+            
+        } catch (\Exception $e) {
+            \Log::error('TXT generation error: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function formatItemForStructuredExport($item, $type)
+    {
+        switch ($type) {
+            case 'assets':
+                return [
+                    'id' => $item->id,
+                    'name' => $item->name,
+                    'type' => $item->type ?? 'N/A',
+                    'category' => $item->category ?? 'N/A',
+                    'status' => $item->status,
+                    'description' => $item->description ?? 'N/A',
+                    'created_by' => $item->created_by ?? 'N/A',
+                    'created_at' => $item->created_at ? $item->created_at->toISOString() : null
+                ];
+            case 'vehicles':
+                return [
+                    'id' => $item->id,
+                    'model' => $item->model ?? 'N/A',
+                    'plate_number' => $item->plate_number ?? 'N/A',
+                    'capacity' => $item->capacity ?? 'N/A',
+                    'driver_name' => $item->driver_name ?? 'N/A',
+                    'status' => $item->status ?? 'available',
+                    'total_fuel_filled' => $item->total_fuel_filled ?? 0,
+                    'fuel_sessions_count' => $item->fuel_sessions_count ?? 0,
+                    'avg_fuel_per_session' => $item->avg_fuel_per_session ?? 0,
+                    'last_fuel_date' => $item->last_fuel_date,
+                    'last_fuel_amount' => $item->last_fuel_amount ?? 0,
+                    'latest_odometer' => $item->latest_odometer ?? 'N/A',
+                    'total_distance' => $item->total_distance ?? 0,
+                    'total_bookings' => $item->total_bookings ?? 0,
+                    'completed_bookings' => $item->completed_bookings ?? 0,
+                    'utilization_rate' => $item->utilization_rate ?? 0,
+                    'created_by' => $item->created_by ?? 'N/A',
+                    'created_at' => $item->created_at ? $item->created_at->toISOString() : null
+                ];
+            case 'bookings':
+                // Get asset name and type
+                $assetName = 'N/A';
+                $assetType = 'N/A';
+                
+                if (isset($item->vehicle)) {
+                    $assetName = $item->vehicle->name ?? 'N/A';
+                    $assetType = 'Vehicle';
+                } elseif (isset($item->itAsset)) {
+                    $assetName = $item->itAsset->name ?? 'N/A';
+                    $assetType = 'IT Asset';
+                } elseif (isset($item->meetingRoom)) {
+                    $assetName = $item->meetingRoom->name ?? 'N/A';
+                    $assetType = 'Meeting Room';
+                }
+                
+                return [
+                    'id' => $item->id,
+                    'asset_name' => $assetName,
+                    'asset_type' => $assetType,
+                    'user_name' => isset($item->user) ? $item->user->name : 'N/A',
+                    'user_email' => isset($item->user) ? $item->user->email : 'N/A',
+                    'start_date' => $item->start_date ? $item->start_date->toDateString() : null,
+                    'end_date' => $item->end_date ? $item->end_date->toDateString() : null,
+                    'status' => $item->status,
+                    'notes' => $item->notes ?? 'N/A',
+                    'created_at' => $item->created_at ? $item->created_at->toISOString() : null
+                ];
+            case 'users':
+                return [
+                    'id' => $item->id ?? 'N/A',
+                    'name' => $item->name ?? 'N/A',
+                    'email' => $item->email ?? 'N/A',
+                    'role' => $item->role ?? 'user',
+                    'total_bookings' => $item->bookings_count ?? 0,
+                    'email_verified' => $item->email_verified_at ? true : false,
+                    'email_verified_at' => $item->email_verified_at ? $item->email_verified_at->toISOString() : null,
+                    'created_at' => $item->created_at ? $item->created_at->toISOString() : null
+                ];
+            default:
+                return (array) $item;
+        }
+    }
+
     private function getFileExtension($format)
     {
         switch ($format) {
@@ -820,6 +1139,14 @@ class ReportService
                 return 'pdf';
             case 'csv':
                 return 'csv';
+            case 'json':
+                return 'json';
+            case 'xml':
+                return 'xml';
+            case 'html':
+                return 'html';
+            case 'txt':
+                return 'txt';
             default:
                 return 'xlsx';
         }
@@ -837,5 +1164,118 @@ class ReportService
             'generated_by' => auth()->id(),
             'generated_at' => now(),
         ]);
+    }
+
+    /**
+     * Enhanced vehicle details method using new normalized models
+     */
+    private function getVehiclesWithEnhancedDetails($filters)
+    {
+        $query = Vehicle::query()
+            ->withLatestLogs()  // Use new relationship to get latest logs
+            ->with(['fuelLogs', 'odometerLogs', 'maintenanceLogs']); // Eager load all logs
+        
+        // Apply filters
+        if (isset($filters['status']) && $filters['status']) {
+            $query->where('status', $filters['status']);
+        }
+        
+        if (isset($filters['date_from']) && $filters['date_from']) {
+            $query->where('created_at', '>=', $filters['date_from']);
+        }
+        
+        if (isset($filters['date_to']) && $filters['date_to']) {
+            $query->where('created_at', '<=', $filters['date_to']);
+        }
+        
+        $vehicles = $query->get();
+        
+        // Get enhanced data for each vehicle using new normalized structure
+        $vehiclesWithDetails = $vehicles->map(function ($vehicle) use ($filters) {
+            $startDate = $filters['booking_date_from'] ?? null;
+            $endDate = $filters['booking_date_to'] ?? null;
+            
+            // Use the new Vehicle model methods for comprehensive stats
+            $stats = $vehicle->getVehicleStats($startDate, $endDate);
+            
+            return (object) [
+                'id' => $vehicle->id,
+                'model' => $vehicle->model ?? 'N/A',
+                'plate_number' => $vehicle->plate_number ?? 'N/A',
+                'capacity' => $vehicle->capacity ?? 'N/A',
+                'driver_name' => $vehicle->driver_name ?? 'N/A',
+                'notes' => $vehicle->notes ?? 'N/A',
+                'status' => $vehicle->status ?? 'available',
+                'created_at' => $vehicle->created_at,
+                'created_by' => 'System',
+                
+                // Enhanced fuel analytics using new models
+                'total_fuel_filled' => $stats['fuel_data']['total_fuel'] ?? 0,
+                'total_fuel_cost' => $stats['fuel_data']['total_cost'] ?? 0,
+                'fuel_sessions_count' => $stats['fuel_data']['fuel_sessions'] ?? 0,
+                'avg_fuel_per_session' => ($stats['fuel_data']['fuel_sessions'] ?? 0) > 0 
+                    ? round(($stats['fuel_data']['total_fuel'] ?? 0) / $stats['fuel_data']['fuel_sessions'], 2) 
+                    : 0,
+                'average_fuel_efficiency' => $stats['fuel_data']['average_efficiency'] ?? 0,
+                
+                // Latest fuel log data
+                'last_fuel_date' => $vehicle->latestFuelLog?->filled_at?->format('Y-m-d') ?? 'N/A',
+                'last_fuel_amount' => $vehicle->latestFuelLog?->fuel_amount ?? 0,
+                'last_fuel_cost' => $vehicle->latestFuelLog?->fuel_cost ?? 0,
+                'last_fuel_station' => $vehicle->latestFuelLog?->fuel_station ?? 'N/A',
+                
+                // Enhanced odometer analytics
+                'latest_odometer' => $vehicle->current_odometer_reading ?? 'N/A',
+                'total_distance' => $stats['odometer_data']['total_distance'] ?? 0,
+                'avg_distance_per_trip' => $stats['odometer_data']['average_distance_per_trip'] ?? 0,
+                'initial_odometer' => $stats['odometer_data']['odometer_range']['min'] ?? 'N/A',
+                'last_odometer_date' => $vehicle->latestOdometerLog?->recorded_at?->format('Y-m-d') ?? 'N/A',
+                
+                // Maintenance analytics
+                'total_maintenance_cost' => $stats['maintenance_data']['total_cost'] ?? 0,
+                'maintenance_sessions_count' => array_sum($stats['maintenance_data']['maintenance_count'] ?? []),
+                'cost_per_km' => $stats['maintenance_data']['cost_per_km'] ?? 0,
+                'last_maintenance_date' => $vehicle->latestMaintenanceLog?->performed_at?->format('Y-m-d') ?? 'N/A',
+                'last_maintenance_type' => $vehicle->latestMaintenanceLog?->maintenance_type ?? 'N/A',
+                
+                // Enhanced booking statistics
+                'total_bookings' => $stats['booking_stats']['total_bookings'] ?? 0,
+                'completed_bookings' => $stats['booking_stats']['completed_bookings'] ?? 0,
+                'pending_bookings' => $vehicle->bookings()->where('status', 'pending')->count(),
+                'approved_bookings' => $vehicle->bookings()->where('status', 'approved')->count(),
+                'utilization_rate' => ($stats['booking_stats']['total_bookings'] ?? 0) > 0 
+                    ? round((($stats['booking_stats']['completed_bookings'] ?? 0) / $stats['booking_stats']['total_bookings']) * 100, 2) 
+                    : 0,
+                
+                // Maintenance status
+                'upcoming_maintenance_count' => $vehicle->upcoming_maintenance ? $vehicle->upcoming_maintenance->count() : 0,
+                'overdue_maintenance_count' => $vehicle->overdue_maintenance ? $vehicle->overdue_maintenance->count() : 0,
+                'maintenance_status' => $vehicle->overdue_maintenance && $vehicle->overdue_maintenance->count() > 0 ? 'Overdue' : 
+                                       ($vehicle->upcoming_maintenance && $vehicle->upcoming_maintenance->count() > 0 ? 'Due Soon' : 'Good'),
+                
+                // Calculate total cost of ownership
+                'total_cost_of_ownership' => ($stats['fuel_data']['total_cost'] ?? 0) + ($stats['maintenance_data']['total_cost'] ?? 0),
+                
+                // Cost per kilometer (comprehensive)
+                'total_cost_per_km' => ($stats['odometer_data']['total_distance'] ?? 0) > 0 
+                    ? round((($stats['fuel_data']['total_cost'] ?? 0) + ($stats['maintenance_data']['total_cost'] ?? 0)) / $stats['odometer_data']['total_distance'], 4) 
+                    : 0,
+            ];
+        });
+
+        return $vehiclesWithDetails;
+    }
+
+    /**
+     * Check if a column exists in the database table
+     */
+    private function columnExists($table, $column)
+    {
+        try {
+            return \Schema::hasColumn($table, $column);
+        } catch (\Exception $e) {
+            \Log::warning("Could not check if column {$column} exists in table {$table}: " . $e->getMessage());
+            return false;
+        }
     }
 }

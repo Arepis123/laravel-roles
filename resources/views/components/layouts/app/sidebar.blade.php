@@ -43,7 +43,18 @@
                     <flux:navlist.item icon="document" :href="route('reports')" :current="request()->routeIs('reports')" wire:navigate>{{ __('Report') }}</flux:navlist.item>                    
                     @endif
                 </flux:navlist.group>
-            </flux:navlist>     
+            </flux:navlist>
+            
+            <flux:navlist variant="outline">
+                <flux:navlist.group :heading="__('VEHICLE MANAGEMENT')" class="grid">
+                    @if(auth()->user()->can('asset.view') || auth()->user()->can('asset.create') || auth()->user()->can('asset.edit') || auth()->user()->can('asset.delete'))
+                    <flux:navlist.item icon="fire" :href="route('vehicles.fuel')" :current="request()->routeIs('vehicles.fuel')" wire:navigate>{{ __('Fuel Logs') }}</flux:navlist.item>
+                    <flux:navlist.item icon="chart-bar" :href="route('vehicles.odometer')" :current="request()->routeIs('vehicles.odometer')" wire:navigate>{{ __('Odometer Logs') }}</flux:navlist.item>
+                    <flux:navlist.item icon="wrench-screwdriver" :href="route('vehicles.maintenance')" :current="request()->routeIs('vehicles.maintenance')" wire:navigate>{{ __('Maintenance') }}</flux:navlist.item>
+                    <flux:navlist.item icon="presentation-chart-line" :href="route('vehicles.analytics')" :current="request()->routeIs('vehicles.analytics')" wire:navigate>{{ __('Analytics') }}</flux:navlist.item>
+                    @endif
+                </flux:navlist.group>
+            </flux:navlist>
             @endif       
 
             <flux:spacer />

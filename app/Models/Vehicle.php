@@ -3,14 +3,186 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Vehicle extends Model
 {
-    protected $fillable = ['model', 'plate_number', 'capacity', 'driver_name', 'notes'];
+    protected $fillable = ['model', 'plate_number', 'capacity', 'driver_name', 'notes', 'status'];
 
+    protected $casts = [
+        'capacity' => 'integer'
+    ];
+
+    /**
+     * Original morphMany relationship for bookings
+     */
     public function bookings()
     {
         return $this->morphMany(Booking::class, 'asset');
+    }
+
+    /**
+     * New relationships to normalized logging tables
+     */
+    public function fuelLogs(): HasMany
+    {
+        return $this->hasMany(VehicleFuelLog::class);
+    }
+
+    public function odometerLogs(): HasMany
+    {
+        return $this->hasMany(VehicleOdometerLog::class);
+    }
+
+    public function maintenanceLogs(): HasMany
+    {
+        return $this->hasMany(VehicleMaintenanceLog::class);
+    }
+
+    /**
+     * Convenience relationships for latest records
+     */
+    public function latestFuelLog()
+    {
+        return $this->hasOne(VehicleFuelLog::class)->latestOfMany('filled_at');
+    }
+
+    public function latestOdometerLog()
+    {
+        return $this->hasOne(VehicleOdometerLog::class)->latestOfMany('recorded_at');
+    }
+
+    public function latestMaintenanceLog()
+    {
+        return $this->hasOne(VehicleMaintenanceLog::class)->latestOfMany('performed_at');
+    }
+
+    /**
+     * Accessor methods for vehicle analytics
+     */
+    public function getTotalFuelConsumedAttribute()
+    {
+        return VehicleFuelLog::getTotalFuelForVehicle($this->id);
+    }
+
+    public function getTotalFuelCostAttribute()
+    {
+        return VehicleFuelLog::getTotalCostForVehicle($this->id);
+    }
+
+    public function getTotalDistanceTraveledAttribute()
+    {
+        return VehicleOdometerLog::getTotalDistanceForVehicle($this->id);
+    }
+
+    public function getTotalMaintenanceCostAttribute()
+    {
+        return VehicleMaintenanceLog::getTotalCostForVehicle($this->id);
+    }
+
+    public function getCurrentOdometerReadingAttribute()
+    {
+        $latest = VehicleOdometerLog::getLatestReadingForVehicle($this->id);
+        return $latest ? $latest->odometer_reading : null;
+    }
+
+    public function getAverageFuelEfficiencyAttribute()
+    {
+        return VehicleFuelLog::getAverageFuelEfficiency($this->id);
+    }
+
+    public function getUpcomingMaintenanceAttribute()
+    {
+        return VehicleMaintenanceLog::getUpcomingMaintenanceForVehicle($this->id);
+    }
+
+    public function getOverdueMaintenanceAttribute()
+    {
+        return VehicleMaintenanceLog::getOverdueMaintenanceForVehicle($this->id);
+    }
+
+    /**
+     * Scopes for filtering vehicles
+     */
+    public function scopeWithFuelData($query)
+    {
+        return $query->with(['fuelLogs' => function($q) {
+            $q->orderBy('filled_at', 'desc');
+        }]);
+    }
+
+    public function scopeWithOdometerData($query)
+    {
+        return $query->with(['odometerLogs' => function($q) {
+            $q->orderBy('recorded_at', 'desc');
+        }]);
+    }
+
+    public function scopeWithMaintenanceData($query)
+    {
+        return $query->with(['maintenanceLogs' => function($q) {
+            $q->orderBy('performed_at', 'desc');
+        }]);
+    }
+
+    public function scopeWithLatestLogs($query)
+    {
+        return $query->with(['latestFuelLog', 'latestOdometerLog', 'latestMaintenanceLog']);
+    }
+
+    /**
+     * Helper methods for reports and analytics
+     */
+    public function getFuelDataForPeriod($startDate, $endDate)
+    {
+        return [
+            'total_fuel' => VehicleFuelLog::getTotalFuelForVehicle($this->id, $startDate, $endDate),
+            'total_cost' => VehicleFuelLog::getTotalCostForVehicle($this->id, $startDate, $endDate),
+            'average_efficiency' => VehicleFuelLog::getAverageFuelEfficiency($this->id, $startDate, $endDate),
+            'fuel_sessions' => $this->fuelLogs()->inDateRange($startDate, $endDate)->count()
+        ];
+    }
+
+    public function getOdometerDataForPeriod($startDate, $endDate)
+    {
+        return [
+            'total_distance' => VehicleOdometerLog::getTotalDistanceForVehicle($this->id, $startDate, $endDate),
+            'average_distance_per_trip' => VehicleOdometerLog::getAverageDistancePerTrip($this->id, $startDate, $endDate),
+            'odometer_range' => VehicleOdometerLog::getOdometerRange($this->id, $startDate, $endDate)
+        ];
+    }
+
+    public function getMaintenanceDataForPeriod($startDate, $endDate)
+    {
+        return [
+            'total_cost' => VehicleMaintenanceLog::getTotalCostForVehicle($this->id, $startDate, $endDate),
+            'maintenance_count' => VehicleMaintenanceLog::getMaintenanceCountByType($this->id, $startDate, $endDate),
+            'cost_per_km' => VehicleMaintenanceLog::getCostPerKilometer($this->id, $this->total_distance_traveled)
+        ];
+    }
+
+    /**
+     * Get comprehensive vehicle statistics for reports
+     */
+    public function getVehicleStats($startDate = null, $endDate = null)
+    {
+        return [
+            'vehicle_info' => [
+                'id' => $this->id,
+                'model' => $this->model,
+                'plate_number' => $this->plate_number,
+                'capacity' => $this->capacity,
+                'driver_name' => $this->driver_name,
+                'status' => $this->status ?? 'active'
+            ],
+            'fuel_data' => $this->getFuelDataForPeriod($startDate, $endDate),
+            'odometer_data' => $this->getOdometerDataForPeriod($startDate, $endDate),
+            'maintenance_data' => $this->getMaintenanceDataForPeriod($startDate, $endDate),
+            'booking_stats' => [
+                'total_bookings' => $this->bookings()->count(),
+                'completed_bookings' => $this->bookings()->where('status', 'done')->count()
+            ]
+        ];
     }
 }
 

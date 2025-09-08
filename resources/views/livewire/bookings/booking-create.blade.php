@@ -221,6 +221,12 @@
                                     No available time slots for this {{ strtolower($this->assetFieldLabel) }} on the selected date.
                                 </flux:description>
                             @endif
+                            @if($vehicleUnderMaintenance)
+                                <flux:description class="text-amber-600 flex items-center gap-2">
+                                    <span>🔧</span>
+                                    This vehicle is currently under maintenance and cannot be booked until maintenance is completed.
+                                </flux:description>
+                            @endif
                         </flux:field>
 
                         {{-- End Time --}}

@@ -21,6 +21,13 @@ use App\Livewire\Bookings\BookingMyEdit;
 use App\Livewire\Bookings\BookingMyShow;
 use App\Livewire\Admin\AssetManagement;
 use App\Livewire\Admin\Reports;
+use App\Livewire\VehicleFuelManagement;
+use App\Livewire\VehicleOdometerManagement;
+use App\Livewire\VehicleMaintenanceManagement;
+use App\Livewire\VehicleAnalytics;
+use App\Livewire\VehicleDetail;
+use App\Models\ReportLog;
+use Illuminate\Support\Facades\Storage;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -36,6 +43,18 @@ Route::get('/user-manual', function () {
 
 Route::get('/process-flow', function () {
     return response()->file(public_path('process-flow.html'));
+});
+
+// Test routes outside auth middleware for debugging
+Route::get('/reports/test/{report}', function (ReportLog $report) {
+    return response()->json([
+        'report_id' => $report->id,
+        'file_name' => $report->file_name,
+        'file_path' => $report->file_path,
+        'format' => $report->report_format,
+        'full_path' => storage_path('app/' . $report->file_path),
+        'file_exists' => file_exists(storage_path('app/' . $report->file_path)),
+    ]);
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -77,17 +96,98 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('assets/assets', AssetManagement::class)->name('assets')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
     
+    // Vehicle Management Routes
+    Route::get('vehicles/fuel', VehicleFuelManagement::class)->name('vehicles.fuel')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
+    Route::get('vehicles/odometer', VehicleOdometerManagement::class)->name('vehicles.odometer')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
+    Route::get('vehicles/maintenance', VehicleMaintenanceManagement::class)->name('vehicles.maintenance')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
+    Route::get('vehicles/analytics', VehicleAnalytics::class)->name('vehicles.analytics')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
+    Route::get('vehicles/{vehicleId}/detail', VehicleDetail::class)->name('vehicles.detail')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
+    
     Route::prefix('api')->name('api.')->group(function () {
+        // Original calendar endpoints
         Route::get('calendar-bookings', [App\Http\Controllers\Api\CalendarController::class, 'getBookings'])
              ->name('calendar.bookings');
         
         Route::get('calendar-stats', [App\Http\Controllers\Api\CalendarController::class, 'getStats'])
              ->name('calendar.stats');
+             
+        // Enhanced calendar endpoints with vehicle management integration
+        Route::get('calendar-enhanced', [App\Http\Controllers\Api\CalendarController::class, 'getEnhancedBookings'])
+             ->name('calendar.enhanced');
+        
+        // Vehicle management calendar endpoints (Admin/Super Admin only)
+        Route::middleware(['role:Admin|Super Admin'])->group(function () {
+            Route::get('calendar-vehicles', [App\Http\Controllers\Api\CalendarController::class, 'getVehicleEvents'])
+                 ->name('calendar.vehicles');
+                 
+            Route::get('calendar-vehicle-stats', [App\Http\Controllers\Api\CalendarController::class, 'getVehicleStats'])
+                 ->name('calendar.vehicle-stats');
+        });
     }); 
 
     // Reports page
     Route::get('reports/reports', Reports::class)->name('reports')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
     
+    // Report view route - View report in browser  
+    Route::get('/reports/view/{id}', function ($id) {
+        try {
+            $report = ReportLog::findOrFail($id);
+            
+            \Log::info('Route view attempt', [
+                'report_id' => $report->id,
+                'file_path' => $report->file_path,
+                'file_name' => $report->file_name,
+                'format' => $report->report_format
+            ]);
+            
+            $fullPath = storage_path('app/' . $report->file_path);
+            \Log::info('Full file path', ['full_path' => $fullPath, 'exists' => file_exists($fullPath)]);
+            
+            if (!file_exists($fullPath)) {
+                \Log::error('Physical file does not exist', ['full_path' => $fullPath]);
+                return response('<h1>Error</h1><p>Report file not found: ' . htmlspecialchars($report->file_name) . '</p>', 404);
+            }
+            
+            \Log::info('File exists, checking format and returning response');
+            
+            // Get file contents for debugging
+            $fileSize = filesize($fullPath);
+            \Log::info('File info', ['size' => $fileSize, 'format' => $report->report_format]);
+            
+            // Handle different formats for viewing
+            $mimeType = match($report->report_format) {
+                'pdf' => 'application/pdf',
+                'csv' => 'text/csv', 
+                'json' => 'application/json',
+                'xml' => 'application/xml',
+                'html' => 'text/html',
+                'txt' => 'text/plain',
+                'excel' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                default => 'application/octet-stream'
+            };
+            
+            \Log::info('About to return file response', ['mime_type' => $mimeType]);
+            
+            // For formats that can be viewed in browser, display inline
+            if (in_array($report->report_format, ['html', 'json', 'xml', 'txt', 'csv', 'pdf'])) {
+                return response()->file($fullPath, [
+                    'Content-Type' => $mimeType,
+                    'Content-Disposition' => 'inline; filename="' . $report->file_name . '"'
+                ]);
+            } else {
+                // For other formats, still download
+                return response()->download($fullPath, $report->file_name, [
+                    'Content-Type' => $mimeType
+                ]);
+            }
+            
+        } catch (\Exception $e) {
+            \Log::error('Route view error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            return response('<h1>Error</h1><p>Error viewing file: ' . htmlspecialchars($e->getMessage()) . '</p>', 500);
+        }
+    })->name('reports.view');
+
     // Report download route - ADD THIS NEW ROUTE
     Route::get('/reports/download/{report}', function (ReportLog $report) {
         try {
@@ -116,6 +216,10 @@ Route::middleware(['auth'])->group(function () {
                 'Content-Type' => match($report->report_format) {
                     'pdf' => 'application/pdf',
                     'csv' => 'text/csv', 
+                    'json' => 'application/json',
+                    'xml' => 'application/xml',
+                    'html' => 'text/html',
+                    'txt' => 'text/plain',
                     'excel' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     default => 'application/octet-stream'
                 }

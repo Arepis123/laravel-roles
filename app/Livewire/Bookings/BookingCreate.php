@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Booking;
 use App\Models\MeetingRoom;
 use App\Models\Vehicle;
+use App\Models\VehicleMaintenanceLog;
 use App\Models\ItAsset;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -30,6 +31,7 @@ class BookingCreate extends Component
 
     public array $additional_booking = [];
     public string $refreshment_details = '';
+    public bool $vehicleUnderMaintenance = false;
 
     protected $assetTypeConfig = [
         'meeting_room' => [
@@ -313,6 +315,15 @@ class BookingCreate extends Component
         // Reset time selections when asset changes
         $this->start_time = '';
         $this->end_time = '';
+        
+        // Check if selected vehicle is under maintenance
+        if ($this->asset_type === 'vehicle' && $this->asset_id) {
+            $this->vehicleUnderMaintenance = VehicleMaintenanceLog::where('vehicle_id', $this->asset_id)
+                ->where('status', 'ongoing')
+                ->exists();
+        } else {
+            $this->vehicleUnderMaintenance = false;
+        }
     }
 
     public function updatedStartTime()
@@ -464,6 +475,17 @@ class BookingCreate extends Component
         try {
             // Get the model class for this asset type
             $assetModel = $this->assetTypeConfig[$this->asset_type]['model'];
+            
+            // Check for vehicle maintenance conflicts (vehicles only)
+            if ($this->asset_type === 'vehicle') {
+                $maintenanceConflict = VehicleMaintenanceLog::where('vehicle_id', $this->asset_id)
+                    ->where('status', 'ongoing')
+                    ->exists();
+                    
+                if ($maintenanceConflict) {
+                    return false; // Vehicle is under maintenance, no time slots available
+                }
+            }
             
             // For multi-day bookings, check if the entire date range has conflicts
             if ($this->allowsMultiDayBooking) {

@@ -114,6 +114,7 @@ class Reports extends Component
         }
     }
 
+
     public function downloadReport($reportId)
     {
         try {
@@ -273,6 +274,14 @@ class Reports extends Component
                 return 'application/pdf';
             case 'csv':
                 return 'text/csv';
+            case 'json':
+                return 'application/json';
+            case 'xml':
+                return 'application/xml';
+            case 'html':
+                return 'text/html';
+            case 'txt':
+                return 'text/plain';
             case 'excel':
             default:
                 return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
