@@ -29,9 +29,12 @@ class BookingCreate extends Component
     public string $destination = ''; 
     public $availablePassengers;
 
-    public array $additional_booking = [];
+    public $additional_booking = [];
     public string $refreshment_details = '';
     public bool $vehicleUnderMaintenance = false;
+    
+    // Pro features support
+    public bool $saving = false;
 
     protected $assetTypeConfig = [
         'meeting_room' => [
@@ -65,7 +68,7 @@ class BookingCreate extends Component
 
     public function mount()
     {
-        // Initialize additional_booking as empty array
+        // Initialize properties as empty arrays
         $this->additional_booking = [];
         $this->passengers = [];
         $this->availablePassengers = collect(); // Initialize as empty collection
@@ -197,7 +200,13 @@ class BookingCreate extends Component
         return collect($this->assetTypeConfig)->map(function ($config, $key) {
             return [
                 'value' => $key,
-                'label' => $config['label']
+                'label' => $config['label'],
+                'description' => match($key) {
+                    'meeting_room' => 'Book conference rooms and meeting spaces',
+                    'vehicle' => 'Book company vehicles for transportation',
+                    'it_asset' => 'Book IT equipment like laptops, projectors',
+                    default => ''
+                }
             ];
         });
     }
@@ -225,7 +234,33 @@ class BookingCreate extends Component
                 });
         }
 
-        return $model::select('id', "{$nameField} as name")->get();
+        // Special handling for IT assets to include asset tag
+        if ($this->asset_type === 'it_asset') {
+            return $model::select('id', 'name', 'asset_tag', 'location', 'specs')
+                ->get()
+                ->map(function ($asset) {
+                    $item = new \stdClass();
+                    $item->id = $asset->id;
+                    $item->name = $asset->name . ' (' . $asset->asset_tag . ')';
+                    $item->description = $asset->location ?: $asset->specs ?: '';
+                    return $item;
+                });
+        }
+
+        // Build query based on asset type and available columns
+        $query = $model::select('id', "{$nameField} as name");
+        
+        // Add description field based on asset type
+        if ($this->asset_type === 'meeting_room') {
+            $query->selectRaw("COALESCE(location, '') as description");
+        } elseif ($this->asset_type === 'it_asset') {
+            $query->selectRaw("COALESCE(location, specs, '') as description");
+        } else {
+            // For other asset types or fallback
+            $query->selectRaw("'' as description");
+        }
+        
+        return $query->get();
     }
 
     public function updatedAssetType()
@@ -238,6 +273,12 @@ class BookingCreate extends Component
         
         // Clear additional bookings that are not available for the new asset type
         $availableServices = $this->availableServices;
+        
+        // Ensure additional_booking is an array before filtering
+        if (!is_array($this->additional_booking)) {
+            $this->additional_booking = [];
+        }
+        
         $this->additional_booking = array_filter($this->additional_booking, function($service) use ($availableServices) {
             return in_array($service, $availableServices);
         });
@@ -335,6 +376,11 @@ class BookingCreate extends Component
     // Add this method to handle additional_booking updates
     public function updatedAdditionalBooking()
     {
+        // Ensure additional_booking is always an array
+        if (!is_array($this->additional_booking)) {
+            $this->additional_booking = [];
+        }
+        
         // Clear refreshment_details if refreshment is unchecked
         if (!in_array('refreshment', $this->additional_booking)) {
             $this->refreshment_details = '';
@@ -686,17 +732,10 @@ class BookingCreate extends Component
      */
     public function updated($propertyName)
     {
-        // Debug: Log what's being updated
-        \Log::info('Property updated:', [
-            'property' => $propertyName,
-            'value' => $this->{$propertyName} ?? 'N/A',
-            'booking_date' => $this->booking_date,
-            'start_time' => $this->start_time,
-            'end_time' => $this->end_time
-        ]);
+        // Property updated - handle specific cases
 
         // Handle array properties differently
-        if (strpos($propertyName, 'additional_booking') === 0) {
+        if ($propertyName === 'additional_booking') {
             // Handle additional_booking array updates
             $this->updatedAdditionalBooking();
             return;
@@ -815,7 +854,8 @@ class BookingCreate extends Component
         }
 
         // Add conditional rule for refreshment_details
-        if (in_array('refreshment', $this->additional_booking)) {
+        $additionalServices = is_array($this->additional_booking) ? $this->additional_booking : [];
+        if (in_array('refreshment', $additionalServices)) {
             $rules['refreshment_details'] = 'required|string|min:3';
         }
 
@@ -860,6 +900,9 @@ class BookingCreate extends Component
 
     public function save()
     {
+        // Set saving state for loading indicator
+        $this->saving = true;
+        
         // Validate all fields
         $this->validate();
 
@@ -953,8 +996,8 @@ class BookingCreate extends Component
                 'end_time' => $endDateTime,
                 'status' => 'pending',
                 'capacity' => $this->shouldShowCapacity && $this->capacity ? $this->capacity : null,
-                'additional_booking' => $this->additional_booking,
-                'refreshment_details' => in_array('refreshment', $this->additional_booking) ? $this->refreshment_details : null,
+                'additional_booking' => is_array($this->additional_booking) ? $this->additional_booking : [],
+                'refreshment_details' => (is_array($this->additional_booking) && in_array('refreshment', $this->additional_booking)) ? $this->refreshment_details : null,
             ];
 
             // Add vehicle-specific data
@@ -1000,11 +1043,18 @@ class BookingCreate extends Component
             }
             $successMessage .= '. Admin has been notified via email.';
 
-            session()->flash('success', $successMessage);
+            // Reset saving state
+            $this->saving = false;
+            
+            // Show enhanced success message with emoji
+            session()->flash('success', '🎉 ' . $successMessage);
             
             return redirect()->route('bookings.index');
 
         } catch (\Exception $e) {
+            // Reset saving state on exception
+            $this->saving = false;
+            
             \Log::error('Booking creation failed: ' . $e->getMessage(), [
                 'asset_type' => $this->asset_type,
                 'asset_id' => $this->asset_id,
@@ -1013,8 +1063,60 @@ class BookingCreate extends Component
                 'start_time' => $this->start_time,
                 'end_time' => $this->end_time
             ]);
-            session()->flash('error', 'Failed to create booking. Please try again.');
+            session()->flash('error', '⚠️ Failed to create booking. Please try again.');
         }
+    }
+
+    /**
+     * Prepare for booking confirmation
+     */
+    public function confirmBooking()
+    {
+        // Basic validation first - modal will show via trigger
+        $this->validate();
+    }
+    
+    /**
+     * Reset the entire form to initial state
+     */
+    public function resetForm()
+    {
+        // Reset all form properties
+        $this->asset_type = '';
+        $this->asset_id = '';
+        $this->booking_date = '';
+        $this->end_date = '';
+        $this->start_time = '';
+        $this->end_time = '';
+        $this->purpose = '';
+        $this->capacity = '';
+        $this->passengers = [];
+        $this->destination = '';
+        $this->additional_booking = [];
+        $this->refreshment_details = '';
+        $this->vehicleUnderMaintenance = false;
+        
+        // Reset available passengers
+        $this->availablePassengers = collect();
+        
+        // Clear all validation errors
+        $this->resetErrorBag();
+        
+        // Show success message
+        session()->flash('success', '✨ Form has been reset successfully!');
+    }
+    
+    /**
+     * Check if form is valid for submission
+     */
+    public function isFormValid()
+    {
+        return !empty($this->asset_type) && 
+               !empty($this->asset_id) && 
+               !empty($this->booking_date) && 
+               !empty($this->start_time) && 
+               !empty($this->end_time) && 
+               !empty($this->purpose);
     }
 
     public function render()
