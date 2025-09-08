@@ -44,7 +44,9 @@
                     @endif
                 </flux:navlist.group>
             </flux:navlist>
+            @endif 
             
+            @if(auth()->user()->hasPermissionTo('vehicle.view'))
             <flux:navlist variant="outline">
                 <flux:navlist.group :heading="__('VEHICLE MANAGEMENT')" class="grid">
                     @if(auth()->user()->can('asset.view') || auth()->user()->can('asset.create') || auth()->user()->can('asset.edit') || auth()->user()->can('asset.delete'))

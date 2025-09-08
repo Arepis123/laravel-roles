@@ -312,18 +312,72 @@ class CalendarController extends Controller
         for ($day = 1; $day <= $daysInMonth; $day++) {
             $date = $startOfMonth->copy()->day($day);
             
-            // Get total bookings created on this date
-            $totalBookings = Booking::whereDate('created_at', $date)->count();
+            // Get bookings by asset type for this date
+            $vehicleBookings = Booking::whereDate('created_at', $date)
+                ->where('asset_type', 'App\Models\Vehicle')
+                ->count();
             
-            // Get approved bookings created on this date
-            $approvedBookings = Booking::whereDate('created_at', $date)
-                ->where('status', 'approved')
+            $meetingRoomBookings = Booking::whereDate('created_at', $date)
+                ->where('asset_type', 'App\Models\MeetingRoom')
+                ->count();
+            
+            $itAssetBookings = Booking::whereDate('created_at', $date)
+                ->where('asset_type', 'App\Models\ItAsset')
                 ->count();
             
             $chartData[] = [
                 'date' => $date->format('M j'),
-                'bookings' => $totalBookings,
-                'approved' => $approvedBookings,
+                'vehicles' => $vehicleBookings,
+                'meeting_rooms' => $meetingRoomBookings,
+                'it_assets' => $itAssetBookings,
+            ];
+        }
+        
+        return response()->json($chartData);
+    }
+
+    /**
+     * Get peak usage patterns data by time periods
+     */
+    public function getPeakUsageData(Request $request)
+    {
+        $month = $request->get('month', now()->month);
+        $year = $request->get('year', now()->year);
+        
+        // Create date range for the specified month
+        $startOfMonth = Carbon::create($year, $month, 1)->startOfDay();
+        $endOfMonth = $startOfMonth->copy()->endOfMonth()->endOfDay();
+        $daysInMonth = $startOfMonth->daysInMonth;
+        
+        // Generate data for each day of the month
+        $chartData = [];
+        
+        for ($day = 1; $day <= $daysInMonth; $day++) {
+            $date = $startOfMonth->copy()->day($day);
+            
+            // Morning bookings (6:00 AM - 12:00 PM)
+            $morningBookings = Booking::whereDate('start_time', $date)
+                ->whereTime('start_time', '>=', '06:00:00')
+                ->whereTime('start_time', '<', '12:00:00')
+                ->count();
+            
+            // Afternoon bookings (12:00 PM - 6:00 PM)
+            $afternoonBookings = Booking::whereDate('start_time', $date)
+                ->whereTime('start_time', '>=', '12:00:00')
+                ->whereTime('start_time', '<', '18:00:00')
+                ->count();
+            
+            // Evening bookings (6:00 PM - 11:59 PM)
+            $eveningBookings = Booking::whereDate('start_time', $date)
+                ->whereTime('start_time', '>=', '18:00:00')
+                ->whereTime('start_time', '<=', '23:59:59')
+                ->count();
+            
+            $chartData[] = [
+                'date' => $date->format('M j'),
+                'morning' => $morningBookings,
+                'afternoon' => $afternoonBookings,
+                'evening' => $eveningBookings,
             ];
         }
         

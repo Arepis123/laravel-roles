@@ -358,7 +358,7 @@
                     <div class="p-6" x-data="chartController()">
                         <!-- Header with Month Selector -->
                         <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Booking Trends</h3>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Asset Usage Trends</h3>
                             
                             <div class="flex items-center gap-2">
                                 <span class="text-sm text-gray-600 dark:text-gray-400">Month:</span>
@@ -371,7 +371,7 @@
                                     placeholder="Choose month...">
                                     @foreach(range(1, 12) as $month)
                                         <flux:select.option value="{{ $month }}">
-                                            {{ \Carbon\Carbon::create()->month($month)->format('F Y') }}
+                                            {{ \Carbon\Carbon::create()->month($month)->format('F') }}
                                         </flux:select.option>
                                     @endforeach
                                 </flux:select>
@@ -391,29 +391,133 @@
 
                         <!-- Chart -->
                         <div x-show="!loading" class="h-64">
-                            <flux:chart x-bind:value="chartData" class="h-full">
+                            <flux:chart x-bind:value="chartData" class="h-full aspect-auto">
                                 <flux:chart.svg>
-                                    <flux:chart.line field="bookings" class="text-pink-500" />
-                                    <flux:chart.line field="approved" class="text-sky-500" />
+                                    <flux:chart.line field="vehicles" class="text-blue-600 dark:text-blue-400" />
+                                    <flux:chart.line field="meeting_rooms" class="text-green-600 dark:text-green-400" />
+                                    <flux:chart.line field="it_assets" class="text-purple-600 dark:text-purple-400" />
+                                    
                                     <flux:chart.axis axis="x" field="date">
+                                        <flux:chart.axis.line />
                                         <flux:chart.axis.tick />
                                     </flux:chart.axis>
+                                    
                                     <flux:chart.axis axis="y">
+                                        <flux:chart.axis.grid />
                                         <flux:chart.axis.tick />
                                     </flux:chart.axis>
+                                    
+                                    <flux:chart.cursor />
                                 </flux:chart.svg>
+                                
+                                <flux:chart.tooltip>
+                                    <flux:chart.tooltip.heading field="date" />
+                                    <flux:chart.tooltip.value field="vehicles" label="Vehicles" />
+                                    <flux:chart.tooltip.value field="meeting_rooms" label="Meeting Rooms" />
+                                    <flux:chart.tooltip.value field="it_assets" label="IT Assets" />
+                                </flux:chart.tooltip>
                             </flux:chart>
                         </div>
                         
                         <!-- Chart Legend -->
                         <div class="flex justify-center gap-6 mt-4 text-sm">
                             <div class="flex items-center gap-2">
-                                <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
-                                <span class="text-gray-600 dark:text-gray-400">Total Bookings</span>
+                                <div class="w-3 h-3 bg-blue-600 rounded-full"></div>
+                                <span class="text-gray-600 dark:text-gray-400">Vehicles</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                                <span class="text-gray-600 dark:text-gray-400">Approved Bookings</span>
+                                <div class="w-3 h-3 bg-green-600 rounded-full"></div>
+                                <span class="text-gray-600 dark:text-gray-400">Meeting Rooms</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-purple-600 rounded-full"></div>
+                                <span class="text-gray-600 dark:text-gray-400">IT Assets</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Peak Usage Patterns Chart -->
+            <div class="mt-6">
+                <div class="relative overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
+                    <div class="p-6" x-data="peakUsageController()">
+                        <!-- Header with Month Selector -->
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Peak Usage Patterns</h3>
+                            
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Month:</span>
+                                <flux:select 
+                                    variant="listbox" 
+                                    searchable
+                                    x-model="selectedMonth" 
+                                    @change="updateChart()" 
+                                    class="w-48"
+                                    placeholder="Choose month...">
+                                    @foreach(range(1, 12) as $month)
+                                        <flux:select.option value="{{ $month }}">
+                                            {{ \Carbon\Carbon::create()->month($month)->format('F') }}
+                                        </flux:select.option>
+                                    @endforeach
+                                </flux:select>
+                            </div>
+                        </div>
+                        
+                        <!-- Loading State -->
+                        <div x-show="loading" class="h-64 flex items-center justify-center">
+                            <div class="flex items-center gap-2">
+                                <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span class="text-sm text-gray-600 dark:text-gray-300">Loading chart...</span>
+                            </div>
+                        </div>
+
+                        <!-- Chart -->
+                        <div x-show="!loading" class="h-64">
+                            <flux:chart x-bind:value="chartData" class="h-full aspect-auto">
+                                <flux:chart.svg>
+                                    <flux:chart.line field="morning" class="text-orange-500 dark:text-orange-400" />
+                                    <flux:chart.line field="afternoon" class="text-blue-500 dark:text-blue-400" />
+                                    <flux:chart.line field="evening" class="text-pink-600 dark:text-pink-400" />
+                                    
+                                    <flux:chart.axis axis="x" field="date">
+                                        <flux:chart.axis.line />
+                                        <flux:chart.axis.tick />
+                                    </flux:chart.axis>
+                                    
+                                    <flux:chart.axis axis="y">
+                                        <flux:chart.axis.grid />
+                                        <flux:chart.axis.tick />
+                                    </flux:chart.axis>
+                                    
+                                    <flux:chart.cursor />
+                                </flux:chart.svg>
+                                
+                                <flux:chart.tooltip>
+                                    <flux:chart.tooltip.heading field="date" />
+                                    <flux:chart.tooltip.value field="morning" label="Morning (6AM-12PM)" />
+                                    <flux:chart.tooltip.value field="afternoon" label="Afternoon (12PM-6PM)" />
+                                    <flux:chart.tooltip.value field="evening" label="Evening (6PM-12AM)" />
+                                </flux:chart.tooltip>
+                            </flux:chart>
+                        </div>
+                        
+                        <!-- Chart Legend -->
+                        <div class="flex justify-center gap-6 mt-4 text-sm">
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-orange-500 rounded-full"></div>
+                                <span class="text-gray-600 dark:text-gray-400">Morning (6AM-12PM)</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+                                <span class="text-gray-600 dark:text-gray-400">Afternoon (12PM-6PM)</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-pink-600 rounded-full"></div>
+                                <span class="text-gray-600 dark:text-gray-400">Evening (6PM-12AM)</span>
                             </div>
                         </div>
                     </div>
@@ -711,6 +815,70 @@
                             date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
                             bookings: 0, // No data fallback
                             approved: 0
+                        });
+                    }
+                    
+                    this.chartData = data;
+                }
+            }
+        }
+
+        // Peak usage controller functionality
+        function peakUsageController() {
+            return {
+                selectedMonth: {!! now()->month !!},
+                loading: false,
+                chartData: [],
+                
+                init() {
+                    this.loadInitialData();
+                },
+                
+                loadInitialData() {
+                    // Load current month data
+                    this.updateChart();
+                },
+                
+                async updateChart() {
+                    this.loading = true;
+                    
+                    try {
+                        // Fetch real data from the server
+                        const response = await fetch(`/dashboard/peak-usage-data?month=${this.selectedMonth}`, {
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                'Accept': 'application/json'
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            this.chartData = data;
+                        } else {
+                            // Fallback to initial data generation if API fails
+                            this.generateFallbackData();
+                        }
+                    } catch (error) {
+                        console.log('Failed to fetch peak usage data, using fallback');
+                        this.generateFallbackData();
+                    }
+                    
+                    this.loading = false;
+                },
+                
+                generateFallbackData() {
+                    // Fallback data generation
+                    const data = [];
+                    const year = new Date().getFullYear();
+                    const daysInMonth = new Date(year, this.selectedMonth, 0).getDate();
+                    
+                    for (let day = 1; day <= daysInMonth; day++) {
+                        const date = new Date(year, this.selectedMonth - 1, day);
+                        data.push({
+                            date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                            morning: 0, // No data fallback
+                            afternoon: 0,
+                            evening: 0
                         });
                     }
                     

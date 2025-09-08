@@ -41,6 +41,10 @@ Route::get('/dashboard/chart-data', [App\Http\Controllers\Api\CalendarController
     ->middleware(['auth'])
     ->name('dashboard.chart-data');
 
+Route::get('/dashboard/peak-usage-data', [App\Http\Controllers\Api\CalendarController::class, 'getPeakUsageData'])
+    ->middleware(['auth'])
+    ->name('dashboard.peak-usage-data');
+
 Route::get('/user-manual', function () {
     return response()->file(public_path('user-manual.html'));
 });
