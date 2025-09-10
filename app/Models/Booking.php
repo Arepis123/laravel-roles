@@ -235,4 +235,20 @@ class Booking extends Model
     {
         return in_array($userId, $this->passengers ?? []);
     }
+
+    /**
+     * Get vehicle odometer logs for this booking
+     */
+    public function vehicleOdometerLogs()
+    {
+        return $this->hasMany(\App\Models\VehicleOdometerLog::class);
+    }
+
+    /**
+     * Get vehicle fuel logs for this booking
+     */
+    public function vehicleFuelLogs()
+    {
+        return $this->hasMany(\App\Models\VehicleFuelLog::class);
+    }
 }

@@ -221,15 +221,26 @@ class BookingCreate extends Component
         $model = $config['model'];
         $nameField = $config['name_field'];
 
-        // Special handling for vehicles to include plate number
+        // Special handling for vehicles to include plate number and position filtering
         if ($this->asset_type === 'vehicle') {
-            return $model::select('id', 'model', 'plate_number')
+            $userPosition = auth()->user()->position;
+            
+            return $model::select('id', 'model', 'plate_number', 'allowed_positions')
+                ->availableForPosition($userPosition)
                 ->get()
                 ->map(function ($vehicle) {
                     // Create a stdClass object to maintain consistency with the blade template
                     $item = new \stdClass();
                     $item->id = $vehicle->id;
                     $item->name = $vehicle->model . ' (' . $vehicle->plate_number . ')';
+                    
+                    // Add position restriction info as description
+                    if (!empty($vehicle->allowed_positions)) {
+                        $item->description = 'Restricted to: ' . implode(', ', $vehicle->allowed_positions);
+                    } else {
+                        $item->description = 'Available to all positions';
+                    }
+                    
                     return $item;
                 });
         }
@@ -905,6 +916,16 @@ class BookingCreate extends Component
         
         // Validate all fields
         $this->validate();
+
+        // Validate position-based access for vehicles
+        if ($this->asset_type === 'vehicle') {
+            $vehicle = Vehicle::find($this->asset_id);
+            if ($vehicle && !$vehicle->canUserBook(auth()->user())) {
+                $this->saving = false;
+                $this->addError('asset_id', 'You are not authorized to book this vehicle based on your position.');
+                return;
+            }
+        }
 
         // Validate time combination
         if (!$this->validateTimes()) {

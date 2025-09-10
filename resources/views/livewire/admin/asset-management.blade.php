@@ -222,7 +222,17 @@
                                         <div class="text-xs text-gray-500 block">{{ Str::limit($asset['model']->plate_number, 50) }}</div>                             
                                     @else
                                         <div class="text-xs text-gray-500 block">{{ Str::limit($asset['model']->notes, 50) }}</div>
-                                    @endif                                     
+                                    @endif
+                                    
+                                    @if($asset['type'] === 'vehicle' && !empty($asset['model']->allowed_positions))
+                                        <div class="text-xs text-blue-600 block mt-1">
+                                            Restricted to: {{ implode(', ', $asset['model']->allowed_positions) }}
+                                        </div>
+                                    @elseif($asset['type'] === 'vehicle')
+                                        <div class="text-xs text-green-600 block mt-1">
+                                            Available to all positions
+                                        </div>
+                                    @endif                                    
                                 </div>                                
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -342,6 +352,30 @@
                         <flux:label>Passenger Capacity</flux:label>
                         <flux:input type="number" wire:model="vehicle_capacity" placeholder="Enter capacity" min="1" />
                         <flux:error name="vehicle_capacity" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>Driver Name</flux:label>
+                        <flux:input wire:model="driver_name" type="text" placeholder="Enter driver name (optional)" />
+                        <flux:error name="driver_name" />
+                    </flux:field>
+                </div>
+
+                <!-- Position Restrictions Section -->
+                <div class="mt-6">
+                    <flux:field>
+                        <flux:label>Position Access Restrictions</flux:label>
+                        <flux:description>Select which positions can book this vehicle. Leave empty to allow all positions.</flux:description>
+                        
+                        <div class="mt-3 grid grid-cols-2 gap-4">
+                            @foreach($this->getAvailablePositions() as $position)
+                                <flux:field variant="inline">
+                                    <flux:checkbox wire:model="allowed_positions" value="{{ $position }}" />
+                                    <flux:label>{{ $position }}</flux:label>
+                                </flux:field>
+                            @endforeach
+                        </div>
+                        <flux:error name="allowed_positions" />
                     </flux:field>
                 </div>
 

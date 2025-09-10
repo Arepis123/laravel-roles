@@ -149,7 +149,7 @@
                     {{-- Start Date --}}
                     <flux:field>
                         <flux:label>{{ $this->allowsMultiDayBooking ? 'Start Date' : 'Booking Date' }}</flux:label>
-                        <flux:date-picker 
+                        <flux:date-picker with-today  
                             wire:model.live="booking_date" 
                             placeholder="Select date"
                             :min-date="date('Y-m-d')"
@@ -170,7 +170,7 @@
                     @if($this->allowsMultiDayBooking)
                         <flux:field>
                             <flux:label>End Date (Optional)</flux:label>
-                            <flux:date-picker 
+                            <flux:date-picker with-today  
                                 wire:model.live="end_date" 
                                 placeholder="Same as start date if empty"
                                 :min-date="$booking_date ?: date('Y-m-d')"

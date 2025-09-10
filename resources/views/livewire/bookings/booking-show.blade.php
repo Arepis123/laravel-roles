@@ -122,17 +122,20 @@
             <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Completion Details</h3>
             
             @if($asset_type === 'vehicle')
+                @php
+                    $vehicleData = $this->vehicleCompletionData;
+                @endphp
                 <div class="space-y-3 text-sm">
                     <div class="flex justify-between">
                         <span class="text-gray-600 dark:text-gray-300">Odometer Reading:</span>
-                        <span class="font-medium">{{ number_format($booking->done_details['odometer'] ?? 0) }} km</span>
+                        <span class="font-medium">{{ number_format($vehicleData['odometer_reading'] ?? 0) }} km</span>
                     </div>
                     
                     {{-- Display Fuel Level --}}
-                    @if(isset($booking->done_details['fuel_level']))
+                    @if(isset($vehicleData['fuel_level']))
                         <div class="flex justify-between">
                             <span class="text-gray-600 dark:text-gray-300">Fuel Level:</span>
-                            <span class="font-medium">{{ $booking->done_details['fuel_level'] }}/8</span>
+                            <span class="font-medium">{{ $vehicleData['fuel_level'] }}/8</span>
                         </div>
                         
                         {{-- Visual fuel level indicator --}}
@@ -143,11 +146,11 @@
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
                                 @php
-                                    $fuelPercentage = ($booking->done_details['fuel_level'] / 8) * 100;
+                                    $fuelPercentage = ($vehicleData['fuel_level'] / 8) * 100;
                                     $fuelColor = match(true) {
-                                        $booking->done_details['fuel_level'] <= 2 => 'bg-red-500',
-                                        $booking->done_details['fuel_level'] <= 4 => 'bg-yellow-500',
-                                        $booking->done_details['fuel_level'] <= 6 => 'bg-orange-500',
+                                        $vehicleData['fuel_level'] <= 2 => 'bg-red-500',
+                                        $vehicleData['fuel_level'] <= 4 => 'bg-yellow-500',
+                                        $vehicleData['fuel_level'] <= 6 => 'bg-orange-500',
                                         default => 'bg-green-500'
                                     };
                                 @endphp
@@ -156,14 +159,14 @@
                         </div>
                     @endif
                     
-                    @if($booking->done_details['gas_filled'] ?? false)
+                    @if($vehicleData['fuel_filled'] ?? false)
                         <div class="flex justify-between">
                             <span class="text-gray-600 dark:text-gray-300">Fuel Filled:</span>
                             <span class="font-medium">Yes</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600 dark:text-gray-300">Fuel Amount:</span>
-                            <span class="font-medium">RM {{ number_format($booking->done_details['gas_amount'] ?? 0, 2) }}</span>
+                            <span class="font-medium">RM {{ number_format($vehicleData['fuel_amount'] ?? 0, 2) }}</span>
                         </div>
                     @else
                         <div class="flex justify-between">
@@ -320,7 +323,7 @@
                     </h2>
                     
                     <div class="text-center py-6">
-                        <flux:icon name="user-minus" class="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                        <flux:icon name="user-minus" class="w-8 h-8 text-gray-400 mx-auto mb-3" />
                         <p class="text-gray-500 dark:text-gray-400">No passengers selected for this vehicle booking</p>
                         <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Only the driver ({{ $booking->user->name }}) will be using the vehicle</p>
                     </div>

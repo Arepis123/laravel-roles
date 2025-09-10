@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Vehicle extends Model
 {
-    protected $fillable = ['model', 'plate_number', 'capacity', 'driver_name', 'notes', 'status'];
+    protected $fillable = ['model', 'plate_number', 'capacity', 'driver_name', 'notes', 'status', 'allowed_positions'];
 
     protected $casts = [
-        'capacity' => 'integer'
+        'capacity' => 'integer',
+        'allowed_positions' => 'array'
     ];
 
     /**
@@ -159,6 +160,45 @@ class Vehicle extends Model
             'maintenance_count' => VehicleMaintenanceLog::getMaintenanceCountByType($this->id, $startDate, $endDate),
             'cost_per_km' => VehicleMaintenanceLog::getCostPerKilometer($this->id, $this->total_distance_traveled)
         ];
+    }
+
+    /**
+     * Position-based vehicle access methods
+     */
+    public function isAvailableForPosition($position)
+    {
+        if (empty($this->allowed_positions)) {
+            return true;
+        }
+        
+        return in_array($position, $this->allowed_positions);
+    }
+    
+    public function canUserBook($user)
+    {
+        return $this->isAvailableForPosition($user->position);
+    }
+    
+    public function getAllowedPositionsText()
+    {
+        if (empty($this->allowed_positions)) {
+            return 'All positions';
+        }
+        
+        return implode(', ', $this->allowed_positions);
+    }
+    
+    public static function getAvailablePositions()
+    {
+        return ['CEO', 'Manager', 'Executive', 'Non-executive'];
+    }
+    
+    public function scopeAvailableForPosition($query, $position)
+    {
+        return $query->where(function($q) use ($position) {
+            $q->whereNull('allowed_positions')
+              ->orWhereJsonContains('allowed_positions', $position);
+        });
     }
 
     /**

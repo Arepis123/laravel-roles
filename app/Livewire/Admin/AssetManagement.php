@@ -56,6 +56,9 @@ class AssetManagement extends Component
     
     #[Validate('nullable|string')]
     public $vehicle_notes = '';
+
+    #[Validate('nullable|array')]
+    public $allowed_positions = [];
     
     // IT Asset specific fields
     #[Validate('nullable|string|max:255')]
@@ -450,6 +453,7 @@ class AssetManagement extends Component
                 $this->vehicle_capacity = $asset->capacity;
                 $this->driver_name = $asset->driver_name;
                 $this->vehicle_notes = $asset->notes;
+                $this->allowed_positions = $asset->allowed_positions ?? [];
                 break;
                 
             case 'it_asset':
@@ -513,6 +517,7 @@ class AssetManagement extends Component
                     'capacity' => $this->vehicle_capacity,
                     'driver_name' => $this->driver_name,
                     'notes' => $this->vehicle_notes,
+                    'allowed_positions' => $this->allowed_positions,
                 ]);
                 break;
                 
@@ -548,6 +553,7 @@ class AssetManagement extends Component
                     'capacity' => $this->vehicle_capacity,
                     'driver_name' => $this->driver_name,
                     'notes' => $this->vehicle_notes,
+                    'allowed_positions' => $this->allowed_positions,
                 ]);
                 break;
                 
@@ -638,6 +644,7 @@ class AssetManagement extends Component
                     'vehicle_capacity' => 'nullable|integer|min:1',
                     'driver_name' => 'nullable|string|max:255',
                     'vehicle_notes' => 'nullable|string',
+                    'allowed_positions' => 'nullable|array',
                 ];
                 break;
                 
@@ -676,6 +683,7 @@ class AssetManagement extends Component
         $this->vehicle_capacity = null;
         $this->driver_name = '';
         $this->vehicle_notes = '';
+        $this->allowed_positions = [];
         
         // IT Asset fields
         $this->it_asset_name = '';
@@ -705,6 +713,11 @@ class AssetManagement extends Component
                 ->where('status', 'approved')
                 ->count(),
         ];
+    }
+
+    public function getAvailablePositions()
+    {
+        return ['CEO', 'Manager', 'Executive', 'Non-executive'];
     }
 
     public function render()

@@ -7,6 +7,8 @@ use App\Models\Booking;
 use App\Models\MeetingRoom;
 use App\Models\Vehicle;
 use App\Models\ItAsset;
+use App\Models\VehicleOdometerLog;
+use App\Models\VehicleFuelLog;
 
 class BookingMyShow extends Component
 {
@@ -137,20 +139,43 @@ class BookingMyShow extends Component
             ]);
         }
 
-        // Prepare done details based on asset type
-        $doneDetails = [];
-        
         if ($this->asset_type === 'vehicle') {
+            // For vehicles, save to dedicated tables instead of done_details
+            
+            // Save odometer log
+            VehicleOdometerLog::create([
+                'booking_id' => $this->booking->id,
+                'vehicle_id' => $this->booking->asset_id,
+                'odometer_reading' => $this->currentOdometer,
+                'reading_type' => 'end',
+                'recorded_by' => auth()->id(),
+                'recorded_at' => now(),
+                'notes' => 'Booking completion - odometer reading'
+            ]);
+
+            // Save fuel log if gas was filled
+            if ($this->gasFilledUp && $this->gasAmount) {
+                VehicleFuelLog::create([
+                    'booking_id' => $this->booking->id,
+                    'vehicle_id' => $this->booking->asset_id,
+                    'fuel_amount' => $this->gasAmount,
+                    'fuel_type' => 'petrol', // Default to petrol, can be made dynamic later
+                    'odometer_at_fill' => $this->currentOdometer,
+                    'filled_by' => auth()->id(),
+                    'filled_at' => now(),
+                    'notes' => 'Fuel filled during booking completion'
+                ]);
+            }
+
+            // For vehicles, save minimal completion info in done_details
             $doneDetails = [
-                'odometer' => $this->currentOdometer,
                 'fuel_level' => $this->fuelLevel,
-                'gas_filled' => $this->gasFilledUp,
-                'gas_amount' => $this->gasFilledUp ? $this->gasAmount : null,
                 'completed_at' => now()->toDateTimeString(),
                 'completed_by' => auth()->id(),
                 'completed_by_name' => auth()->user()->name,
             ];
         } else {
+            // For non-vehicle assets, keep existing behavior
             $doneDetails = [
                 'remarks' => $this->doneRemarks,
                 'completed_at' => now()->toDateTimeString(),
@@ -159,7 +184,7 @@ class BookingMyShow extends Component
             ];
         }
 
-        // Save the done details and change status
+        // Update booking with done details
         $this->booking->update([
             'done_details' => $doneDetails
         ]);
@@ -427,6 +452,34 @@ class BookingMyShow extends Component
     public function updatedAssetType()
     {
         $this->asset_id = '';
+    }
+
+    /**
+     * Get vehicle completion data from the new tables
+     */
+    public function getVehicleCompletionDataProperty(): array
+    {
+        if ($this->asset_type !== 'vehicle' || $this->status !== 'done') {
+            return [];
+        }
+
+        // Get latest odometer reading for this booking
+        $odometerLog = VehicleOdometerLog::where('booking_id', $this->booking->id)
+            ->where('reading_type', 'end')
+            ->latest('recorded_at')
+            ->first();
+
+        // Get fuel log for this booking
+        $fuelLog = VehicleFuelLog::where('booking_id', $this->booking->id)
+            ->latest('filled_at')
+            ->first();
+
+        return [
+            'odometer_reading' => $odometerLog ? $odometerLog->odometer_reading : null,
+            'fuel_filled' => $fuelLog ? true : false,
+            'fuel_amount' => $fuelLog ? $fuelLog->fuel_amount : null,
+            'fuel_level' => $this->booking->done_details['fuel_level'] ?? null,
+        ];
     }
 
     public function render()
