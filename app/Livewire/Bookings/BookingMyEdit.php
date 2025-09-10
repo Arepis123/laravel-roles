@@ -393,6 +393,25 @@ class BookingMyEdit extends Component
     }
 
     /**
+     * Handle when passengers array is updated (from wire:model)
+     */
+    public function updatedPassengers()
+    {
+        // Enforce capacity limit when passengers are selected via wire:model
+        if ($this->asset_type === 'vehicle' && is_numeric($this->capacity) && $this->capacity > 0) {
+            $maxPassengers = $this->maxPassengers;
+            if (count($this->passengers) > $maxPassengers) {
+                // Keep only the first allowed passengers and show error
+                $this->passengers = array_slice($this->passengers, 0, $maxPassengers);
+                $this->addError('passengers', "You can only select up to {$maxPassengers} passengers for this vehicle capacity of {$this->capacity}.");
+            } else {
+                // Clear the error if selection is valid
+                $this->resetErrorBag('passengers');
+            }
+        }
+    }
+
+    /**
      * Toggle passenger selection
      */
     public function togglePassenger($userId)
