@@ -30,7 +30,7 @@
             <flux:label>Type</flux:label>
             <flux:select variant="listbox" wire:model.live="asset_type" placeholder="Select booking type" searchable>
                 @foreach ($this->assetTypeOptions as $option)
-                    <flux:select.option value="{{ $option['value'] }}" description="{{ $option['description'] ?? '' }}">{{ $option['label'] }}</flux:select.option>
+                    <flux:select.option value="{{ $option['value'] }}">{{ $option['label'] }}</flux:select.option>
                 @endforeach
             </flux:select>            
         </flux:field>
@@ -39,7 +39,7 @@
             <flux:label>{{ $this->assetFieldLabel }}</flux:label>
             <flux:select variant="listbox" wire:model.live="asset_id" placeholder="Select {{ strtolower($this->assetFieldLabel) }}" :disabled="!$asset_type" searchable>
                 @foreach ($this->assetOptions as $asset)
-                    <flux:select.option value="{{ $asset->id }}" description="{{ $asset->description ?? '' }}">
+                    <flux:select.option value="{{ $asset->id }}">
                         {{ $asset->name }}
                     </flux:select.option>
                 @endforeach

@@ -158,7 +158,7 @@ class BookingMyShow extends Component
                 VehicleFuelLog::create([
                     'booking_id' => $this->booking->id,
                     'vehicle_id' => $this->booking->asset_id,
-                    'fuel_amount' => $this->gasAmount,
+                    'fuel_cost' => $this->gasAmount,
                     'fuel_type' => 'petrol', // Default to petrol, can be made dynamic later
                     'odometer_at_fill' => $this->currentOdometer,
                     'filled_by' => auth()->id(),
