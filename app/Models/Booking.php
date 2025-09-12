@@ -26,6 +26,8 @@ class Booking extends Model
         'passengers', 
         'destination',
         'done_details',
+        'parking_level',
+        'is_reserved_slot',
     ];
     
     protected $casts = [
@@ -34,7 +36,9 @@ class Booking extends Model
         'passengers' => 'array', // Cast passengers as array
         'done_details' => 'array', // Cast done_details as array
         'start_time' => 'datetime',
-        'end_time' => 'datetime',        
+        'end_time' => 'datetime',
+        'parking_level' => 'integer',
+        'is_reserved_slot' => 'boolean',
     ];
 
     public function asset()
@@ -250,5 +254,51 @@ class Booking extends Model
     public function vehicleFuelLogs()
     {
         return $this->hasMany(\App\Models\VehicleFuelLog::class);
+    }
+
+    /**
+     * Check if parking location is required for this booking
+     */
+    public function isParkingRequired(): bool
+    {
+        if (class_basename($this->asset_type) !== 'Vehicle') {
+            return false;
+        }
+
+        $vehicle = $this->asset();
+        return $vehicle && $vehicle->parking_required;
+    }
+
+    /**
+     * Check if parking location has been set
+     */
+    public function hasParkingLocation(): bool
+    {
+        return !is_null($this->parking_level);
+    }
+
+    /**
+     * Get parking level display text
+     */
+    public function getParkingLevelTextAttribute(): ?string
+    {
+        if (is_null($this->parking_level)) {
+            return null;
+        }
+
+        $levelText = "Level {$this->parking_level}";
+        if ($this->parking_level === 1 && $this->is_reserved_slot) {
+            $levelText .= " (Reserved Slot)";
+        }
+
+        return $levelText;
+    }
+
+    /**
+     * Get available parking levels
+     */
+    public static function getParkingLevels(): array
+    {
+        return [1, 2, 3, 4, 5];
     }
 }

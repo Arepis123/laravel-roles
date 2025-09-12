@@ -49,8 +49,8 @@ class VehicleOdometerManagement extends Component
     public function mount()
     {
         $this->recorded_at = now()->format('Y-m-d\TH:i');
-        $this->filterDateFrom = now()->subMonth()->format('Y-m-d');
-        $this->filterDateTo = now()->format('Y-m-d');
+        $this->filterDateFrom = now()->startOfYear()->format('Y-m-d'); // January 1st of current year
+        $this->filterDateTo = now()->endOfYear()->format('Y-m-d'); // December 31st of current year
         $this->performed_by = auth()->user()->name ?? '';
     }
 
@@ -268,6 +268,16 @@ class VehicleOdometerManagement extends Component
                 'max' => $logs->max('odometer_reading') ?: 0
             ]
         ];
+    }
+
+    public function exportOdometerData($format = 'excel')
+    {
+        $this->dispatch('odometer-export', [
+            'vehicle_id' => $this->filterVehicle,
+            'date_from' => $this->filterDateFrom,
+            'date_to' => $this->filterDateTo,
+            'format' => $format
+        ]);
     }
 
     public function render()

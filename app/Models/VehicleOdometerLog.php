@@ -53,7 +53,8 @@ class VehicleOdometerLog extends Model
 
     public function scopeInDateRange($query, $startDate, $endDate)
     {
-        return $query->whereBetween('recorded_at', [$startDate, $endDate]);
+        return $query->whereDate('recorded_at', '>=', $startDate)
+                     ->whereDate('recorded_at', '<=', $endDate);
     }
 
     public function scopeByReadingType($query, $readingType)

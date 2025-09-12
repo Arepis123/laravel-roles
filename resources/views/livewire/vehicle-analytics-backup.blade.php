@@ -1,57 +1,42 @@
-<div class="relative mb-6 w-full">
+<div class="p-4 sm:p-6 bg-white dark:bg-zinc-800 min-h-screen">
     <div class="mb-6">
         <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white dark:text-white">Vehicle Analytics Dashboard</h1>
         <p class="text-gray-600 dark:text-gray-400 mt-1">Comprehensive insights and analytics for company vehicles</p>
     </div>
 
-    <!-- Filters -->
-    <div class="mb-6 mx-2">
-        <flux:accordion>
-            <flux:accordion.item>
-                <flux:accordion.heading>
-                    <span class="flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-                        </svg>
-                        Filters & Export
-                    </span>
-                </flux:accordion.heading>
-                <flux:accordion.content>
-                    <div class="space-y-4 pt-4 mx-3">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <flux:field>
-                                <flux:label>From Date</flux:label>
-                                <flux:date-picker wire:model.live="dateFrom" with-today/>
-                            </flux:field>
-
-                            <flux:field>
-                                <flux:label>To Date</flux:label>
-                                <flux:date-picker wire:model.live="dateTo" with-today/>
-                            </flux:field>
-
-                            <flux:field>
-                                <flux:label>Vehicle</flux:label>
-                                <flux:select variant="listbox" wire:model.live="selectedVehicle" placeholder="All Vehicles">
-                                    @foreach($vehicles as $vehicle)
-                                        <flux:select.option value="{{ $vehicle->id }}">{{ $vehicle->model }} ({{ $vehicle->plate_number }})</flux:select.option>
-                                    @endforeach
-                                </flux:select>
-                            </flux:field>
-                        </div>
-
-                        <!-- Export Buttons -->
-                        <div class="flex gap-3 pt-2 border-t border-gray-200 dark:border-zinc-700">
-                            <flux:button variant="filled" size="sm" wire:click="exportAnalytics('excel')" icon="document-arrow-down" class="bg-green-600 hover:bg-green-700">
-                                Export Excel
-                            </flux:button>
-                            <flux:button variant="filled" size="sm" wire:click="exportAnalytics('pdf')" icon="document-arrow-down" class="bg-red-600 hover:bg-red-700">
-                                Export PDF
-                            </flux:button>
-                        </div>
-                    </div>
-                </flux:accordion.content>
-            </flux:accordion.item>
-        </flux:accordion>
+    <!-- Date Range Filters -->
+    <div class="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-lg shadow-sm dark:shadow-zinc-700 border border-gray-200 dark:border-zinc-700 mb-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">From Date</label>
+                    <input type="date" wire:model.live="dateFrom" class="w-full border-gray-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">To Date</label>
+                    <input type="date" wire:model.live="dateTo" class="w-full border-gray-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Vehicle</label>
+                    <select wire:model.live="selectedVehicle" class="w-full border-gray-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400">
+                        <option value="">All Vehicles</option>
+                        @foreach($vehicles as $vehicle)
+                            <option value="{{ $vehicle->id }}">{{ $vehicle->model }} ({{ $vehicle->plate_number }})</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div>
+                <button wire:click="exportAnalytics('excel')" 
+                        class="bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white px-4 py-2 rounded-lg w-full sm:w-auto mb-2 sm:mb-0 sm:mr-2">
+                    Export Excel
+                </button>
+                <button wire:click="exportAnalytics('pdf')" 
+                        class="bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white px-4 py-2 rounded-lg w-full sm:w-auto">
+                    Export PDF
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Analytics Type Tabs -->
@@ -100,7 +85,7 @@
     @if($analyticsType === 'overview')
         <!-- Fleet Statistics Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
-            <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+            <flux:card class="p-4 sm:p-6">
                 <div class="flex items-center">
                     <div class="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
                         <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,13 +95,13 @@
                         </svg>                        
                     </div>
                     <div class="ml-4">
-                        <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Total Vehicles</flux:heading>
-                        <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">{{ $fleetOverview['total_vehicles'] }}</flux:text>
+                        <flux:heading size="sm" class="text-gray-500 dark:text-gray-400 font-medium">Total Vehicles</flux:heading>
+                        <flux:text size="xl" class="font-semibold text-gray-900 dark:text-white">{{ $fleetOverview['total_vehicles'] }}</flux:text>
                     </div>
                 </div>
             </flux:card>
 
-            <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+            <flux:card class="p-4 sm:p-6">
                 <div class="flex items-center">
                     <div class="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
                         <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,13 +109,13 @@
                         </svg>
                     </div>
                     <div class="ml-4">
-                        <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Active Vehicles</flux:heading>
-                        <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">{{ $fleetOverview['active_vehicles'] }}</flux:text>
+                        <flux:heading size="sm" class="text-gray-500 dark:text-gray-400 font-medium">Active Vehicles</flux:heading>
+                        <flux:text size="xl" class="font-semibold text-gray-900 dark:text-white">{{ $fleetOverview['active_vehicles'] }}</flux:text>
                     </div>
                 </div>
             </flux:card>
 
-            <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+            <flux:card class="p-4 sm:p-6">
                 <div class="flex items-center">
                     <div class="p-2 bg-yellow-100 dark:bg-yellow-900/50 rounded-lg">
                         <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,13 +123,13 @@
                         </svg>
                     </div>
                     <div class="ml-4">
-                        <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Total Distance</flux:heading>
-                        <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">{{ number_format($fleetOverview['total_distance_traveled']) }} km</flux:text>
+                        <flux:heading size="sm" class="text-gray-500 dark:text-gray-400 font-medium">Total Distance</flux:heading>
+                        <flux:text size="xl" class="font-semibold text-gray-900 dark:text-white">{{ number_format($fleetOverview['total_distance_traveled']) }} km</flux:text>
                     </div>
                 </div>
             </flux:card>
 
-            <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+            <flux:card class="p-4 sm:p-6">
                 <div class="flex items-center">
                     <div class="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
                         <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,8 +139,8 @@
                         </svg>                         
                     </div>
                     <div class="ml-4">
-                        <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Total Fuel Cost</flux:heading>
-                        <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">RM{{ number_format($fleetOverview['total_fuel_cost'], 2) }}</flux:text>
+                        <flux:heading size="sm" class="text-gray-500 dark:text-gray-400 font-medium">Total Fuel Cost</flux:heading>
+                        <flux:text size="xl" class="font-semibold text-gray-900 dark:text-white">RM{{ number_format($fleetOverview['total_fuel_cost'], 2) }}</flux:text>
                     </div>
                 </div>
             </flux:card>
@@ -163,7 +148,7 @@
 
         <!-- Additional Fleet Stats -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+            <flux:card class="p-4 sm:p-6">
                 <div class="flex items-center justify-between mb-4">
                     <flux:heading>Fuel Statistics</flux:heading>
                     @if($fleetOverview['fuel_by_type']->count() > 0)
@@ -187,12 +172,12 @@
                 <div class="space-y-3">
                     <!-- Always visible: Overall Totals -->
                     <div class="flex justify-between">
-                        <flux:text class="text-gray-600 dark:text-gray-400 font-medium">Total Consumed</flux:text>
-                        <flux:text class="font-semibold text-gray-900 dark:text-white">{{ number_format($fleetOverview['total_fuel_consumed'], 2) }} L</flux:text>
+                        <flux:text size="sm" class="text-gray-600 dark:text-gray-400 font-medium">Total Consumed</flux:text>
+                        <flux:text size="sm" class="font-semibold text-gray-900 dark:text-white">{{ number_format($fleetOverview['total_fuel_consumed'], 2) }} L</flux:text>
                     </div>
                     <div class="flex justify-between">
-                        <flux:text class="text-gray-600 dark:text-gray-400 font-medium">Total Cost</flux:text>
-                        <flux:text class="font-semibold text-gray-900 dark:text-white">RM{{ number_format($fleetOverview['total_fuel_cost'], 2) }}</flux:text>
+                        <flux:text size="sm" class="text-gray-600 dark:text-gray-400 font-medium">Total Cost</flux:text>
+                        <flux:text size="sm" class="font-semibold text-gray-900 dark:text-white">RM{{ number_format($fleetOverview['total_fuel_cost'], 2) }}</flux:text>
                     </div>
                     
                     <!-- Expandable: Breakdown by Fuel Type -->
@@ -200,7 +185,7 @@
                         <div class="pt-3 border-t border-gray-200 dark:border-zinc-600 space-y-4">
                             @forelse($fleetOverview['fuel_by_type'] as $fuelType => $stats)
                                 <div class="space-y-2">
-                                    <flux:heading class="text-gray-800 dark:text-gray-200 capitalize flex items-center">
+                                    <flux:heading size="sm" class="text-gray-800 dark:text-gray-200 capitalize flex items-center">
                                         @if($fuelType === 'petrol')
                                             <div class="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
                                         @elseif($fuelType === 'diesel')
@@ -239,27 +224,27 @@
                 </div>
             </flux:card>
 
-            <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+            <flux:card class="p-4 sm:p-6">
                 <flux:heading class="mb-4">Maintenance Overview</flux:heading>
                 <div class="space-y-3">
                     <div class="flex justify-between">
-                        <flux:text class="text-gray-600 dark:text-gray-400">Total Maintenance Cost</flux:text>
-                        <flux:text class="font-medium text-gray-900 dark:text-white">RM{{ number_format($fleetOverview['total_maintenance_cost'], 2) }}</flux:text>
+                        <flux:text size="sm" class="text-gray-600 dark:text-gray-400">Total Maintenance Cost</flux:text>
+                        <flux:text size="sm" class="font-medium text-gray-900 dark:text-white">RM{{ number_format($fleetOverview['total_maintenance_cost'], 2) }}</flux:text>
                     </div>
                     <div class="flex justify-between">
-                        <flux:text class="text-gray-600 dark:text-gray-400">Needs Maintenance Soon</flux:text>
-                        <flux:text class="font-medium text-yellow-600">{{ $fleetOverview['vehicles_needing_maintenance'] }}</flux:text>
+                        <flux:text size="sm" class="text-gray-600 dark:text-gray-400">Needs Maintenance Soon</flux:text>
+                        <flux:text size="sm" class="font-medium text-yellow-600">{{ $fleetOverview['vehicles_needing_maintenance'] }}</flux:text>
                     </div>
                     <div class="flex justify-between">
-                        <flux:text class="text-gray-600 dark:text-gray-400">Overdue Maintenance</flux:text>
-                        <flux:text class="font-medium text-red-600">{{ $fleetOverview['overdue_maintenance'] }}</flux:text>
+                        <flux:text size="sm" class="text-gray-600 dark:text-gray-400">Overdue Maintenance</flux:text>
+                        <flux:text size="sm" class="font-medium text-red-600">{{ $fleetOverview['overdue_maintenance'] }}</flux:text>
                     </div>
                 </div>
             </flux:card>
 
-            <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+            <flux:card class="p-4 sm:p-6">
                 <flux:heading class="mb-4">Fleet Efficiency</flux:heading>
-                <div class="space-y-2">
+                <div class="space-y-3">
                     <div class="flex justify-between items-center">
                         <div class="flex items-center gap-1">
                             <span class="text-sm text-gray-600 dark:text-gray-400">Avg Distance/Vehicle</span>
@@ -329,11 +314,11 @@
                         </span>
                     </div>
                 </div>
-            </flux:card>
+            </div>
         </div>
 
         <!-- Top Performing Vehicles -->
-        <flux:card class="dark:bg-zinc-900">
+        <flux:card>
             <div class="p-6 border-b border-gray-200 dark:border-zinc-700">
                 <flux:heading>Top Performing Vehicles</flux:heading>
                 <flux:text class="text-gray-600 dark:text-gray-400">Based on fuel efficiency and utilization</flux:text>
@@ -409,19 +394,19 @@
     @if($analyticsType === 'fuel' && $selectedVehicle && $fuelAnalytics)
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
             <flux:card class="p-4 sm:p-6">
-                <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Total Fuel</flux:heading>
+                <flux:heading size="sm" class="text-gray-500 dark:text-gray-400 font-medium">Total Fuel</flux:heading>
                 <flux:text size="xl" class="font-semibold text-gray-900 dark:text-white">{{ number_format($fuelAnalytics['total_fuel'], 2) }} L</flux:text>
             </flux:card>
             <flux:card class="p-4 sm:p-6">
-                <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Total Cost</flux:heading>
+                <flux:heading size="sm" class="text-gray-500 dark:text-gray-400 font-medium">Total Cost</flux:heading>
                 <flux:text size="xl" class="font-semibold text-gray-900 dark:text-white">RM{{ number_format($fuelAnalytics['total_cost'], 2) }}</flux:text>
             </flux:card>
             <flux:card class="p-4 sm:p-6">
-                <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Sessions</flux:heading>
+                <flux:heading size="sm" class="text-gray-500 dark:text-gray-400 font-medium">Sessions</flux:heading>
                 <flux:text size="xl" class="font-semibold text-gray-900 dark:text-white">{{ $fuelAnalytics['fuel_sessions'] }}</flux:text>
             </flux:card>
             <flux:card class="p-4 sm:p-6">
-                <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Avg Efficiency</flux:heading>
+                <flux:heading size="sm" class="text-gray-500 dark:text-gray-400 font-medium">Avg Efficiency</flux:heading>
                 <flux:text size="xl" class="font-semibold text-gray-900 dark:text-white">{{ number_format($fuelAnalytics['average_efficiency'], 2) }} km/L</flux:text>
             </flux:card>
         </div>
@@ -472,19 +457,19 @@
     @if($analyticsType === 'odometer' && $selectedVehicle && $odometerAnalytics)
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
             <flux:card class="p-4 sm:p-6">
-                <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Total Distance</flux:heading>
+                <flux:heading size="sm" class="text-gray-500 dark:text-gray-400 font-medium">Total Distance</flux:heading>
                 <flux:text size="xl" class="font-semibold text-gray-900 dark:text-white">{{ number_format($odometerAnalytics['total_distance']) }} km</flux:text>
             </flux:card>
             <flux:card class="p-4 sm:p-6">
-                <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Readings Count</flux:heading>
+                <flux:heading size="sm" class="text-gray-500 dark:text-gray-400 font-medium">Readings Count</flux:heading>
                 <flux:text size="xl" class="font-semibold text-gray-900 dark:text-white">{{ $odometerAnalytics['readings_count'] }}</flux:text>
             </flux:card>
             <flux:card class="p-4 sm:p-6">
-                <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Avg Distance/Trip</flux:heading>
+                <flux:heading size="sm" class="text-gray-500 dark:text-gray-400 font-medium">Avg Distance/Trip</flux:heading>
                 <flux:text size="xl" class="font-semibold text-gray-900 dark:text-white">{{ number_format($odometerAnalytics['average_distance'], 1) }} km</flux:text>
             </flux:card>
             <flux:card class="p-4 sm:p-6">
-                <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Odometer Range</flux:heading>
+                <flux:heading size="sm" class="text-gray-500 dark:text-gray-400 font-medium">Odometer Range</flux:heading>
                 <flux:text size="xl" class="font-semibold text-gray-900 dark:text-white">
                     {{ number_format($odometerAnalytics['odometer_range']['min']) }} - {{ number_format($odometerAnalytics['odometer_range']['max']) }} km
                 </flux:text>
@@ -543,15 +528,15 @@
     @if($analyticsType === 'maintenance' && $selectedVehicle && $maintenanceAnalytics)
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <flux:card class="p-4 sm:p-6">
-                <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Total Cost</flux:heading>
+                <flux:heading size="sm" class="text-gray-500 dark:text-gray-400 font-medium">Total Cost</flux:heading>
                 <flux:text size="xl" class="font-semibold text-gray-900 dark:text-white">RM{{ number_format($maintenanceAnalytics['total_cost'], 2) }}</flux:text>
             </flux:card>
             <flux:card class="p-4 sm:p-6">
-                <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Upcoming Maintenance</flux:heading>
+                <flux:heading size="sm" class="text-gray-500 dark:text-gray-400 font-medium">Upcoming Maintenance</flux:heading>
                 <flux:text size="xl" class="font-semibold text-yellow-600">{{ count($maintenanceAnalytics['upcoming_maintenance']) }}</flux:text>
             </flux:card>
             <flux:card class="p-4 sm:p-6">
-                <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Overdue Maintenance</flux:heading>
+                <flux:heading size="sm" class="text-gray-500 dark:text-gray-400 font-medium">Overdue Maintenance</flux:heading>
                 <flux:text size="xl" class="font-semibold text-red-600">{{ count($maintenanceAnalytics['overdue_maintenance']) }}</flux:text>
             </flux:card>
         </div>
@@ -648,40 +633,8 @@
             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
             </svg>            
-            <flux:heading class="mt-2">Select a Vehicle</flux:heading>
+            <flux:heading size="sm" class="mt-2">Select a Vehicle</flux:heading>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Choose a vehicle from the dropdown above to view detailed {{ $analyticsType }} analytics.</p>
         </flux:card>
     @endif
-
-    @script
-    <script>
-        $wire.on('analytics-export', (data) => {
-            const params = new URLSearchParams({
-                vehicle_id: data.vehicle_id || '',
-                date_from: data.date_from || '',
-                date_to: data.date_to || '',
-                analytics_type: data.analytics_type || 'overview',
-                format: data.format || 'excel'
-            });
-
-            // Create export URL
-            const exportUrl = `/vehicle-analytics/export?${params}`;
-            
-            // Debug logging
-            console.log('Export data received:', data);
-            console.log('Constructed URL:', exportUrl);
-            console.log('Format parameter:', data.format);
-            
-            // Download the file
-            window.open(exportUrl, '_blank');
-            
-            // Show success message
-            $flux.toast({
-                title: 'Export Started',
-                body: `${data.format.toUpperCase()} export is being generated...`,
-                variant: 'success'
-            });
-        });
-    </script>
-    @endscript
 </div>

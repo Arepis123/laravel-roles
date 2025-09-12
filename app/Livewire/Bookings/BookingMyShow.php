@@ -32,7 +32,12 @@ class BookingMyShow extends Component
     public string $currentOdometer = '';
     public bool $gasFilledUp = false;
     public string $gasAmount = '';
+    public string $gasLiters = '';
     public string $fuelLevel = '4';
+    
+    // Parking location properties  
+    public $parkingLevel = null;
+    public bool $isReservedSlot = false;
 
     protected $assetTypeConfig = [
         'meeting_room' => [
@@ -73,7 +78,14 @@ class BookingMyShow extends Component
             $this->currentOdometer = $doneDetails['odometer'] ?? '';
             $this->gasFilledUp = $doneDetails['gas_filled'] ?? false;
             $this->gasAmount = $doneDetails['gas_amount'] ?? '';
+            $this->gasLiters = $doneDetails['gas_liters'] ?? '';
             $this->fuelLevel = $doneDetails['fuel_level'] ?? '4';
+        }
+        
+        // Load existing parking data only if booking is already completed
+        if ($this->booking->status === 'done' && $this->booking->parking_level) {
+            $this->parkingLevel = $this->booking->parking_level;
+            $this->isReservedSlot = $this->booking->is_reserved_slot ?? false;
         }
     }
 
@@ -95,7 +107,10 @@ class BookingMyShow extends Component
         $this->currentOdometer = '';
         $this->gasFilledUp = false;
         $this->gasAmount = '';
+        $this->gasLiters = '';
         $this->fuelLevel = '4';
+        $this->parkingLevel = null;
+        $this->isReservedSlot = false;
     }
 
     /**
@@ -114,20 +129,36 @@ class BookingMyShow extends Component
     {
         // Validation based on asset type
         if ($this->asset_type === 'vehicle') {
-            $this->validate([
+            $validationRules = [
                 'currentOdometer' => 'required|numeric|min:0',
                 'fuelLevel' => 'required|integer|min:1|max:8',
                 'gasAmount' => $this->gasFilledUp ? 'required|numeric|min:0' : 'nullable',
-            ], [
+                'gasLiters' => $this->gasFilledUp ? 'required|numeric|min:0' : 'nullable',
+            ];
+            
+            $validationMessages = [
                 'currentOdometer.required' => 'Current odometer reading is required.',
                 'currentOdometer.numeric' => 'Odometer must be a valid number.',
                 'fuelLevel.required' => 'Fuel level is required.',
                 'fuelLevel.integer' => 'Fuel level must be a valid number.',
                 'fuelLevel.min' => 'Fuel level must be at least 1.',
                 'fuelLevel.max' => 'Fuel level must be at most 8.',
-                'gasAmount.required' => 'Gas amount is required when gas filled up is checked.',
-                'gasAmount.numeric' => 'Gas amount must be a valid number.',
-            ]);
+                'gasAmount.required' => 'Fuel cost is required when fuel was filled up.',
+                'gasAmount.numeric' => 'Fuel cost must be a valid number.',
+                'gasLiters.required' => 'Fuel amount in liters is required when fuel was filled up.',
+                'gasLiters.numeric' => 'Fuel amount must be a valid number.',
+            ];
+            
+            // Add parking validation if required
+            if ($this->isParkingRequired()) {
+                $validationRules['parkingLevel'] = 'required|integer|min:1|max:5';
+                $validationMessages['parkingLevel.required'] = 'Parking level is required.';
+                $validationMessages['parkingLevel.integer'] = 'Parking level must be a valid number.';
+                $validationMessages['parkingLevel.min'] = 'Parking level must be at least 1.';
+                $validationMessages['parkingLevel.max'] = 'Parking level must be at most 5.';
+            }
+            
+            $this->validate($validationRules, $validationMessages);
         } else {
             // For meeting room and IT assets
             $this->validate([
@@ -154,11 +185,12 @@ class BookingMyShow extends Component
             ]);
 
             // Save fuel log if gas was filled
-            if ($this->gasFilledUp && $this->gasAmount) {
+            if ($this->gasFilledUp && $this->gasAmount && $this->gasLiters) {
                 VehicleFuelLog::create([
                     'booking_id' => $this->booking->id,
                     'vehicle_id' => $this->booking->asset_id,
                     'fuel_cost' => $this->gasAmount,
+                    'fuel_amount' => $this->gasLiters,
                     'fuel_type' => 'petrol', // Default to petrol, can be made dynamic later
                     'odometer_at_fill' => $this->currentOdometer,
                     'filled_by' => auth()->id(),
@@ -184,10 +216,19 @@ class BookingMyShow extends Component
             ];
         }
 
-        // Update booking with done details
-        $this->booking->update([
+        // Prepare update data
+        $updateData = [
             'done_details' => $doneDetails
-        ]);
+        ];
+
+        // Add parking data if required and provided
+        if ($this->asset_type === 'vehicle' && $this->isParkingRequired() && $this->parkingLevel) {
+            $updateData['parking_level'] = $this->parkingLevel;
+            $updateData['is_reserved_slot'] = $this->isReservedSlot;
+        }
+
+        // Update booking with done details and parking data
+        $this->booking->update($updateData);
 
         // Close modal
         $this->closeDoneModal();
@@ -477,9 +518,31 @@ class BookingMyShow extends Component
         return [
             'odometer_reading' => $odometerLog ? $odometerLog->odometer_reading : null,
             'fuel_filled' => $fuelLog ? true : false,
+            'fuel_cost' => $fuelLog ? $fuelLog->fuel_cost : null,
             'fuel_amount' => $fuelLog ? $fuelLog->fuel_amount : null,
             'fuel_level' => $this->booking->done_details['fuel_level'] ?? null,
         ];
+    }
+
+    /**
+     * Check if parking location is required for this booking
+     */
+    public function isParkingRequired(): bool
+    {
+        if ($this->asset_type !== 'vehicle') {
+            return false;
+        }
+
+        $vehicle = Vehicle::find($this->booking->asset_id);
+        return $vehicle && $vehicle->parking_required;
+    }
+
+    /**
+     * Get available parking levels
+     */
+    public function getParkingLevels(): array
+    {
+        return [1, 2, 3, 4, 5];
     }
 
     public function render()

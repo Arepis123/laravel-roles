@@ -12,11 +12,30 @@ class Logout
      */
     public function __invoke()
     {
-        Auth::guard('web')->logout();
+        try {
+            // Get current user before logout (for any cleanup if needed)
+            $user = Auth::user();
+            
+            // Logout the user
+            Auth::guard('web')->logout();
 
-        Session::invalidate();
-        Session::regenerateToken();
+            // Clear session data with error handling
+            if (Session::isStarted()) {
+                Session::invalidate();
+                Session::regenerateToken();
+            }
 
-        return redirect('/');
+            // Force garbage collection to clean up session
+            Session::save();
+            
+        } catch (\Exception $e) {
+            // Log the error but continue with redirect
+            \Log::error('Logout error: ' . $e->getMessage());
+            
+            // Force clear auth even if session fails
+            Auth::forgetUser();
+        }
+
+        return redirect('/')->with('message', 'You have been logged out successfully.');
     }
 }

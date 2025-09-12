@@ -476,6 +476,7 @@ class BookingShow extends Component
         return [
             'odometer_reading' => $odometerLog ? $odometerLog->odometer_reading : null,
             'fuel_filled' => $fuelLog ? true : false,
+            'fuel_cost' => $fuelLog ? $fuelLog->fuel_cost : null,
             'fuel_amount' => $fuelLog ? $fuelLog->fuel_amount : null,
             'fuel_level' => $this->booking->done_details['fuel_level'] ?? null,
         ];

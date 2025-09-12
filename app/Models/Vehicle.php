@@ -7,11 +7,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Vehicle extends Model
 {
-    protected $fillable = ['model', 'plate_number', 'capacity', 'driver_name', 'notes', 'status', 'allowed_positions'];
+    protected $fillable = ['model', 'plate_number', 'capacity', 'driver_name', 'notes', 'status', 'allowed_positions', 'parking_required'];
 
     protected $casts = [
         'capacity' => 'integer',
-        'allowed_positions' => 'array'
+        'allowed_positions' => 'array',
+        'parking_required' => 'boolean'
     ];
 
     /**
@@ -167,7 +168,8 @@ class Vehicle extends Model
      */
     public function isAvailableForPosition($position)
     {
-        if (empty($this->allowed_positions)) {
+        // If allowed_positions is null or empty array, available to all positions
+        if (is_null($this->allowed_positions) || empty($this->allowed_positions)) {
             return true;
         }
         
@@ -181,7 +183,7 @@ class Vehicle extends Model
     
     public function getAllowedPositionsText()
     {
-        if (empty($this->allowed_positions)) {
+        if (is_null($this->allowed_positions) || empty($this->allowed_positions)) {
             return 'All positions';
         }
         
@@ -197,6 +199,8 @@ class Vehicle extends Model
     {
         return $query->where(function($q) use ($position) {
             $q->whereNull('allowed_positions')
+              ->orWhere('allowed_positions', '[]')
+              ->orWhere('allowed_positions', 'null')
               ->orWhereJsonContains('allowed_positions', $position);
         });
     }
@@ -219,10 +223,31 @@ class Vehicle extends Model
             'odometer_data' => $this->getOdometerDataForPeriod($startDate, $endDate),
             'maintenance_data' => $this->getMaintenanceDataForPeriod($startDate, $endDate),
             'booking_stats' => [
-                'total_bookings' => $this->bookings()->count(),
-                'completed_bookings' => $this->bookings()->where('status', 'done')->count()
+                'total_bookings' => $this->getBookingsInDateRange($startDate, $endDate)->count(),
+                'completed_bookings' => $this->getBookingsInDateRange($startDate, $endDate)->where('status', 'done')->count()
             ]
         ];
+    }
+    
+    /**
+     * Get bookings in date range
+     */
+    public function getBookingsInDateRange($startDate, $endDate)
+    {
+        if (!$startDate || !$endDate) {
+            return $this->bookings();
+        }
+        
+        return $this->bookings()->where(function($q) use ($startDate, $endDate) {
+            $q->whereDate('start_time', '>=', $startDate)
+              ->whereDate('start_time', '<=', $endDate)
+              ->orWhereDate('end_time', '>=', $startDate)
+              ->whereDate('end_time', '<=', $endDate)
+              ->orWhere(function($dateQ) use ($startDate, $endDate) {
+                  $dateQ->whereDate('start_time', '<=', $startDate)
+                        ->whereDate('end_time', '>=', $endDate);
+              });
+        });
     }
 }
 

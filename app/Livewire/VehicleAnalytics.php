@@ -19,6 +19,9 @@ class VehicleAnalytics extends Component
     public $dateTo;
     public $analyticsType = 'overview'; // overview, fuel, odometer, maintenance
     
+    // UI States
+    public $showFuelDetails = false;
+    
     // Filters
     public $fuelType = '';
     public $maintenanceType = '';
@@ -26,8 +29,8 @@ class VehicleAnalytics extends Component
 
     public function mount()
     {
-        $this->dateFrom = now()->subMonth()->format('Y-m-d');
-        $this->dateTo = now()->format('Y-m-d');
+        $this->dateFrom = now()->startOfYear()->format('Y-m-d'); // January 1st of current year
+        $this->dateTo = now()->endOfYear()->format('Y-m-d'); // December 31st of current year
     }
 
     public function updatedSelectedVehicle()
@@ -44,6 +47,11 @@ class VehicleAnalytics extends Component
     {
         $this->analyticsType = $type;
         $this->resetPage();
+    }
+
+    public function toggleFuelDetails()
+    {
+        $this->showFuelDetails = !$this->showFuelDetails;
     }
 
     public function getVehiclesProperty()
@@ -71,10 +79,24 @@ class VehicleAnalytics extends Component
         return [
             'total_vehicles' => Vehicle::count(),
             'active_vehicles' => Vehicle::whereHas('bookings', function($q) use ($startDate, $endDate) {
-                $q->whereBetween('created_at', [$startDate, $endDate]);
+                $q->where(function($subQ) use ($startDate, $endDate) {
+                    $subQ->whereDate('start_time', '>=', $startDate)
+                         ->whereDate('start_time', '<=', $endDate)
+                         ->orWhereDate('end_time', '>=', $startDate)
+                         ->whereDate('end_time', '<=', $endDate)
+                         ->orWhere(function($dateQ) use ($startDate, $endDate) {
+                             $dateQ->whereDate('start_time', '<=', $startDate)
+                                   ->whereDate('end_time', '>=', $endDate);
+                         });
+                });
             })->count(),
-            'total_fuel_consumed' => VehicleFuelLog::inDateRange($startDate, $endDate)->sum('fuel_amount'),
-            'total_fuel_cost' => VehicleFuelLog::inDateRange($startDate, $endDate)->sum('fuel_cost'),
+            'total_fuel_consumed' => VehicleFuelLog::inDateRange($startDate, $endDate)
+                ->whereNotNull('fuel_amount')
+                ->sum('fuel_amount'),
+            'total_fuel_cost' => VehicleFuelLog::inDateRange($startDate, $endDate)
+                ->whereNotNull('fuel_cost')
+                ->sum('fuel_cost'),
+            'fuel_by_type' => $this->getFuelStatsByType($startDate, $endDate),
             'total_distance_traveled' => VehicleOdometerLog::inDateRange($startDate, $endDate)->sum('distance_traveled'),
             'total_maintenance_cost' => VehicleMaintenanceLog::inDateRange($startDate, $endDate)->sum('cost'),
             'vehicles_needing_maintenance' => Vehicle::whereHas('maintenanceLogs', function($q) {
@@ -86,6 +108,28 @@ class VehicleAnalytics extends Component
                   ->where('next_maintenance_due', '<', now());
             })->count()
         ];
+    }
+
+    public function getFuelStatsByType($startDate, $endDate)
+    {
+        return VehicleFuelLog::inDateRange($startDate, $endDate)
+            ->whereNotNull('fuel_amount')
+            ->whereNotNull('fuel_cost')
+            ->whereNotNull('fuel_type')
+            ->where('fuel_amount', '>', 0)
+            ->selectRaw('
+                fuel_type,
+                SUM(fuel_amount) as total_amount,
+                SUM(fuel_cost) as total_cost,
+                COUNT(*) as fill_count,
+                CASE 
+                    WHEN SUM(fuel_amount) > 0 THEN SUM(fuel_cost) / SUM(fuel_amount)
+                    ELSE 0
+                END as avg_cost_per_liter
+            ')
+            ->groupBy('fuel_type')
+            ->get()
+            ->keyBy('fuel_type');
     }
 
     public function getTopPerformingVehiclesProperty()
@@ -121,11 +165,14 @@ class VehicleAnalytics extends Component
 
         $logs = $query->with(['filledBy', 'booking'])->orderBy('filled_at', 'desc')->get();
 
+        $avgFuelAmount = $logs->avg('fuel_amount');
+        $avgFuelCost = $logs->avg('fuel_cost');
+
         return [
             'logs' => $logs,
             'total_fuel' => $logs->sum('fuel_amount'),
             'total_cost' => $logs->sum('fuel_cost'),
-            'average_cost_per_liter' => $logs->avg('fuel_cost') / $logs->avg('fuel_amount'),
+            'average_cost_per_liter' => ($avgFuelAmount && $avgFuelAmount > 0) ? round($avgFuelCost / $avgFuelAmount, 2) : null,
             'fuel_sessions' => $logs->count(),
             'average_efficiency' => VehicleFuelLog::getAverageFuelEfficiency($this->selectedVehicle, $this->dateFrom, $this->dateTo)
         ];

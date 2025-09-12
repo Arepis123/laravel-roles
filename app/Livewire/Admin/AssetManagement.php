@@ -59,6 +59,9 @@ class AssetManagement extends Component
 
     #[Validate('nullable|array')]
     public $allowed_positions = [];
+
+    #[Validate('nullable|boolean')]
+    public $parking_required = false;
     
     // IT Asset specific fields
     #[Validate('nullable|string|max:255')]
@@ -454,6 +457,7 @@ class AssetManagement extends Component
                 $this->driver_name = $asset->driver_name;
                 $this->vehicle_notes = $asset->notes;
                 $this->allowed_positions = $asset->allowed_positions ?? [];
+                $this->parking_required = $asset->parking_required ?? false;
                 break;
                 
             case 'it_asset':
@@ -517,7 +521,8 @@ class AssetManagement extends Component
                     'capacity' => $this->vehicle_capacity,
                     'driver_name' => $this->driver_name,
                     'notes' => $this->vehicle_notes,
-                    'allowed_positions' => $this->allowed_positions,
+                    'allowed_positions' => empty($this->allowed_positions) ? null : $this->allowed_positions,
+                    'parking_required' => $this->parking_required,
                 ]);
                 break;
                 
@@ -553,7 +558,8 @@ class AssetManagement extends Component
                     'capacity' => $this->vehicle_capacity,
                     'driver_name' => $this->driver_name,
                     'notes' => $this->vehicle_notes,
-                    'allowed_positions' => $this->allowed_positions,
+                    'allowed_positions' => empty($this->allowed_positions) ? null : $this->allowed_positions,
+                    'parking_required' => $this->parking_required,
                 ]);
                 break;
                 
@@ -684,6 +690,7 @@ class AssetManagement extends Component
         $this->driver_name = '';
         $this->vehicle_notes = '';
         $this->allowed_positions = [];
+        $this->parking_required = false;
         
         // IT Asset fields
         $this->it_asset_name = '';

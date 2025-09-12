@@ -61,7 +61,7 @@
                 </div>
                 <div class="ml-4">
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Cost</h3>
-                    <p class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">${{ number_format($stats['total_cost'], 2) }}</p>
+                    <p class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">RM{{ number_format($stats['total_cost'], 2) }}</p>
                 </div>
             </div>
         </div>
@@ -90,7 +90,7 @@
                 </div>
                 <div class="ml-4">
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Avg Cost/Service</h3>
-                    <p class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">${{ number_format($stats['avg_cost_per_service'], 2) }}</p>
+                    <p class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">RM{{ number_format($stats['avg_cost_per_service'], 2) }}</p>
                 </div>
             </div>
         </div>
@@ -116,50 +116,71 @@
     </div>
 
     <!-- Filters -->
-    <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-700 p-6 mb-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Filters</h3>
-        
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
-            <flux:field>
-                <flux:label>Vehicle</flux:label>
-                <flux:select wire:model.live="filterVehicle" placeholder="All Vehicles">
-                    @foreach($vehicles as $vehicle)
-                        <flux:select.option value="{{ $vehicle->id }}">{{ $vehicle->model }} ({{ $vehicle->license_plate }})</flux:select.option>
-                    @endforeach
-                </flux:select>
-            </flux:field>
+    <div class="mb-6 mx-2">
+        <flux:accordion>
+            <flux:accordion.item>
+                <flux:accordion.heading>
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                        </svg>
+                        Filters & Export
+                    </span>
+                </flux:accordion.heading>
+                <flux:accordion.content>
+                    <div class="space-y-4 pt-4 mx-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                            <flux:field>
+                                <flux:label>Vehicle</flux:label>
+                                <flux:select variant="listbox" wire:model.live="filterVehicle" placeholder="All Vehicles">
+                                    @foreach($vehicles as $vehicle)
+                                        <flux:select.option value="{{ $vehicle->id }}">{{ $vehicle->model }} ({{ $vehicle->plate_number }})</flux:select.option>
+                                    @endforeach
+                                </flux:select>
+                            </flux:field>
 
-            <flux:field>
-                <flux:label>Maintenance Type</flux:label>
-                <flux:select wire:model.live="filterMaintenanceType" placeholder="All Types">
-                    <flux:select.option value="routine">Routine</flux:select.option>
-                    <flux:select.option value="repair">Repair</flux:select.option>
-                    <flux:select.option value="inspection">Inspection</flux:select.option>
-                    <flux:select.option value="emergency">Emergency</flux:select.option>
-                    <flux:select.option value="tire">Tire</flux:select.option>
-                    <flux:select.option value="oil_change">Oil Change</flux:select.option>
-                    <flux:select.option value="brake">Brake</flux:select.option>
-                    <flux:select.option value="engine">Engine</flux:select.option>
-                    <flux:select.option value="electrical">Electrical</flux:select.option>
-                    <flux:select.option value="bodywork">Bodywork</flux:select.option>
-                </flux:select>
-            </flux:field>
+                            <flux:field>
+                                <flux:label>Maintenance Type</flux:label>
+                                <flux:select variant="listbox" wire:model.live="filterMaintenanceType" placeholder="All Types">
+                                    <flux:select.option value="service">Service</flux:select.option>
+                                    <flux:select.option value="repair">Repair</flux:select.option>
+                                    <flux:select.option value="inspection">Inspection</flux:select.option>
+                                    <flux:select.option value="oil_change">Oil Change</flux:select.option>
+                                    <flux:select.option value="tire_change">Tire Change</flux:select.option>
+                                    <flux:select.option value="brake_service">Brake Service</flux:select.option>
+                                    <flux:select.option value="other">Other</flux:select.option>
+                                </flux:select>
+                            </flux:field>
 
-            <flux:field>
-                <flux:label>From Date</flux:label>
-                <flux:input type="date" wire:model.live="filterDateFrom" />
-            </flux:field>
+                            <flux:field>
+                                <flux:label>From Date</flux:label>
+                                <flux:date-picker wire:model.live="filterDateFrom" with-today/>
+                            </flux:field>
 
-            <flux:field>
-                <flux:label>To Date</flux:label>
-                <flux:input type="date" wire:model.live="filterDateTo" />
-            </flux:field>
-        </div>
+                            <flux:field>
+                                <flux:label>To Date</flux:label>
+                                <flux:date-picker wire:model.live="filterDateTo" with-today/>
+                            </flux:field>
+                        </div>
 
-        <div class="flex gap-4 *:gap-x-2">
-            <flux:checkbox wire:model.live="filterUpcoming" label="Upcoming Maintenance" />
-            <flux:checkbox wire:model.live="filterOverdue" label="Overdue Maintenance" />
-        </div>
+                        <div class="flex gap-4 *:gap-x-2">
+                            <flux:checkbox wire:model.live="filterUpcoming" label="Upcoming Maintenance" />
+                            <flux:checkbox wire:model.live="filterOverdue" label="Overdue Maintenance" />
+                        </div>
+
+                        <!-- Export Buttons -->
+                        <div class="flex gap-3 pt-4 border-t border-gray-200 dark:border-zinc-700">
+                            <flux:button variant="filled" size="sm" wire:click="exportMaintenanceData('excel')" icon="document-arrow-down" class="bg-green-600 hover:bg-green-700">
+                                Export Excel
+                            </flux:button>
+                            <flux:button variant="filled" size="sm" wire:click="exportMaintenanceData('pdf')" icon="document-arrow-down" class="bg-red-600 hover:bg-red-700">
+                                Export PDF
+                            </flux:button>
+                        </div>
+                    </div>
+                </flux:accordion.content>
+            </flux:accordion.item>
+        </flux:accordion>
     </div>
 
     <!-- Table -->
@@ -253,46 +274,44 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @php
                                     $badgeColor = match($log->maintenance_type) {
-                                        'routine' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300',
-                                        'repair', 'emergency' => 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300',
-                                        'inspection' => 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
-                                        'oil_change' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300',
-                                        default => 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300'
+                                        'service' => 'lime',
+                                        'repair' => 'rose',
+                                        'inspection' => 'yellow',
+                                        'oil_change' => 'emerald',
+                                        'tire_change' => 'cyan',
+                                        'brake_service' => 'indigo',
+                                        default => 'zinc'
                                     };
                                 @endphp
-                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $badgeColor }}">
-                                    {{ ucfirst(str_replace('_', ' ', $log->maintenance_type)) }}
-                                </span>
+                                <flux:badge size="sm" color="{{ $badgeColor }}">{{ ucfirst(str_replace('_', ' ', $log->maintenance_type)) }}</flux:badge>
                             </td>
                             
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if($log->status === 'ongoing')
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300">
-                                        🔧 Ongoing
-                                    </span>
+                                    <flux:text>Ongoing</flux:text>
+                                @elseif($log->status === 'scheduled')
+                                    <flux:text class="text-gray-900 dark:text-white">Scheduled</flux:text>
                                 @else
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">
-                                        ✅ Completed
-                                    </span>
+                                    <flux:text class="text-gray-900 dark:text-white">Completed</flux:text>
                                 @endif
                             </td>
                             
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            <td class="px-6 py-4 whitespace-nowrap">
                                 @if($log->cost)
-                                    ${{ number_format($log->cost, 2) }}
+                                    <flux:text class="text-gray-900 dark:text-white">RM{{ number_format($log->cost, 2) }}</flux:text>
                                 @else
-                                    <span class="text-gray-400">-</span>
+                                    <flux:text class="text-gray-900 dark:text-white">-</flux:text>
                                 @endif
                             </td>
                             
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                {{ $log->service_provider ?: '-' }}
+                            <td class="px-6 py-4 whitespace-nowrap">                                
+                                <flux:text class="text-gray-900 dark:text-white">{{ $log->service_provider ?: '-' }}</flux:text>
                             </td>
                             
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 @if($log->next_maintenance_due)
                                     @php
-                                        $daysUntilDue = now()->diffInDays($log->next_maintenance_due, false);
+                                        $daysUntilDue = floor(now()->diffInDays($log->next_maintenance_due, false));
                                     @endphp
                                     <div class="
                                         {{ $daysUntilDue < 0 ? 'text-red-600 font-medium' : '' }}
@@ -314,7 +333,6 @@
                                 <div class="flex space-x-2">
                                     <button 
                                         wire:click="editLog({{ $log->id }})" 
-                                        class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
                                     >
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -336,7 +354,7 @@
                         <tr>
                             <td colspan="8" class="px-6 py-12 text-center">
                                 <div class="text-gray-500 dark:text-gray-400">
-                                    <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="mx-auto h-8 w-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
                                     </svg>
                                     <h3 class="font-medium text-gray-900 dark:text-white mb-1">No maintenance records</h3>
@@ -360,14 +378,24 @@
     <!-- FluxUI Modal -->
     <flux:modal name="maintenance-form" class="max-w-4xl" variant="flyout">
         <form wire:submit="saveLog">
-            <flux:heading size="lg" class="mb-6">
+            <flux:heading size="lg" class="mb-4">
                 {{ $editingLog ? 'Edit Maintenance Record' : 'Add New Maintenance Record' }}
             </flux:heading>
+
+            @if(!$editingLog)
+                <!-- Mode Toggle -->
+                <div class="mb-6 p-4 bg-gray-50 dark:bg-zinc-800 rounded-lg border">
+                    <flux:checkbox wire:model.live="isScheduleMode" label="Schedule Future Maintenance" />
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {{ $isScheduleMode ? 'Schedule maintenance for a future date without logging completed work' : 'Log completed or ongoing maintenance work' }}
+                    </p>
+                </div>
+            @endif
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <flux:field>
                     <flux:label>Vehicle <span class="text-red-500 ms-1">*</span></flux:label>
-                    <flux:select wire:model.live="vehicle_id" placeholder="Select Vehicle" >
+                    <flux:select variant="listbox" wire:model.live="vehicle_id" placeholder="Select Vehicle" >
                         @foreach($vehicles as $vehicle)
                             <flux:select.option value="{{ $vehicle->id }}">{{ $vehicle->model }} ({{ $vehicle->plate_number }})</flux:select.option>
                         @endforeach
@@ -377,17 +405,14 @@
 
                 <flux:field>
                     <flux:label>Maintenance Type <span class="text-red-500 ms-1">*</span></flux:label>
-                    <flux:select wire:model.live="maintenance_type" placeholder="Select Type" >
-                        <flux:select.option value="routine">Routine</flux:select.option>
+                    <flux:select variant="listbox" wire:model.live="maintenance_type" placeholder="Select Type" >
+                        <flux:select.option value="service">Service</flux:select.option>
                         <flux:select.option value="repair">Repair</flux:select.option>
                         <flux:select.option value="inspection">Inspection</flux:select.option>
-                        <flux:select.option value="emergency">Emergency</flux:select.option>
-                        <flux:select.option value="tire">Tire</flux:select.option>
                         <flux:select.option value="oil_change">Oil Change</flux:select.option>
-                        <flux:select.option value="brake">Brake</flux:select.option>
-                        <flux:select.option value="engine">Engine</flux:select.option>
-                        <flux:select.option value="electrical">Electrical</flux:select.option>
-                        <flux:select.option value="bodywork">Bodywork</flux:select.option>
+                        <flux:select.option value="tire_change">Tire Change</flux:select.option>
+                        <flux:select.option value="brake_service">Brake Service</flux:select.option>
+                        <flux:select.option value="other">Other</flux:select.option>
                     </flux:select>
                     <flux:error name="maintenance_type" />
                 </flux:field>
@@ -400,8 +425,8 @@
             </flux:field>
 
             <flux:field class="mb-4">
-                <flux:label>Description <span class="text-red-500 ms-1">*</span></flux:label>
-                <flux:textarea wire:model="description" placeholder="Describe the maintenance work" rows="3" maxlength="500"  />
+                <flux:label>Description @if(!$isScheduleMode)<span class="text-red-500 ms-1">*</span>@endif</flux:label>
+                <flux:textarea wire:model="description" placeholder="{{ $isScheduleMode ? 'Describe the scheduled maintenance (optional)' : 'Describe the maintenance work' }}" rows="3" maxlength="500" />
                 <flux:error name="description" />
             </flux:field>
 
@@ -420,8 +445,8 @@
             </div>
 
             <flux:field class="mb-4">
-                <flux:label>Performed By <span class="text-red-500 ms-1">*</span></flux:label>
-                <flux:input wire:model="performed_by" placeholder="Enter technician or person who performed maintenance" maxlength="255"  />
+                <flux:label>{{ $isScheduleMode ? 'Assigned To' : 'Performed By' }} @if(!$isScheduleMode)<span class="text-red-500 ms-1">*</span>@endif</flux:label>
+                <flux:input wire:model="performed_by" placeholder="{{ $isScheduleMode ? 'Who will perform this maintenance (optional)' : 'Enter technician or person who performed maintenance' }}" maxlength="255" />
                 <flux:error name="performed_by" />
             </flux:field>
 
@@ -434,7 +459,7 @@
 
                 <flux:field>
                     <flux:label>Booking<span class="text-gray-500 ms-1">(Optional)</span></flux:label>
-                    <flux:select wire:model="booking_id" placeholder="Select Booking">
+                    <flux:select variant="listbox" wire:model="booking_id" placeholder="Select Booking">
                         @foreach($bookings as $booking)
                             <flux:select.option value="{{ $booking->id }}">{{ $booking->user->name ?? 'N/A' }} - #{{ $booking->id }}</flux:select.option>
                         @endforeach
@@ -445,36 +470,52 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <flux:field>
-                    <flux:label>Performed At <span class="text-red-500 ms-1">*</span></flux:label>
-                    <flux:input type="datetime-local" wire:model="performed_at"  />
+                    <flux:label>{{ $isScheduleMode ? 'Scheduled For' : 'Performed At' }} <span class="text-red-500 ms-1">*</span></flux:label>
+                    <flux:input type="datetime-local" wire:model="performed_at" />
                     <flux:error name="performed_at" />
+                    @if($isScheduleMode)
+                        <div class="text-xs text-gray-600 dark:text-gray-400 mt-1">Select a future date and time</div>
+                    @endif
                 </flux:field>
 
-                <flux:field>
-                    <flux:label>Next Maintenance Due</flux:label>
-                    <flux:input type="date" wire:model="next_maintenance_due" />
-                    <flux:error name="next_maintenance_due" />
-                </flux:field>
+                @if(!$isScheduleMode)
+                    <flux:field>
+                        <flux:label>Next Maintenance Due</flux:label>
+                        <flux:date-picker wire:model="next_maintenance_due" with-today/>
+                        <flux:error name="next_maintenance_due" />
+                    </flux:field>
+                @endif
             </div>
 
-            <flux:field class="mb-4">
-                <!-- <flux:label>Maintenance Status <span class="text-red-500 ms-1">*</span></flux:label> -->
-                <flux:heading class="flex items-center">
-                    Maintenance Status <span class="text-red-500 ms-1">*</span>
-                    <flux:tooltip toggleable>
-                        <flux:button icon="information-circle" size="sm" variant="ghost"/>
-                        <flux:tooltip.content class="max-w-[20rem] space-y-2">
-                            <p>Ongoing - Vehicle will be unavailable for booking</p>
-                            <p>Completed - Vehicle will be available for booking</p>
-                        </flux:tooltip.content>
-                    </flux:tooltip>
-                </flux:heading>                
-                <flux:select wire:model="status" >
-                    <flux:select.option value="ongoing">Ongoing</flux:select.option>
-                    <flux:select.option value="completed">Completed</flux:select.option>
-                </flux:select>
-                <flux:error name="status" />
-            </flux:field>
+            @if(!$isScheduleMode)
+                <flux:field class="mb-4">
+                    <flux:heading class="flex items-center">
+                        Maintenance Status <span class="text-red-500 ms-1">*</span>
+                        <flux:tooltip toggleable>
+                            <flux:button icon="information-circle" size="sm" variant="ghost"/>
+                            <flux:tooltip.content class="max-w-[20rem] space-y-2">
+                                <p>Ongoing - Vehicle will be unavailable for booking</p>
+                                <p>Completed - Vehicle will be available for booking</p>
+                            </flux:tooltip.content>
+                        </flux:tooltip>
+                    </flux:heading>                
+                    <flux:select variant="listbox" wire:model="status" >
+                        <flux:select.option value="ongoing">Ongoing</flux:select.option>
+                        <flux:select.option value="completed">Completed</flux:select.option>
+                    </flux:select>
+                    <flux:error name="status" />
+                </flux:field>
+            @else
+                <!-- Schedule mode automatically sets status to 'scheduled' -->
+                <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <span class="text-sm font-medium text-blue-800 dark:text-blue-300">This maintenance will be marked as "Scheduled"</span>
+                    </div>
+                </div>
+            @endif
 
             <flux:field class="mb-6">
                 <flux:label>Notes</flux:label>
@@ -501,6 +542,29 @@
 
         $wire.on('close-modal', () => {
             $flux.modal('maintenance-form').close();
+        });
+
+        $wire.on('maintenance-export', (data) => {
+            const params = new URLSearchParams({
+                vehicle_id: data.vehicle_id || '',
+                date_from: data.date_from || '',
+                date_to: data.date_to || '',
+                analytics_type: 'maintenance',
+                format: data.format || 'excel'
+            });
+
+            // Create export URL
+            const exportUrl = `/vehicle-analytics/export?${params}`;
+            
+            // Download the file
+            window.open(exportUrl, '_blank');
+            
+            // Show success message
+            $flux.toast({
+                title: 'Export Started',
+                body: `${data.format.toUpperCase()} export is being generated...`,
+                variant: 'success'
+            });
         });
     </script>
     @endscript

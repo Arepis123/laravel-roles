@@ -49,6 +49,11 @@ Route::get('/user-manual', function () {
     return response()->file(public_path('user-manual.html'));
 });
 
+// Demo route for session expired page
+Route::get('/session-expired-demo', function () {
+    return response()->view('errors.419', [], 419);
+});
+
 Route::get('/process-flow', function () {
     return response()->file(public_path('process-flow.html'));
 });
@@ -109,6 +114,17 @@ Route::middleware(['auth'])->group(function () {
     Route::get('vehicles/odometer', VehicleOdometerManagement::class)->name('vehicles.odometer')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
     Route::get('vehicles/maintenance', VehicleMaintenanceManagement::class)->name('vehicles.maintenance')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
     Route::get('vehicles/analytics', VehicleAnalytics::class)->name('vehicles.analytics')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
+    Route::get('vehicle-analytics/export', [App\Http\Controllers\VehicleAnalyticsController::class, 'export'])->name('vehicle.analytics.export')->middleware('permission:asset.view');
+    
+    // Test route for PDF debugging
+    Route::get('test-pdf', function() {
+        try {
+            $pdf = Barryvdh\DomPDF\Facade\Pdf::loadHTML('<h1>Test PDF</h1><p>This is a test PDF file.</p>');
+            return $pdf->download('test.pdf');
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()]);
+        }
+    })->middleware('auth');
     Route::get('vehicles/{vehicleId}/detail', VehicleDetail::class)->name('vehicles.detail')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
     
     Route::prefix('api')->name('api.')->group(function () {

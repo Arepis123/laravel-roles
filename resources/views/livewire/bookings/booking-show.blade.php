@@ -165,13 +165,33 @@
                             <span class="font-medium">Yes</span>
                         </div>
                         <div class="flex justify-between">
+                            <span class="text-gray-600 dark:text-gray-300">Fuel Cost:</span>
+                            <span class="font-medium">RM {{ number_format($vehicleData['fuel_cost'] ?? 0, 2) }}</span>
+                        </div>
+                        <div class="flex justify-between">
                             <span class="text-gray-600 dark:text-gray-300">Fuel Amount:</span>
-                            <span class="font-medium">RM {{ number_format($vehicleData['fuel_amount'] ?? 0, 2) }}</span>
+                            <span class="font-medium">{{ number_format($vehicleData['fuel_amount'] ?? 0, 1) }} L</span>
                         </div>
                     @else
                         <div class="flex justify-between">
                             <span class="text-gray-600 dark:text-gray-300">Fuel Filled:</span>
                             <span class="font-medium">No</span>
+                        </div>
+                    @endif
+                    
+                    {{-- Parking Information --}}
+                    @if($booking->parking_level)
+                        <div class="pt-3 border-t border-gray-200 dark:border-gray-700">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600 dark:text-gray-300">Parking Level:</span>
+                                <span class="font-medium">Level {{ $booking->parking_level }}</span>
+                            </div>
+                            @if($booking->parking_level == 1 && $booking->is_reserved_slot)
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-300">Reserved Slot:</span>
+                                    <span class="font-medium text-blue-600 dark:text-blue-400">Yes</span>
+                                </div>
+                            @endif
                         </div>
                     @endif
                 </div>
@@ -543,7 +563,7 @@
                 <flux:separator />
 
                 <flux:field>
-                    <flux:label>Remarks *</flux:label>
+                    <flux:label>Remarks</flux:label>
                     <flux:textarea 
                         wire:model="doneRemarks" 
                         rows="4" 
@@ -581,7 +601,7 @@
 
                 <div class="space-y-4">
                     <flux:field>
-                        <flux:label>Current Odometer Reading (km) *</flux:label>
+                        <flux:label>Current Odometer Reading (km)</flux:label>
                         <flux:input 
                             wire:model="currentOdometer" 
                             type="number" 
@@ -595,7 +615,7 @@
 
                     {{-- Fuel Level Slider --}}
                     <flux:field>
-                        <flux:label>Fuel Level *</flux:label>
+                        <flux:label>Fuel Level</flux:label>
                         <div class="space-y-3">
                             <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
                                 <span>Empty (1)</span>
@@ -625,17 +645,17 @@
                     <flux:field>
                         <flux:checkbox 
                             wire:model.live="gasFilledUp" 
-                            label="Gas was filled up"
+                            label="Fuel was filled up"
                         />
                     </flux:field>
 
                     @if($gasFilledUp)
                         <flux:field>
-                            <flux:label>Gas Amount (RM) *</flux:label>
+                            <flux:label>Fuel Amount (RM)</flux:label>
                             <flux:input 
                                 wire:model="gasAmount" 
                                 type="number" 
-                                placeholder="Enter amount spent on gas"
+                                placeholder="Enter amount spent on fuel"
                                 min="0"
                                 step="0.01"
                             />

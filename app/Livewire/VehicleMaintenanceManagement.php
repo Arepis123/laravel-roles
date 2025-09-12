@@ -14,11 +14,12 @@ class VehicleMaintenanceManagement extends Component
     use WithPagination;
 
     public $editingLog = null;
+    public $isScheduleMode = false; // Toggle between log completed vs schedule future
     
     // Form fields
     public $vehicle_id = '';
     public $booking_id = '';
-    public $maintenance_type = 'routine';
+    public $maintenance_type = 'service';
     public $title = '';
     public $description = '';
     public $cost = '';
@@ -42,27 +43,42 @@ class VehicleMaintenanceManagement extends Component
     public $sortField = 'performed_at';
     public $sortDirection = 'desc';
 
-    protected $rules = [
-        'vehicle_id' => 'required|exists:vehicles,id',
-        'maintenance_type' => 'required|in:routine,repair,inspection,emergency,tire,oil_change,brake,engine,electrical,bodywork',
-        'title' => 'required|string|max:255',
-        'description' => 'required|string|max:500',
-        'cost' => 'nullable|numeric|min:0|max:999999.99',
-        'service_provider' => 'nullable|string|max:255',
-        'performed_by' => 'required|string|max:255',
-        'odometer_at_service' => 'nullable|integer|min:0|max:9999999',
-        'performed_at' => 'required|date|before_or_equal:now',
-        'next_maintenance_due' => 'nullable|date|after:performed_at',
-        'notes' => 'nullable|string|max:1000',
-        'booking_id' => 'nullable|exists:bookings,id',
-        'status' => 'required|in:ongoing,completed'
-    ];
+    protected function rules()
+    {
+        $baseRules = [
+            'vehicle_id' => 'required|exists:vehicles,id',
+            'maintenance_type' => 'required|in:service,repair,inspection,oil_change,tire_change,brake_service,other',
+            'title' => 'required|string|max:255',
+            'cost' => 'nullable|numeric|min:0|max:999999.99',
+            'service_provider' => 'nullable|string|max:255',
+            'odometer_at_service' => 'nullable|integer|min:0|max:9999999',
+            'notes' => 'nullable|string|max:1000',
+            'booking_id' => 'nullable|exists:bookings,id',
+            'status' => 'required|in:ongoing,completed,scheduled'
+        ];
+
+        if ($this->isScheduleMode) {
+            // Schedule mode: future maintenance
+            $baseRules['description'] = 'nullable|string|max:500'; // Optional for scheduling
+            $baseRules['performed_by'] = 'nullable|string|max:255'; // Optional for scheduling
+            $baseRules['performed_at'] = 'required|date|after:now'; // Must be future date
+            $baseRules['next_maintenance_due'] = 'nullable|date|after:performed_at';
+        } else {
+            // Log mode: completed/ongoing maintenance
+            $baseRules['description'] = 'required|string|max:500';
+            $baseRules['performed_by'] = 'required|string|max:255';
+            $baseRules['performed_at'] = 'required|date|before_or_equal:now';
+            $baseRules['next_maintenance_due'] = 'nullable|date|after:performed_at';
+        }
+
+        return $baseRules;
+    }
 
     public function mount()
     {
         $this->performed_at = now()->format('Y-m-d\TH:i');
-        $this->filterDateFrom = now()->subMonth()->format('Y-m-d');
-        $this->filterDateTo = now()->format('Y-m-d');
+        $this->filterDateFrom = now()->startOfYear()->format('Y-m-d'); // January 1st of current year
+        $this->filterDateTo = now()->endOfYear()->format('Y-m-d'); // December 31st of current year
     }
 
     public function updatedFilterVehicle()
@@ -96,6 +112,21 @@ class VehicleMaintenanceManagement extends Component
         }
     }
 
+    public function updatedIsScheduleMode()
+    {
+        // When switching modes, adjust form fields accordingly
+        if ($this->isScheduleMode) {
+            // Schedule mode: set future date and scheduled status
+            $this->status = 'scheduled';
+            $this->performed_at = now()->addDays(7)->format('Y-m-d\TH:i'); // Default to next week
+            $this->performed_by = ''; // Not required for scheduling
+        } else {
+            // Log mode: set current/past date and ongoing status
+            $this->status = 'ongoing';
+            $this->performed_at = now()->format('Y-m-d\TH:i');
+        }
+    }
+
     public function updatedMaintenanceType()
     {
         // Auto-suggest next maintenance based on type
@@ -104,10 +135,10 @@ class VehicleMaintenanceManagement extends Component
             
             $nextDue = match($this->maintenance_type) {
                 'oil_change' => $performedDate->addMonths(6),
-                'routine' => $performedDate->addMonths(12),
+                'service' => $performedDate->addMonths(12),
                 'inspection' => $performedDate->addMonths(12),
-                'tire' => $performedDate->addMonths(24),
-                'brake' => $performedDate->addMonths(18),
+                'tire_change' => $performedDate->addMonths(24),
+                'brake_service' => $performedDate->addMonths(18),
                 default => null
             };
             
@@ -132,6 +163,7 @@ class VehicleMaintenanceManagement extends Component
     {
         $this->resetForm();
         $this->editingLog = null;
+        $this->isScheduleMode = false; // Default to log mode
         // Modal is triggered by flux:modal.trigger, no need to dispatch
     }
 
@@ -228,7 +260,7 @@ class VehicleMaintenanceManagement extends Component
         $this->editingLog = null;
         $this->vehicle_id = '';
         $this->booking_id = '';
-        $this->maintenance_type = 'routine';
+        $this->maintenance_type = 'service';
         $this->title = '';
         $this->description = '';
         $this->cost = '';
@@ -238,6 +270,7 @@ class VehicleMaintenanceManagement extends Component
         $this->next_maintenance_due = '';
         $this->notes = '';
         $this->status = 'ongoing';
+        $this->isScheduleMode = false;
         $this->resetErrorBag();
     }
 
@@ -336,6 +369,16 @@ class VehicleMaintenanceManagement extends Component
                 ->count(),
             'maintenance_by_type' => $logs->groupBy('maintenance_type')->map->count()
         ];
+    }
+
+    public function exportMaintenanceData($format = 'excel')
+    {
+        $this->dispatch('maintenance-export', [
+            'vehicle_id' => $this->filterVehicle,
+            'date_from' => $this->filterDateFrom,
+            'date_to' => $this->filterDateTo,
+            'format' => $format
+        ]);
     }
 
     public function render()

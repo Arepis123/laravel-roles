@@ -44,7 +44,7 @@
                 </div>
                 <div class="ml-4">
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Cost</h3>
-                    <p class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">${{ number_format($stats['total_cost'], 2) }}</p>
+                    <p class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">RM{{ number_format($stats['total_cost'], 2) }}</p>
                 </div>
             </div>
         </div>
@@ -73,46 +73,69 @@
                 </div>
                 <div class="ml-4">
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Avg Cost/Liter</h3>
-                    <p class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">${{ number_format($stats['avg_cost_per_liter'], 3) }}</p>
+                    <p class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">RM{{ number_format($stats['avg_cost_per_liter'], 3) }}</p>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-700 p-6 mb-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Filters</h3>
-        
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
-            <flux:field>
-                <flux:label>Vehicle</flux:label>
-                <flux:select wire:model.live="filterVehicle" placeholder="All Vehicles">
-                    @foreach($vehicles as $vehicle)
-                        <flux:select.option value="{{ $vehicle->id }}">{{ $vehicle->model }} ({{ $vehicle->license_plate }})</flux:select.option>
-                    @endforeach
-                </flux:select>
-            </flux:field>
+    <div class="mb-6 mx-2">
+        <flux:accordion>
+            <flux:accordion.item>
+                <flux:accordion.heading>
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5 transition-transform duration-200 accordion-icon" 
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                        </svg>
+                        Filters & Export
+                    </span>
+                </flux:accordion.heading>
+                <flux:accordion.content>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pt-4 mx-3">
+                        <flux:field>
+                            <flux:label>Vehicle</flux:label>
+                            <flux:select variant="listbox" wire:model.live="filterVehicle" placeholder="All Vehicles">
+                                @foreach($vehicles as $vehicle)
+                                    <flux:select.option value="{{ $vehicle->id }}">{{ $vehicle->model }} ({{ $vehicle->plate_number }})</flux:select.option>
+                                @endforeach
+                            </flux:select>
+                        </flux:field>
 
-            <flux:field>
-                <flux:label>Fuel Type</flux:label>
-                <flux:select wire:model.live="filterFuelType" placeholder="All Types">
-                    <flux:select.option value="petrol">Petrol</flux:select.option>
-                    <flux:select.option value="diesel">Diesel</flux:select.option>
-                    <flux:select.option value="hybrid">Hybrid</flux:select.option>
-                    <flux:select.option value="electric">Electric</flux:select.option>
-                </flux:select>
-            </flux:field>
+                        <flux:field>
+                            <flux:label>Fuel Type</flux:label>
+                            <flux:select variant="listbox" wire:model.live="filterFuelType" placeholder="All Types">
+                                <flux:select.option value="petrol">Petrol</flux:select.option>
+                                <flux:select.option value="diesel">Diesel</flux:select.option>
+                                <flux:select.option value="hybrid">Hybrid</flux:select.option>
+                                <flux:select.option value="electric">Electric</flux:select.option>
+                            </flux:select>
+                        </flux:field>
 
-            <flux:field>
-                <flux:label>From Date</flux:label>
-                <flux:input type="date" wire:model.live="filterDateFrom" />
-            </flux:field>
+                        <flux:field>
+                            <flux:label>From Date</flux:label>
+                            <flux:date-picker wire:model.live="filterDateFrom" with-today/>
+                        </flux:field>
 
-            <flux:field>
-                <flux:label>To Date</flux:label>
-                <flux:input type="date" wire:model.live="filterDateTo" />
-            </flux:field>
-        </div>
+                        <flux:field>
+                            <flux:label>To Date</flux:label>
+                            <flux:date-picker wire:model.live="filterDateTo" with-today/>
+                        </flux:field>
+                    </div>
+
+                    <!-- Export Buttons -->
+                    <div class="flex gap-3 pt-4 mx-3 border-t border-gray-200 dark:border-zinc-700">
+                        <flux:button variant="filled" size="sm" wire:click="exportFuelData('excel')" icon="document-arrow-down" class="bg-green-600 hover:bg-green-700">
+                            Export Excel
+                        </flux:button>
+                        <flux:button variant="filled" size="sm" wire:click="exportFuelData('pdf')" icon="document-arrow-down" class="bg-red-600 hover:bg-red-700">
+                            Export PDF
+                        </flux:button>
+                    </div>
+                </flux:accordion.content>
+            </flux:accordion.item>
+        </flux:accordion>
     </div>
 
     <!-- Fuel Logs Table -->
@@ -200,7 +223,7 @@
                             
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <h3 class="font-semibold text-gray-900 dark:text-white">{{ $log->vehicle->model ?? 'N/A' }}</h3> 
-                                <span class="text-sm text-gray-500 font-normal">{{ $log->vehicle->license_plate ?? 'N/A' }}</span>  
+                                <span class="text-sm text-gray-500 font-normal">{{ $log->vehicle->plate_number ?? 'N/A' }}</span>  
                             </td>
                             
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900 dark:text-white">
@@ -208,23 +231,12 @@
                             </td>
                             
                             <td class="px-6 py-4 whitespace-nowrap">
-                                @php
-                                    $badgeColor = match($log->fuel_type) {
-                                        'petrol' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300',
-                                        'diesel' => 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
-                                        'hybrid' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300',
-                                        'electric' => 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300',
-                                        default => 'bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-300'
-                                    };
-                                @endphp
-                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $badgeColor }}">
-                                    {{ ucfirst($log->fuel_type) }}
-                                </span>
+                                <flux:text class="text-gray-900 dark:text-white"> {{ ucfirst($log->fuel_type) }}</flux:text>
                             </td>
                             
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                 @if($log->fuel_cost)
-                                    ${{ number_format($log->fuel_cost, 2) }}
+                                    RM{{ number_format($log->fuel_cost, 2) }}
                                 @else
                                     <span class="text-gray-400">-</span>
                                 @endif
@@ -241,8 +253,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div class="flex space-x-2">
                                     <button 
-                                        wire:click="editLog({{ $log->id }})" 
-                                        class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                        wire:click="editLog({{ $log->id }})"
                                     >
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -264,7 +275,7 @@
                         <tr>
                             <td colspan="8" class="px-6 py-12 text-center">
                                 <div class="text-gray-500 dark:text-gray-400">
-                                    <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="mx-auto h-8 w-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
                                     </svg>
                                     <h3 class="font-medium text-gray-900 dark:text-white mb-1">No fuel logs</h3>
@@ -297,7 +308,7 @@
                     <flux:label>Vehicle <span class="text-red-500 ms-1">*</span></flux:label>
                     <flux:select wire:model.live="vehicle_id" placeholder="Select Vehicle" >
                         @foreach($vehicles as $vehicle)
-                            <flux:select.option value="{{ $vehicle->id }}">{{ $vehicle->model }} ({{ $vehicle->license_plate }})</flux:select.option>
+                            <flux:select.option value="{{ $vehicle->id }}">{{ $vehicle->model }} ({{ $vehicle->plate_number }})</flux:select.option>
                         @endforeach
                     </flux:select>
                     <flux:error name="vehicle_id" />
@@ -386,6 +397,30 @@
 
         $wire.on('close-modal', () => {
             $flux.modal('fuel-form').close();
+        });
+
+        $wire.on('fuel-export', (data) => {
+            const params = new URLSearchParams({
+                vehicle_id: data.vehicle_id || '',
+                date_from: data.date_from || '',
+                date_to: data.date_to || '',
+                analytics_type: 'fuel',
+                format: data.format || 'excel'
+            });
+
+            // Create export URL
+            const exportUrl = `/vehicle-analytics/export?${params}`;
+            
+            
+            // Download the file
+            window.open(exportUrl, '_blank');
+            
+            // Show success message
+            $flux.toast({
+                title: 'Export Started',
+                body: `${data.format.toUpperCase()} export is being generated...`,
+                variant: 'success'
+            });
         });
     </script>
     @endscript

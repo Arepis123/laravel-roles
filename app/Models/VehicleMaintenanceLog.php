@@ -63,7 +63,8 @@ class VehicleMaintenanceLog extends Model
 
     public function scopeInDateRange($query, $startDate, $endDate)
     {
-        return $query->whereBetween('performed_at', [$startDate, $endDate]);
+        return $query->whereDate('performed_at', '>=', $startDate)
+                     ->whereDate('performed_at', '<=', $endDate);
     }
 
     public function scopeByMaintenanceType($query, $maintenanceType)
@@ -203,6 +204,6 @@ class VehicleMaintenanceLog extends Model
         
         $totalCost = static::getTotalCostForVehicle($vehicleId);
         
-        return $totalCost > 0 ? round($totalCost / $totalKilometers, 4) : null;
+        return ($totalCost && $totalCost > 0) ? round($totalCost / $totalKilometers, 4) : null;
     }
 }

@@ -165,13 +165,33 @@
                             <span class="font-medium">Yes</span>
                         </div>
                         <div class="flex justify-between">
+                            <span class="text-gray-600 dark:text-gray-300">Fuel Cost:</span>
+                            <span class="font-medium">RM {{ number_format($vehicleData['fuel_cost'] ?? 0, 2) }}</span>
+                        </div>
+                        <div class="flex justify-between">
                             <span class="text-gray-600 dark:text-gray-300">Fuel Amount:</span>
-                            <span class="font-medium">RM {{ number_format($vehicleData['fuel_amount'] ?? 0, 2) }}</span>
+                            <span class="font-medium">{{ number_format($vehicleData['fuel_amount'] ?? 0, 1) }} L</span>
                         </div>
                     @else
                         <div class="flex justify-between">
                             <span class="text-gray-600 dark:text-gray-300">Fuel Filled:</span>
                             <span class="font-medium">No</span>
+                        </div>
+                    @endif
+                    
+                    {{-- Parking Information --}}
+                    @if($booking->parking_level)
+                        <div class="pt-3 border-t border-gray-200 dark:border-gray-700">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600 dark:text-gray-300">Parking Level:</span>
+                                <span class="font-medium">Level {{ $booking->parking_level }}</span>
+                            </div>
+                            @if($booking->parking_level == 1 && $booking->is_reserved_slot)
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-300">Reserved Slot:</span>
+                                    <span class="font-medium text-blue-600 dark:text-blue-400">Yes</span>
+                                </div>
+                            @endif
                         </div>
                     @endif
                 </div>
@@ -245,6 +265,76 @@
                     </flux:field>   
                 </div>                                            
             </div>
+
+            {{-- Passengers Section for Vehicles --}}
+            @if($asset_type === 'vehicle' && $booking->passengers && count($booking->passengers) > 0)
+                <div class="rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden">                    
+                    <div class="px-6 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-neutral-700">           
+                        <flux:icon name="users" class="w-4 h-4 inline text-gray-500 dark:text-white me-1" />
+                        <div class="text-left text-xs font-medium text-gray-500 dark:text-white tracking-wider uppercase inline">Passengers ({{ count($booking->passengers) }})</div>
+                    </div>                                          
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            @foreach($booking->passengers as $passengerId)
+                                @php
+                                    $passenger = \App\Models\User::find($passengerId);
+                                @endphp
+                                
+                                @if($passenger)
+                                    <div class="flex items-center p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                                        <div class="flex-shrink-0">                                            
+                                            <flux:avatar size="xs" color="auto" name="{{ preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $passenger->name) }}" />                                        
+                                        </div>
+                                        <div class="ml-3 min-w-0 flex-1">
+                                            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                                {{ $passenger->name }}
+                                            </p>
+                                            @if($passenger->email)
+                                                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                                    {{ $passenger->email }}
+                                                </p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @else
+                                    <div class="flex items-center p-2 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                                        <div class="flex-shrink-0">
+                                            <flux:icon name="exclamation-triangle" class="w-5 h-5 text-red-500" />
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm font-medium text-red-900 dark:text-red-400">
+                                                User not found (ID: {{ $passengerId }})
+                                            </p>
+                                            <p class="text-xs text-red-600 dark:text-red-500">
+                                                This user may have been deleted
+                                            </p>
+                                        </div>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+                        
+                        {{-- Summary Info --}}
+                        <flux:callout icon="information-circle" color="purple" class="mt-3" >
+                            <flux:callout.heading class="flex gap-2 @max-md:flex-col items-start">Total Capacity: <flux:text>{{ $capacity ?? 'Not specified' }} ({{ $booking->user->name }} + {{ count($booking->passengers) }} passenger{{ count($booking->passengers) === 1 ? '' : 's' }})</flux:text></flux:callout.heading>                            
+                        </flux:callout>                        
+                    </div>
+
+                </div>
+            @elseif($asset_type === 'vehicle' && (!$booking->passengers || count($booking->passengers) === 0))
+                <div class="border rounded-lg p-6">
+                    <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                        <flux:icon name="user-group" class="w-5 h-5 inline mr-2" />
+                        Passengers
+                    </h2>
+                    
+                    <div class="text-center py-6">
+                        <flux:icon name="user-minus" class="w-8 h-8 text-gray-400 mx-auto mb-3" />
+                        <p class="text-gray-500 dark:text-gray-400">No passengers selected for this vehicle booking</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Only the driver ({{ $booking->user->name }}) will be using the vehicle</p>
+                    </div>
+                </div>
+            @endif
 
             {{-- Additional Services --}}
             @if(!empty($additional_booking))
@@ -474,7 +564,7 @@
 
                 <div class="space-y-4">
                     <flux:field>
-                        <flux:label>Current Odometer Reading (km) *</flux:label>
+                        <flux:label>Current Odometer Reading (km)</flux:label>
                         <flux:input 
                             wire:model="currentOdometer" 
                             type="number" 
@@ -488,7 +578,7 @@
 
                     {{-- Fuel Level Slider --}}
                     <flux:field>
-                        <flux:label>Fuel Level *</flux:label>
+                        <flux:label>Fuel Level</flux:label>
                         <div class="space-y-3">
                             <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
                                 <span>Empty (1)</span>
@@ -518,17 +608,17 @@
                     <flux:field>
                         <flux:checkbox 
                             wire:model.live="gasFilledUp" 
-                            label="Gas was filled up"
+                            label="Fuel was filled up"
                         />
                     </flux:field>
 
                     @if($gasFilledUp)
                         <flux:field>
-                            <flux:label>Gas Amount (RM) *</flux:label>
+                            <flux:label>Fuel Cost (RM)</flux:label>
                             <flux:input 
                                 wire:model="gasAmount" 
                                 type="number" 
-                                placeholder="Enter amount spent on gas"
+                                placeholder="Enter amount spent on fuel"
                                 min="0"
                                 step="0.01"
                             />
@@ -536,6 +626,55 @@
                                 <flux:error>{{ $message }}</flux:error>
                             @enderror
                         </flux:field>
+
+                        <flux:field>
+                            <flux:label>Fuel Amount (Liters)</flux:label>
+                            <flux:input 
+                                wire:model="gasLiters" 
+                                type="number" 
+                                placeholder="Enter amount of fuel in liters"
+                                min="0"
+                                step="0.1"
+                            />
+                            @error('gasLiters')
+                                <flux:error>{{ $message }}</flux:error>
+                            @enderror
+                        </flux:field>
+                    @endif
+
+                    {{-- Parking Location Section --}}
+                    @if($this->isParkingRequired())
+                        <flux:separator />
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <flux:heading size="sm">Parking Location</flux:heading>
+                                <flux:subheading>Please select where you parked the vehicle.</flux:subheading>
+                            </div>
+
+                            <flux:field>
+                                <flux:label>Parking Level</flux:label>
+                                <flux:select wire:model.live="parkingLevel">
+                                    <flux:select.option value="">Select parking level</flux:select.option>
+                                    @foreach($this->getParkingLevels() as $level)
+                                        <flux:select.option value="{{ $level }}">Level {{ $level }}</flux:select.option>
+                                    @endforeach
+                                </flux:select>
+                                @error('parkingLevel')
+                                    <flux:error>{{ $message }}</flux:error>
+                                @enderror
+                            </flux:field>
+
+                            @if($parkingLevel == 1)
+                                <flux:field>
+                                    <flux:checkbox 
+                                        wire:model="isReservedSlot" 
+                                        label="Parked in reserved parking slot"
+                                        description="Check this if you parked in a reserved parking slot on Level 1"
+                                    />
+                                </flux:field>
+                            @endif
+                        </div>
                     @endif
                 </div>
 

@@ -21,11 +21,9 @@
             <div class="flex items-center">
                 <div class="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
                     <svg class="w-6 h-6 text-blue-600 dark:text-blue-400 lucide lucide-land-plot-icon lucide-land-plot" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m12 8 6-3-6-3v10"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m8 11.99-5.5 3.14a1 1 0 0 0 0 1.74l8.5 4.86a2 2 0 0 0 2 0l8.5-4.86a1 1 0 0 0 0-1.74L16 12"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6.49 12.85 11.02 6.3"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.51 12.85 6.5 19.15"/>
-                    </svg>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m12 14 4-4"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.34 19a10 10 0 1 1 17.32 0"/>
+                    </svg>                     
                 </div>
                 <div class="ml-4">
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Distance</h3>
@@ -83,39 +81,61 @@
     </div>
 
     <!-- Filters -->
-    <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-700 p-6 mb-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Filters</h3>
-        
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
-            <flux:field>
-                <flux:label>Vehicle</flux:label>
-                <flux:select wire:model.live="filterVehicle" placeholder="All Vehicles">
-                    @foreach($vehicles as $vehicle)
-                        <flux:select.option value="{{ $vehicle->id }}">{{ $vehicle->model }} ({{ $vehicle->plate_number }})</flux:select.option>
-                    @endforeach
-                </flux:select>
-            </flux:field>
+    <div class="mb-6 mx-2">
+        <flux:accordion>
+            <flux:accordion.item>
+                <flux:accordion.heading>
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                        </svg>
+                        Filters & Export
+                    </span>
+                </flux:accordion.heading>
+                <flux:accordion.content>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pt-4 mx-3">
+                        <flux:field>
+                            <flux:label>Vehicle</flux:label>
+                            <flux:select variant="listbox" wire:model.live="filterVehicle" placeholder="All Vehicles">
+                                @foreach($vehicles as $vehicle)
+                                    <flux:select.option value="{{ $vehicle->id }}">{{ $vehicle->model }} ({{ $vehicle->plate_number }})</flux:select.option>
+                                @endforeach
+                            </flux:select>
+                        </flux:field>
 
-            <flux:field>
-                <flux:label>Reading Type</flux:label>
-                <flux:select wire:model.live="filterReadingType" placeholder="All Types">
-                    <flux:select.option value="start">Start</flux:select.option>
-                    <flux:select.option value="end">End</flux:select.option>
-                    <flux:select.option value="manual">Manual</flux:select.option>
-                    <flux:select.option value="service">Service</flux:select.option>
-                </flux:select>
-            </flux:field>
+                        <flux:field>
+                            <flux:label>Reading Type</flux:label>
+                            <flux:select variant="listbox" wire:model.live="filterReadingType" placeholder="All Types">
+                                <flux:select.option value="start">Start</flux:select.option>
+                                <flux:select.option value="end">End</flux:select.option>
+                                <flux:select.option value="manual">Manual</flux:select.option>
+                                <flux:select.option value="service">Service</flux:select.option>
+                            </flux:select>
+                        </flux:field>
 
-            <flux:field>
-                <flux:label>From Date</flux:label>
-                <flux:input type="date" wire:model.live="filterDateFrom" />
-            </flux:field>
+                        <flux:field>
+                            <flux:label>From Date</flux:label>
+                            <flux:date-picker wire:model.live="filterDateFrom" with-today/>
+                        </flux:field>
 
-            <flux:field>
-                <flux:label>To Date</flux:label>
-                <flux:input type="date" wire:model.live="filterDateTo" />
-            </flux:field>
-        </div>
+                        <flux:field>
+                            <flux:label>To Date</flux:label>
+                            <flux:date-picker wire:model.live="filterDateTo" with-today/>
+                        </flux:field>
+                    </div>
+
+                    <!-- Export Buttons -->
+                    <div class="flex gap-3 pt-4 mx-3 border-t border-gray-200 dark:border-zinc-700">
+                        <flux:button variant="filled" size="sm" wire:click="exportOdometerData('excel')" icon="document-arrow-down" class="bg-green-600 hover:bg-green-700">
+                            Export Excel
+                        </flux:button>
+                        <flux:button variant="filled" size="sm" wire:click="exportOdometerData('pdf')" icon="document-arrow-down" class="bg-red-600 hover:bg-red-700">
+                            Export PDF
+                        </flux:button>
+                    </div>
+                </flux:accordion.content>
+            </flux:accordion.item>
+        </flux:accordion>
     </div>
 
     <!-- Table -->
@@ -249,8 +269,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div class="flex space-x-2">
                                     <button 
-                                        wire:click="editLog({{ $log->id }})" 
-                                        class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                        wire:click="editLog({{ $log->id }})"
                                     >
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -272,7 +291,7 @@
                         <tr>
                             <td colspan="8" class="px-6 py-12 text-center">
                                 <div class="text-gray-500 dark:text-gray-400">
-                                    <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="mx-auto h-8 w-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                                     </svg>
                                     <h3 class="font-medium text-gray-900 dark:text-white mb-1">No odometer readings</h3>
@@ -346,7 +365,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <flux:field>
                     <flux:label>Recorded At <span class="text-red-500 ms-1">*</span></flux:label>
-                    <flux:input type="datetime-local" wire:model="recorded_at"  />
+                    <flux:date-picker wire:model="recorded_at" with-today/>
                     <flux:error name="recorded_at" />
                 </flux:field>
 
@@ -386,6 +405,29 @@
 
         $wire.on('close-modal', () => {
             $flux.modal('odometer-form').close();
+        });
+
+        $wire.on('odometer-export', (data) => {
+            const params = new URLSearchParams({
+                vehicle_id: data.vehicle_id || '',
+                date_from: data.date_from || '',
+                date_to: data.date_to || '',
+                analytics_type: 'odometer',
+                format: data.format || 'excel'
+            });
+
+            // Create export URL
+            const exportUrl = `/vehicle-analytics/export?${params}`;
+            
+            // Download the file
+            window.open(exportUrl, '_blank');
+            
+            // Show success message
+            $flux.toast({
+                title: 'Export Started',
+                body: `${data.format.toUpperCase()} export is being generated...`,
+                variant: 'success'
+            });
         });
     </script>
     @endscript

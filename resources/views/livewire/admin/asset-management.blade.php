@@ -379,6 +379,16 @@
                     </flux:field>
                 </div>
 
+                <!-- Parking Requirements Section -->
+                <div class="mt-6">
+                    <flux:field variant="inline">
+                        <flux:checkbox wire:model="parking_required" />
+                        <flux:label>Require parking location after booking completion</flux:label>
+                        <flux:description>When enabled, users will be asked to select their parking level when they mark this vehicle booking as done.</flux:description>
+                    </flux:field>
+                    <flux:error name="parking_required" />
+                </div>
+
             @else
                 <!-- IT Asset Form -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

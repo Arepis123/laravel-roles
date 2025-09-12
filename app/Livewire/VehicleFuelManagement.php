@@ -51,8 +51,8 @@ class VehicleFuelManagement extends Component
     public function mount()
     {
         $this->filled_at = now()->format('Y-m-d\TH:i');
-        $this->filterDateFrom = now()->subMonth()->format('Y-m-d');
-        $this->filterDateTo = now()->format('Y-m-d');
+        $this->filterDateFrom = now()->startOfYear()->format('Y-m-d'); // January 1st of current year
+        $this->filterDateTo = now()->endOfYear()->format('Y-m-d'); // December 31st of current year
     }
 
     public function updatedFilterVehicle()
@@ -255,6 +255,16 @@ class VehicleFuelManagement extends Component
                 return $log->fuel_cost / $log->fuel_amount;
             }) ?: 0
         ];
+    }
+
+    public function exportFuelData($format = 'excel')
+    {
+        $this->dispatch('fuel-export', [
+            'vehicle_id' => $this->filterVehicle,
+            'date_from' => $this->filterDateFrom,
+            'date_to' => $this->filterDateTo,
+            'format' => $format
+        ]);
     }
 
     public function render()

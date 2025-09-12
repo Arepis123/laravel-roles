@@ -56,7 +56,8 @@ class VehicleFuelLog extends Model
 
     public function scopeInDateRange($query, $startDate, $endDate)
     {
-        return $query->whereBetween('filled_at', [$startDate, $endDate]);
+        return $query->whereDate('filled_at', '>=', $startDate)
+                     ->whereDate('filled_at', '<=', $endDate);
     }
 
     public function scopeByFuelType($query, $fuelType)
@@ -86,7 +87,7 @@ class VehicleFuelLog extends Model
 
         $distance = $this->odometer_at_fill - $previousLog->odometer_at_fill;
         
-        return $distance > 0 ? round($distance / $this->fuel_amount, 2) : null;
+        return ($distance > 0 && $this->fuel_amount > 0) ? round($distance / $this->fuel_amount, 2) : null;
     }
 
     public function getCostPerLiterAttribute()
