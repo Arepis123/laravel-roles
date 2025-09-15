@@ -7,11 +7,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Vehicle extends Model
 {
-    protected $fillable = ['model', 'plate_number', 'capacity', 'driver_name', 'notes', 'status', 'allowed_positions', 'parking_required'];
+    protected $fillable = ['model', 'plate_number', 'capacity', 'driver_name', 'notes', 'status', 'allowed_positions', 'allowed_users', 'parking_required'];
 
     protected $casts = [
         'capacity' => 'integer',
         'allowed_positions' => 'array',
+        'allowed_users' => 'array',
         'parking_required' => 'boolean'
     ];
 
@@ -178,7 +179,24 @@ class Vehicle extends Model
     
     public function canUserBook($user)
     {
-        return $this->isAvailableForPosition($user->position);
+        $hasPositionAccess = $this->isAvailableForPosition($user->position);
+        $hasUserAccess = false;
+        
+        // Check if user is specifically allowed
+        if (!is_null($this->allowed_users) && !empty($this->allowed_users)) {
+            $hasUserAccess = in_array($user->id, $this->allowed_users);
+        }
+        
+        // If no position restrictions and no specific users, allow all
+        $hasNoPositionRestrictions = is_null($this->allowed_positions) || empty($this->allowed_positions);
+        $hasNoUserRestrictions = is_null($this->allowed_users) || empty($this->allowed_users);
+        
+        if ($hasNoPositionRestrictions && $hasNoUserRestrictions) {
+            return true;
+        }
+        
+        // Allow if user has position access OR is specifically allowed
+        return $hasPositionAccess || $hasUserAccess;
     }
     
     public function getAllowedPositionsText()
@@ -188,6 +206,16 @@ class Vehicle extends Model
         }
         
         return implode(', ', $this->allowed_positions);
+    }
+    
+    public function getAllowedUsersText()
+    {
+        if (is_null($this->allowed_users) || empty($this->allowed_users)) {
+            return null;
+        }
+        
+        $users = User::whereIn('id', $this->allowed_users)->get();
+        return $users->pluck('name')->implode(', ');
     }
     
     public static function getAvailablePositions()

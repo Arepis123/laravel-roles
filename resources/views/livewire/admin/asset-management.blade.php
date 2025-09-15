@@ -192,6 +192,11 @@
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">
                             <div class="flex items-center gap-1">
+                                {{ __('Access') }}
+                            </div>
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">
+                            <div class="flex items-center gap-1">
                                 {{ __('Status') }}
                             </div>
                         </th>
@@ -222,17 +227,7 @@
                                         <div class="text-xs text-gray-500 block">{{ Str::limit($asset['model']->plate_number, 50) }}</div>                             
                                     @else
                                         <div class="text-xs text-gray-500 block">{{ Str::limit($asset['model']->notes, 50) }}</div>
-                                    @endif
-                                    
-                                    @if($asset['type'] === 'vehicle' && !empty($asset['model']->allowed_positions))
-                                        <div class="text-xs text-blue-600 block mt-1">
-                                            Restricted to: {{ implode(', ', $asset['model']->allowed_positions) }}
-                                        </div>
-                                    @elseif($asset['type'] === 'vehicle')
-                                        <div class="text-xs text-green-600 block mt-1">
-                                            Available to all positions
-                                        </div>
-                                    @endif                                    
+                                    @endif                                  
                                 </div>                                
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -247,9 +242,46 @@
                                 </flux:badge>                                   
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <flux:badge size="sm">
-                                    {{ $asset['status'] }}
-                                </flux:badge>                               
+                                @if($asset['type'] === 'vehicle')
+                                    @php
+                                        $hasPositions = !empty($asset['model']->allowed_positions);
+                                        $hasUsers = !empty($asset['model']->allowed_users);
+                                        $allowedUsers = $hasUsers ? \App\Models\User::whereIn('id', $asset['model']->allowed_users)->get() : collect();
+                                    @endphp
+                                    
+                                    <div class="space-y-2">
+                                        @if($hasPositions)
+                                            <div>                                               
+                                                <flux:text class="text-black dark:text-white">{{ implode(', ', $asset['model']->allowed_positions) }}</flux:text>
+                                            </div>
+                                        @endif
+                                        
+                                        @if($hasUsers)
+                                            <div class="flex items-center gap-2">
+                                                <flux:avatar.group>
+                                                    @foreach($allowedUsers->take(3) as $user)
+                                                        <flux:avatar size="xs" tooltip="{{ $user->name }}" name="{{ $user->name }}" />
+                                                    @endforeach
+                                                    @if($allowedUsers->count() > 3)
+                                                        <flux:avatar size="xs" tooltip="{{ $allowedUsers->count() - 3 }} more users">{{ $allowedUsers->count() - 3 }}+</flux:avatar>
+                                                    @endif
+                                                </flux:avatar.group>
+                                            </div>
+                                        @endif
+                                        
+                                        @if(!$hasPositions && !$hasUsers)
+                                            <flux:text class="text-black dark:text-white">All Users</flux:text>
+                                        @endif
+                                    </div>
+                                @else                                    
+                                    <flux:text class="text-black dark:text-white">N/A</flux:text>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <!-- <flux:badge size="sm">
+                                    {{ $asset['status'] }}                                    
+                                </flux:badge>              -->
+                                <flux:text class="text-black dark:text-white">{{ $asset['status'] }}</flux:text>                  
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <div class="text-sm font-medium text-gray-900 dark:text-neutral-200">
@@ -273,7 +305,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-12 text-center">
+                            <td colspan="7" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center gap-2">
                                     <flux:icon name="car" class="w-8 h-8 text-gray-400" />
                                     <div class="text-gray-500">No assets found</div>                                    
@@ -365,7 +397,7 @@
                 <div class="mt-6">
                     <flux:field>
                         <flux:label>Position Access Restrictions</flux:label>
-                        <flux:description>Select which positions can book this vehicle. Leave empty to allow all positions.</flux:description>
+                        <flux:description>Select which positions can book this vehicle. Users in these positions will have access.</flux:description>
                         
                         <div class="mt-3 grid grid-cols-2 gap-4">
                             @foreach($this->getAvailablePositions() as $position)
@@ -376,6 +408,27 @@
                             @endforeach
                         </div>
                         <flux:error name="allowed_positions" />
+                    </flux:field>
+                </div>
+
+                <div class="my-2 mx-4">
+                    <flux:separator text="and/or"/>
+                </div>
+
+                <!-- User-Specific Access Section -->
+                <div class="mt-6">
+                    <flux:field>
+                        <flux:label>Additional User Access</flux:label>
+                        <flux:description>Select specific users who can also book this vehicle (in addition to position-based access above).</flux:description>
+                        
+                        <div class="mt-3">
+                            <flux:select wire:model="allowed_users" placeholder="Select users..." multiple variant="listbox">
+                                @foreach($this->getAvailableUsers() as $user)
+                                    <flux:select.option value="{{ $user->id }}">{{ $user->name }} ({{ $user->position }})</flux:select.option>
+                                @endforeach
+                            </flux:select>
+                        </div>
+                        <flux:error name="allowed_users" />
                     </flux:field>
                 </div>
 

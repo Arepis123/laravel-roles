@@ -6,6 +6,7 @@ use App\Models\MeetingRoom;
 use App\Models\Vehicle;
 use App\Models\ItAsset;
 use App\Models\Booking;
+use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Validate;
@@ -59,6 +60,9 @@ class AssetManagement extends Component
 
     #[Validate('nullable|array')]
     public $allowed_positions = [];
+
+    #[Validate('nullable|array')]
+    public $allowed_users = [];
 
     #[Validate('nullable|boolean')]
     public $parking_required = false;
@@ -457,6 +461,7 @@ class AssetManagement extends Component
                 $this->driver_name = $asset->driver_name;
                 $this->vehicle_notes = $asset->notes;
                 $this->allowed_positions = $asset->allowed_positions ?? [];
+                $this->allowed_users = $asset->allowed_users ?? [];
                 $this->parking_required = $asset->parking_required ?? false;
                 break;
                 
@@ -522,6 +527,7 @@ class AssetManagement extends Component
                     'driver_name' => $this->driver_name,
                     'notes' => $this->vehicle_notes,
                     'allowed_positions' => empty($this->allowed_positions) ? null : $this->allowed_positions,
+                    'allowed_users' => empty($this->allowed_users) ? null : $this->allowed_users,
                     'parking_required' => $this->parking_required,
                 ]);
                 break;
@@ -559,6 +565,7 @@ class AssetManagement extends Component
                     'driver_name' => $this->driver_name,
                     'notes' => $this->vehicle_notes,
                     'allowed_positions' => empty($this->allowed_positions) ? null : $this->allowed_positions,
+                    'allowed_users' => empty($this->allowed_users) ? null : $this->allowed_users,
                     'parking_required' => $this->parking_required,
                 ]);
                 break;
@@ -651,6 +658,7 @@ class AssetManagement extends Component
                     'driver_name' => 'nullable|string|max:255',
                     'vehicle_notes' => 'nullable|string',
                     'allowed_positions' => 'nullable|array',
+                    'allowed_users' => 'nullable|array',
                 ];
                 break;
                 
@@ -690,6 +698,7 @@ class AssetManagement extends Component
         $this->driver_name = '';
         $this->vehicle_notes = '';
         $this->allowed_positions = [];
+        $this->allowed_users = [];
         $this->parking_required = false;
         
         // IT Asset fields
@@ -725,6 +734,13 @@ class AssetManagement extends Component
     public function getAvailablePositions()
     {
         return ['CEO', 'Manager', 'Executive', 'Non-executive'];
+    }
+
+    public function getAvailableUsers()
+    {
+        return User::where('status', 'active')
+            ->orderBy('name')
+            ->get();
     }
 
     public function render()

@@ -221,28 +221,38 @@ class BookingCreate extends Component
         $model = $config['model'];
         $nameField = $config['name_field'];
 
-        // Special handling for vehicles to include plate number and position filtering
+        // Special handling for vehicles to include plate number and access filtering
         if ($this->asset_type === 'vehicle') {
-            $userPosition = auth()->user()->position;
+            $currentUser = auth()->user();
             
-            return $model::select('id', 'model', 'plate_number', 'allowed_positions')
-                ->availableForPosition($userPosition)
+            return $model::select('id', 'model', 'plate_number', 'allowed_positions', 'allowed_users')
                 ->get()
+                ->filter(function ($vehicle) use ($currentUser) {
+                    return $vehicle->canUserBook($currentUser);
+                })
                 ->map(function ($vehicle) {
                     // Create a stdClass object to maintain consistency with the blade template
                     $item = new \stdClass();
                     $item->id = $vehicle->id;
                     $item->name = $vehicle->model . ' (' . $vehicle->plate_number . ')';
                     
-                    // Add position restriction info as description
-                    if (!empty($vehicle->allowed_positions)) {
-                        $item->description = 'Restricted to: ' . implode(', ', $vehicle->allowed_positions);
+                    // Add access restriction info as description
+                    $hasPositions = !empty($vehicle->allowed_positions);
+                    $hasUsers = !empty($vehicle->allowed_users);
+                    
+                    if ($hasPositions && $hasUsers) {
+                        $item->description = 'Position: ' . implode(', ', $vehicle->allowed_positions) . ' + Specific users';
+                    } elseif ($hasUsers) {
+                        $item->description = 'Specific users only';
+                    } elseif ($hasPositions) {
+                        $item->description = 'Positions: ' . implode(', ', $vehicle->allowed_positions);
                     } else {
-                        $item->description = 'Available to all positions';
+                        $item->description = 'Available to all users';
                     }
                     
                     return $item;
-                });
+                })
+                ->values(); // Reset array keys after filtering
         }
 
         // Special handling for IT assets to include asset tag
