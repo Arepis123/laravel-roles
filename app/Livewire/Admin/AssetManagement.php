@@ -25,6 +25,10 @@ class AssetManagement extends Component
     public $showStatsModal = false;
     public $selectedStatType = '';
     public $statsModalData = [];
+
+    // Delete Modal properties
+    public $showDeleteModal = false;
+    public $assetToDelete = [];
     
     // Meeting Room specific fields
     #[Validate('required|string|max:255')]
@@ -623,6 +627,34 @@ class AssetManagement extends Component
         }
     }
 
+    public function confirmDelete($type, $id, $name)
+    {
+        // Check permission for deleting assets
+        if (!auth()->user()->hasPermissionTo('asset.delete')) {
+            session()->flash('error', 'You do not have permission to delete assets.');
+            return;
+        }
+
+        $this->assetToDelete = [
+            'type' => $type,
+            'id' => $id,
+            'name' => $name
+        ];
+        $this->showDeleteModal = true;
+    }
+
+    public function confirmDeleteAsset()
+    {
+        $this->deleteAsset($this->assetToDelete['type'], $this->assetToDelete['id']);
+        $this->cancelDelete();
+    }
+
+    public function cancelDelete()
+    {
+        $this->showDeleteModal = false;
+        $this->assetToDelete = [];
+    }
+
     private function getModelClass($type)
     {
         switch($type) {
@@ -738,7 +770,8 @@ class AssetManagement extends Component
 
     public function getAvailableUsers()
     {
-        return User::where('status', 'active')
+        return User::notDeleted()
+            ->where('status', 'active')
             ->orderBy('name')
             ->get();
     }

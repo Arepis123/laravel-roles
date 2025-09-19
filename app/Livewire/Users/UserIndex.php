@@ -15,6 +15,10 @@ class UserIndex extends Component
     public $roleFilter = '';
     public $positionFilter = ''; // Added position filter
     public $perPage = 15;
+
+    // Delete Modal properties
+    public $showDeleteModal = false;
+    public $userToDelete = [];
     
     // Sorting properties
     public $sortField = 'created_at';
@@ -30,6 +34,7 @@ class UserIndex extends Component
     public function render()
     {
         $query = User::with('roles')
+            ->notDeleted() // Exclude deleted users
             ->when($this->search, function ($q) {
                 $q->where(function ($query) {
                     $query->where('name', 'like', '%' . $this->search . '%')
@@ -86,17 +91,44 @@ class UserIndex extends Component
         session()->flash("success", "User successfully {$statusText}.");
     }
     
+    public function confirmDelete($id, $name)
+    {
+        // Prevent deleting yourself
+        if ($id == auth()->id()) {
+            session()->flash("error", "You cannot delete your own account.");
+            return;
+        }
+
+        $this->userToDelete = [
+            'id' => $id,
+            'name' => $name
+        ];
+        $this->showDeleteModal = true;
+    }
+
+    public function confirmDeleteUser()
+    {
+        $this->delete($this->userToDelete['id']);
+        $this->cancelDelete();
+    }
+
+    public function cancelDelete()
+    {
+        $this->showDeleteModal = false;
+        $this->userToDelete = [];
+    }
+
     public function delete($id)
     {
         $user = User::find($id);
-        
+
         // Prevent deleting yourself
         if ($user->id === auth()->id()) {
             session()->flash("error", "You cannot delete your own account.");
             return;
         }
-        
-        $user->delete();
+
+        $user->softDelete();
         session()->flash("success", "User successfully deleted.");
     }
 

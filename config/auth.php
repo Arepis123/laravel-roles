@@ -112,4 +112,17 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Remember Me Duration
+    |--------------------------------------------------------------------------
+    |
+    | Here you may define the amount of minutes that the "remember me" session
+    | will be considered valid. By default, Laravel uses 5 years (2628000 minutes).
+    | Setting this to 43200 minutes equals 30 days (1 month).
+    |
+    */
+
+    'remember_duration' => env('AUTH_REMEMBER_DURATION', 43200), // 30 days in minutes
+
 ];

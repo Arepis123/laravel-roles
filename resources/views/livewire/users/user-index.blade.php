@@ -19,7 +19,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-600 dark:text-gray-400">Total Users</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ \App\Models\User::count() }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ \App\Models\User::notDeleted()->count() }}</p>
                 </div>
                 <flux:icon.users class="size-8 text-blue-500" />
             </div>
@@ -29,7 +29,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-600 dark:text-gray-400">Active Users</p>
-                    <p class="text-2xl font-bold text-green-600">{{ \App\Models\User::where('status', 'active')->count() }}</p>
+                    <p class="text-2xl font-bold text-green-600">{{ \App\Models\User::notDeleted()->where('status', 'active')->count() }}</p>
                 </div>
                 <flux:icon.check-circle class="size-8 text-green-500" />
             </div>
@@ -39,7 +39,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-600 dark:text-gray-400">Inactive Users</p>
-                    <p class="text-2xl font-bold text-red-600">{{ \App\Models\User::where('status', 'inactive')->count() }}</p>
+                    <p class="text-2xl font-bold text-red-600">{{ \App\Models\User::notDeleted()->where('status', 'inactive')->count() }}</p>
                 </div>
                 <flux:icon.x-circle class="size-8 text-red-500" />
             </div>
@@ -345,11 +345,9 @@
                                             @if(auth()->user()->hasRole(['Super Admin']))
                                             <flux:menu.separator />
                                             @if($user->id !== auth()->id())
-                                                <flux:modal.trigger name="delete-user-{{ $user->id }}">
-                                                    <flux:menu.item icon="trash" variant="danger">
-                                                        Delete User
-                                                    </flux:menu.item>
-                                                </flux:modal.trigger>
+                                                <flux:menu.item wire:click="confirmDelete({{ $user->id }}, '{{ $user->name }}')" icon="trash" variant="danger">
+                                                    Delete User
+                                                </flux:menu.item>
                                                 @endif
                                             @endif 
                                         </flux:menu>
@@ -359,30 +357,6 @@
                             </td>
                         </tr>
                         
-                        @can('user.delete')
-                            @if($user->id !== auth()->id())
-                                <flux:modal name="delete-user-{{ $user->id }}" class="min-w-[22rem]">
-                                    <div class="space-y-6">
-                                        <div>
-                                            <flux:heading size="lg">Delete User?</flux:heading>
-                                            <flux:text class="mt-2">
-                                                <p>You're about to delete <strong>{{ $user->name }}</strong>.</p>
-                                                <p class="text-red-600 mt-2">This action cannot be reversed.</p>
-                                            </flux:text>
-                                        </div>
-                                        <div class="flex gap-2">
-                                            <flux:spacer />
-                                            <flux:modal.close>
-                                                <flux:button variant="ghost">Cancel</flux:button>
-                                            </flux:modal.close>
-                                            <flux:button wire:click="delete({{ $user->id }})" variant="danger">
-                                                Delete User
-                                            </flux:button>
-                                        </div>
-                                    </div>
-                                </flux:modal>
-                            @endif
-                        @endcan
                     @empty
                         <tr>
                             <td colspan="7" class="px-6 py-12 text-center">
@@ -450,11 +424,9 @@
                             </flux:menu.submenu>
                             @if(auth()->user()->hasRole(['Super Admin']) && $user->id !== auth()->id())
                             <flux:menu.separator />
-                            <flux:modal.trigger name="delete-user-mobile-{{ $user->id }}">
-                                <flux:menu.item icon="trash" variant="danger">
-                                    Delete User
-                                </flux:menu.item>
-                            </flux:modal.trigger>
+                            <flux:menu.item wire:click="confirmDelete({{ $user->id }}, '{{ $user->name }}')" icon="trash" variant="danger">
+                                Delete User
+                            </flux:menu.item>
                             @endif
                         </flux:menu>
                     </flux:dropdown>
@@ -497,30 +469,6 @@
                     @endif
                 </div>
 
-                {{-- Delete Modal for Mobile --}}
-                @if(auth()->user()->hasRole(['Super Admin']) && $user->id !== auth()->id())
-                @can('user.delete')
-                    <flux:modal name="delete-user-mobile-{{ $user->id }}" class="min-w-[20rem]">
-                        <div class="space-y-4">
-                            <div class="text-center">
-                                <flux:heading size="md">Delete {{ $user->name }}?</flux:heading>
-                                <flux:text class="mt-2 text-sm">
-                                    This action cannot be reversed.
-                                </flux:text>
-                            </div>
-                            <div class="flex gap-2">
-                                <flux:spacer />
-                                <flux:modal.close>
-                                    <flux:button variant="ghost" size="sm">Cancel</flux:button>
-                                </flux:modal.close>
-                                <flux:button wire:click="delete({{ $user->id }})" variant="danger" size="sm">
-                                    Delete
-                                </flux:button>
-                            </div>
-                        </div>
-                    </flux:modal>
-                @endcan
-                @endif
             </div>
         @empty
             <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg p-8 text-center">
@@ -535,5 +483,27 @@
             {{ $users->links() }}
         </div>
         @endif
-    </div> 
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <flux:modal wire:model="showDeleteModal" class="min-w-[22rem]">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Delete User?</flux:heading>
+
+                <flux:text class="mt-2">
+                    <p>You're about to delete <strong>{{ $userToDelete['name'] ?? '' }}</strong>.</p>
+                    <p class="text-red-600 mt-2">This action cannot be reversed.</p>
+                </flux:text>
+            </div>
+
+            <div class="flex gap-2">
+                <flux:spacer />
+
+                <flux:button wire:click="cancelDelete" variant="ghost">Cancel</flux:button>
+
+                <flux:button wire:click="confirmDeleteUser" variant="danger">Delete User</flux:button>
+            </div>
+        </div>
+    </flux:modal>
 </div>

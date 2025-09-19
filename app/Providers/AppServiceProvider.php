@@ -28,5 +28,6 @@ class AppServiceProvider extends ServiceProvider
             'vehicle' => Vehicle::class,
             'it_asset' => ItAsset::class,
         ]);
+
     }
 }

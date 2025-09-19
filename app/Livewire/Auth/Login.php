@@ -6,6 +6,7 @@ use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
@@ -41,8 +42,45 @@ class Login extends Component
             ]);
         }
 
+        // Check if user is inactive or deleted after successful authentication
+        $user = Auth::user();
+
+        if ($user->deleted) {
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => 'This account has been deleted. Please contact an administrator.',
+            ]);
+        }
+
+        if ($user->status !== 'active') {
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => 'Your account is inactive. Please contact an administrator to activate your account.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
         Session::regenerate();
+
+        // Set custom remember token duration if "remember me" was checked
+        if ($this->remember) {
+            $user = Auth::user();
+            $rememberToken = Str::random(60);
+            $user->forceFill([
+                'remember_token' => hash('sha256', $rememberToken),
+            ])->save();
+
+            // Create a remember cookie with 1-month expiry (43200 minutes)
+            Cookie::queue(
+                Auth::guard()->getRecallerName(),
+                $user->id . '|' . $rememberToken . '|' . $user->getAuthPassword(),
+                43200 // 30 days in minutes
+            );
+        }
 
         $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
     }

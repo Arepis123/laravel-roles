@@ -79,7 +79,8 @@ class BookingCreate extends Component
      */
     public function loadAvailablePassengers()
     {
-        $this->availablePassengers = User::where('id', '!=', Auth::id())
+        $this->availablePassengers = User::notDeleted()
+            ->where('id', '!=', Auth::id())
             ->orderBy('name')
             ->get();
     }

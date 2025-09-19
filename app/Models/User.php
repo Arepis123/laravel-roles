@@ -21,6 +21,7 @@ class User extends Authenticatable implements CanResetPassword
         'font_size',
         'status',
         'position',
+        'deleted',
     ];
 
     protected $hidden = [
@@ -35,6 +36,7 @@ class User extends Authenticatable implements CanResetPassword
             'password' => 'hashed',
             'status' => 'string',
             'position' => 'string',
+            'deleted' => 'boolean',
         ];
     }
 
@@ -77,6 +79,38 @@ class User extends Authenticatable implements CanResetPassword
         $this->save();
     }
 
+    // Helper method to check if user is deleted
+    public function isDeleted(): bool
+    {
+        return $this->deleted === true;
+    }
+
+    // Helper method to soft delete user
+    public function softDelete(): void
+    {
+        $this->deleted = true;
+        $this->save();
+    }
+
+    // Helper method to restore user
+    public function restore(): void
+    {
+        $this->deleted = false;
+        $this->save();
+    }
+
+    // Query scope to exclude deleted users
+    public function scopeNotDeleted($query)
+    {
+        return $query->where('deleted', false);
+    }
+
+    // Query scope to get only deleted users
+    public function scopeDeleted($query)
+    {
+        return $query->where('deleted', true);
+    }
+
     // Helper method to get available positions
     public static function getPositions(): array
     {
@@ -99,5 +133,14 @@ class User extends Authenticatable implements CanResetPassword
             'Non-executive' => 'bg-gray-100 text-gray-800',
             default => 'bg-gray-100 text-gray-800'
         };
+    }
+
+    /**
+     * Get the number of minutes for remember token expiry.
+     * Override Laravel's default 5 years to 1 month (43200 minutes).
+     */
+    public function getRememberTokenValidityDuration(): int
+    {
+        return config('auth.remember_duration', 43200); // 30 days in minutes
     }
 }

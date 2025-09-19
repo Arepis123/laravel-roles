@@ -274,14 +274,17 @@
                                         @endif
                                     </div>
                                 @else                                    
-                                    <flux:text class="text-black dark:text-white">N/A</flux:text>
+                                    <flux:text class="text-black dark:text-white">-</flux:text>
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <!-- <flux:badge size="sm">
-                                    {{ $asset['status'] }}                                    
-                                </flux:badge>              -->
-                                <flux:text class="text-black dark:text-white">{{ $asset['status'] }}</flux:text>                  
+                                @if($asset['status'] === 'Available')
+                                    <flux:text color="green">{{ $asset['status'] }}</flux:text>
+                                @elseif($asset['status'] === 'In Use')
+                                    <flux:text color="red">{{ $asset['status'] }}</flux:text>
+                                @else
+                                    <flux:text>{{ $asset['status'] }}</flux:text>
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <div class="text-sm font-medium text-gray-900 dark:text-neutral-200">
@@ -296,7 +299,7 @@
                                     </flux:button>
                                     @endcan        
                                     @can('asset.delete')
-                                    <flux:button size="sm" wire:click="deleteAsset('{{ $asset['type'] }}', {{ $asset['id'] }})" variant="ghost">
+                                    <flux:button size="sm" wire:click="confirmDelete('{{ $asset['type'] }}', {{ $asset['id'] }}, '{{ $asset['name'] }}')" variant="ghost">
                                         <flux:icon name="trash" class="w-4 h-4" />
                                     </flux:button>
                                     @endcan                                                                                                                                      
@@ -316,7 +319,29 @@
                 </tbody>
             </table>
         </div>
-    </div>    
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <flux:modal wire:model="showDeleteModal" class="min-w-[22rem]">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Delete Asset?</flux:heading>
+
+                <flux:text class="mt-2">
+                    <p>You're about to delete <strong>{{ $assetToDelete['name'] ?? '' }}</strong>.</p>
+                    <p>This action cannot be reversed.</p>
+                </flux:text>
+            </div>
+
+            <div class="flex gap-2">
+                <flux:spacer />
+
+                <flux:button wire:click="cancelDelete" variant="ghost">Cancel</flux:button>
+
+                <flux:button wire:click="confirmDeleteAsset" variant="danger">Delete Asset</flux:button>
+            </div>
+        </div>
+    </flux:modal>
 
     <!-- Asset Modal -->
     <flux:modal wire:model="showModal" class="space-y-6">
