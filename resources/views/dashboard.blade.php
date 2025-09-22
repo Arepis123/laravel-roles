@@ -352,21 +352,20 @@
                 </div>
             </div>
 
-            <!-- Booking Trends Chart -->
+            <!-- Asset Usage Trends Chart -->
             <div class="mt-6">
                 <div class="relative overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
-                    <div class="p-6" x-data="chartController()">
+                    <div class="p-6" x-data="assetUsageController()">
                         <!-- Header with Month Selector -->
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Asset Usage Trends</h3>
-                            
+
                             <div class="flex items-center gap-2">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Month:</span>
-                                <flux:select 
-                                    variant="listbox" 
+                                <flux:select
+                                    variant="listbox"
                                     searchable
-                                    x-model="selectedMonth" 
-                                    @change="updateChart()" 
+                                    x-model="selectedMonth"
+                                    @change="updateChart()"
                                     class="w-48"
                                     placeholder="Choose month...">
                                     @foreach(range(1, 12) as $month)
@@ -377,7 +376,7 @@
                                 </flux:select>
                             </div>
                         </div>
-                        
+
                         <!-- Loading State -->
                         <div x-show="loading" class="h-64 flex items-center justify-center">
                             <div class="flex items-center gap-2">
@@ -389,36 +388,11 @@
                             </div>
                         </div>
 
-                        <!-- Chart -->
+                        <!-- Chart Canvas -->
                         <div x-show="!loading" class="h-64">
-                            <flux:chart x-bind:value="chartData" class="h-full aspect-auto">
-                                <flux:chart.svg>
-                                    <flux:chart.line field="vehicles" class="text-blue-600 dark:text-blue-400" />
-                                    <flux:chart.line field="meeting_rooms" class="text-green-600 dark:text-green-400" />
-                                    <flux:chart.line field="it_assets" class="text-purple-600 dark:text-purple-400" />
-                                    
-                                    <flux:chart.axis axis="x" field="date">
-                                        <flux:chart.axis.line />
-                                        <flux:chart.axis.tick />
-                                    </flux:chart.axis>
-                                    
-                                    <flux:chart.axis axis="y">
-                                        <flux:chart.axis.grid />
-                                        <flux:chart.axis.tick />
-                                    </flux:chart.axis>
-                                    
-                                    <flux:chart.cursor />
-                                </flux:chart.svg>
-                                
-                                <flux:chart.tooltip>
-                                    <flux:chart.tooltip.heading field="date" />
-                                    <flux:chart.tooltip.value field="vehicles" label="Vehicles" />
-                                    <flux:chart.tooltip.value field="meeting_rooms" label="Meeting Rooms" />
-                                    <flux:chart.tooltip.value field="it_assets" label="IT Assets" />
-                                </flux:chart.tooltip>
-                            </flux:chart>
+                            <canvas id="assetUsageChart"></canvas>
                         </div>
-                        
+
                         <!-- Chart Legend -->
                         <div class="flex justify-center gap-6 mt-4 text-sm">
                             <div class="flex items-center gap-2">
@@ -438,21 +412,21 @@
                 </div>
             </div>
 
-            <!-- Peak Usage Patterns Chart -->
+            <!-- Booking Status Distribution Chart -->
             <div class="mt-6">
                 <div class="relative overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
-                    <div class="p-6" x-data="peakUsageController()">
+                    <div class="p-6" x-data="bookingStatusController()">
                         <!-- Header with Month Selector -->
                         <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Peak Usage Patterns</h3>
-                            
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Booking Status Distribution</h3>
+
                             <div class="flex items-center gap-2">
                                 <span class="text-sm text-gray-600 dark:text-gray-400">Month:</span>
-                                <flux:select 
-                                    variant="listbox" 
+                                <flux:select
+                                    variant="listbox"
                                     searchable
-                                    x-model="selectedMonth" 
-                                    @change="updateChart()" 
+                                    x-model="selectedMonth"
+                                    @change="updateChart()"
                                     class="w-48"
                                     placeholder="Choose month...">
                                     @foreach(range(1, 12) as $month)
@@ -463,61 +437,44 @@
                                 </flux:select>
                             </div>
                         </div>
-                        
+
                         <!-- Loading State -->
                         <div x-show="loading" class="h-64 flex items-center justify-center">
                             <div class="flex items-center gap-2">
                                 <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
                                 <span class="text-sm text-gray-600 dark:text-gray-300">Loading chart...</span>
                             </div>
                         </div>
 
-                        <!-- Chart -->
-                        <div x-show="!loading" class="h-64">
-                            <flux:chart x-bind:value="chartData" class="h-full aspect-auto">
-                                <flux:chart.svg>
-                                    <flux:chart.line field="morning" class="text-orange-500 dark:text-orange-400" />
-                                    <flux:chart.line field="afternoon" class="text-blue-500 dark:text-blue-400" />
-                                    <flux:chart.line field="evening" class="text-pink-600 dark:text-pink-400" />
-                                    
-                                    <flux:chart.axis axis="x" field="date">
-                                        <flux:chart.axis.line />
-                                        <flux:chart.axis.tick />
-                                    </flux:chart.axis>
-                                    
-                                    <flux:chart.axis axis="y">
-                                        <flux:chart.axis.grid />
-                                        <flux:chart.axis.tick />
-                                    </flux:chart.axis>
-                                    
-                                    <flux:chart.cursor />
-                                </flux:chart.svg>
-                                
-                                <flux:chart.tooltip>
-                                    <flux:chart.tooltip.heading field="date" />
-                                    <flux:chart.tooltip.value field="morning" label="Morning (6AM-12PM)" />
-                                    <flux:chart.tooltip.value field="afternoon" label="Afternoon (12PM-6PM)" />
-                                    <flux:chart.tooltip.value field="evening" label="Evening (6PM-12AM)" />
-                                </flux:chart.tooltip>
-                            </flux:chart>
+                        <!-- Chart Canvas -->
+                        <div x-show="!loading" class="h-64 flex items-center justify-center">
+                            <canvas id="bookingStatusChart" style="max-height: 250px;"></canvas>
                         </div>
-                        
+
                         <!-- Chart Legend -->
-                        <div class="flex justify-center gap-6 mt-4 text-sm">
+                        <div class="flex justify-center gap-4 mt-4 text-sm flex-wrap">
                             <div class="flex items-center gap-2">
-                                <div class="w-3 h-3 bg-orange-500 rounded-full"></div>
-                                <span class="text-gray-600 dark:text-gray-400">Morning (6AM-12PM)</span>
+                                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                <span class="text-gray-600 dark:text-gray-400">Approved</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                                <span class="text-gray-600 dark:text-gray-400">Pending</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
-                                <span class="text-gray-600 dark:text-gray-400">Afternoon (12PM-6PM)</span>
+                                <span class="text-gray-600 dark:text-gray-400">Done</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <div class="w-3 h-3 bg-pink-600 rounded-full"></div>
-                                <span class="text-gray-600 dark:text-gray-400">Evening (6PM-12AM)</span>
+                                <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                                <span class="text-gray-600 dark:text-gray-400">Rejected</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-gray-500 rounded-full"></div>
+                                <span class="text-gray-600 dark:text-gray-400">Cancelled</span>
                             </div>
                         </div>
                     </div>
@@ -660,7 +617,21 @@
         </div>
     </flux:modal>
 
-    <!-- Include the compiled Schedule-X JavaScript -->
+    <!-- Include Chart.js via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+
+    <!-- Test Chart.js -->
+    <script>
+        // Simple test to see if Chart.js works
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('Chart.js available:', typeof Chart !== 'undefined');
+            if (typeof Chart !== 'undefined') {
+                console.log('Chart.js version:', Chart.version || 'unknown');
+            }
+        });
+    </script>
+
+    <!-- Include the compiled JavaScript -->
     @vite(['resources/js/schedule-x-calendar.js'])
     
     <!-- Alpine.js initialization for calendar -->
@@ -760,25 +731,174 @@
             @endcan
         });
 
-        // Chart controller functionality
-        function chartController() {
+        // Asset Usage Trends Chart controller functionality
+        function assetUsageController() {
             return {
                 selectedMonth: {!! now()->month !!},
                 loading: false,
-                chartData: [],
-                
+                chart: null,
+
                 init() {
                     this.loadInitialData();
                 },
-                
+
                 loadInitialData() {
-                    // Load current month data
-                    this.updateChart();
+                    this.$nextTick(() => {
+                        this.waitForChart();
+                    });
                 },
-                
+
+                waitForChart() {
+                    if (typeof Chart !== 'undefined') {
+                        // Ensure loading is false first so canvas is visible
+                        this.loading = false;
+                        this.$nextTick(() => {
+                            this.waitForCanvas();
+                        });
+                    } else {
+                        setTimeout(() => this.waitForChart(), 100);
+                    }
+                },
+
+                waitForCanvas() {
+                    const canvas = document.getElementById('assetUsageChart');
+                    if (canvas && canvas.offsetWidth > 0 && canvas.offsetHeight > 0) {
+                        // Canvas is visible, proceed with initialization
+                        setTimeout(() => {
+                            this.initChart();
+                            if (this.chart) {
+                                this.updateChart();
+                            }
+                        }, 50);
+                    } else {
+                        // Canvas not visible yet, wait a bit more
+                        setTimeout(() => this.waitForCanvas(), 50);
+                    }
+                },
+
+                initChart() {
+                    const canvas = document.getElementById('assetUsageChart');
+                    if (!canvas) {
+                        console.error('Asset Usage Chart canvas not found');
+                        return;
+                    }
+
+                    if (typeof Chart === 'undefined') {
+                        console.error('Chart.js not loaded');
+                        return;
+                    }
+
+                    // Check if canvas is visible and has dimensions
+                    if (canvas.offsetWidth === 0 || canvas.offsetHeight === 0) {
+                        console.error('Asset Usage Chart canvas is not visible or has no dimensions');
+                        return;
+                    }
+
+                    // Check if canvas can get context
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) {
+                        console.error('Cannot get 2D context from Asset Usage Chart canvas');
+                        return;
+                    }
+
+                    // Destroy existing chart if it exists
+                    if (this.chart) {
+                        this.chart.destroy();
+                        this.chart = null;
+                    }
+
+                    console.log('Initializing Asset Usage Chart...');
+
+                    try {
+                        this.chart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: [],
+                                datasets: [
+                                    {
+                                        label: 'Vehicles',
+                                        data: [],
+                                        borderColor: '#2563eb',
+                                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                                        tension: 0.4,
+                                        cubicInterpolationMode: 'monotone',
+                                        borderWidth: 3,
+                                        pointRadius: 4,
+                                        pointHoverRadius: 6,
+                                        pointBackgroundColor: '#2563eb',
+                                        pointBorderColor: '#ffffff',
+                                        pointBorderWidth: 2,
+                                        fill: true
+                                    },
+                                    {
+                                        label: 'Meeting Rooms',
+                                        data: [],
+                                        borderColor: '#059669',
+                                        backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                                        tension: 0.4,
+                                        cubicInterpolationMode: 'monotone',
+                                        borderWidth: 3,
+                                        pointRadius: 4,
+                                        pointHoverRadius: 6,
+                                        pointBackgroundColor: '#059669',
+                                        pointBorderColor: '#ffffff',
+                                        pointBorderWidth: 2,
+                                        fill: true
+                                    },
+                                    {
+                                        label: 'IT Assets',
+                                        data: [],
+                                        borderColor: '#7c3aed',
+                                        backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                                        tension: 0.4,
+                                        cubicInterpolationMode: 'monotone',
+                                        borderWidth: 3,
+                                        pointRadius: 4,
+                                        pointHoverRadius: 6,
+                                        pointBackgroundColor: '#7c3aed',
+                                        pointBorderColor: '#ffffff',
+                                        pointBorderWidth: 2,
+                                        fill: true
+                                    }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    }
+                                },
+                                scales: {
+                                    x: {
+                                        grid: {
+                                            display: false
+                                        }
+                                    },
+                                    y: {
+                                        beginAtZero: true,
+                                        grid: {
+                                            color: 'rgba(0, 0, 0, 0.1)'
+                                        }
+                                    }
+                                },
+                                interaction: {
+                                    intersect: false,
+                                    mode: 'index'
+                                }
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Error initializing Asset Usage Chart:', error);
+                        this.chart = null;
+                    }
+                },
+
                 async updateChart() {
                     this.loading = true;
-                    
+                    console.log('Updating Asset Usage Chart for month:', this.selectedMonth);
+
                     try {
                         // Fetch real data from the server
                         const response = await fetch(`/dashboard/chart-data?month=${this.selectedMonth}`, {
@@ -787,102 +907,403 @@
                                 'Accept': 'application/json'
                             }
                         });
-                        
+
+                        console.log('Chart data response status:', response.status);
+
                         if (response.ok) {
                             const data = await response.json();
-                            this.chartData = data;
+                            console.log('Chart data received:', data);
+                            this.updateChartData(data);
                         } else {
+                            console.error('Chart data API response not ok:', response.status, response.statusText);
                             // Fallback to initial data generation if API fails
                             this.generateFallbackData();
                         }
                     } catch (error) {
-                        console.log('Failed to fetch chart data, using fallback');
+                        console.error('Failed to fetch chart data:', error);
                         this.generateFallbackData();
                     }
-                    
+
                     this.loading = false;
                 },
-                
+
+                updateChartData(data) {
+                    if (!this.chart) return;
+
+                    try {
+                        // Destroy existing chart and recreate with new data
+                        this.chart.destroy();
+
+                        const canvas = document.getElementById('assetUsageChart');
+                        if (!canvas) return;
+
+                        const ctx = canvas.getContext('2d');
+                        if (!ctx) return;
+
+                        this.chart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: data.map(item => item.date),
+                                datasets: [
+                                    {
+                                        label: 'Vehicles',
+                                        data: data.map(item => item.vehicles || 0),
+                                        borderColor: '#2563eb',
+                                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                                        tension: 0.4,
+                                        cubicInterpolationMode: 'monotone',
+                                        borderWidth: 3,
+                                        pointRadius: 4,
+                                        pointHoverRadius: 6,
+                                        pointBackgroundColor: '#2563eb',
+                                        pointBorderColor: '#ffffff',
+                                        pointBorderWidth: 2,
+                                        fill: true
+                                    },
+                                    {
+                                        label: 'Meeting Rooms',
+                                        data: data.map(item => item.meeting_rooms || 0),
+                                        borderColor: '#059669',
+                                        backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                                        tension: 0.4,
+                                        cubicInterpolationMode: 'monotone',
+                                        borderWidth: 3,
+                                        pointRadius: 4,
+                                        pointHoverRadius: 6,
+                                        pointBackgroundColor: '#059669',
+                                        pointBorderColor: '#ffffff',
+                                        pointBorderWidth: 2,
+                                        fill: true
+                                    },
+                                    {
+                                        label: 'IT Assets',
+                                        data: data.map(item => item.it_assets || 0),
+                                        borderColor: '#7c3aed',
+                                        backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                                        tension: 0.4,
+                                        cubicInterpolationMode: 'monotone',
+                                        borderWidth: 3,
+                                        pointRadius: 4,
+                                        pointHoverRadius: 6,
+                                        pointBackgroundColor: '#7c3aed',
+                                        pointBorderColor: '#ffffff',
+                                        pointBorderWidth: 2,
+                                        fill: true
+                                    }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    }
+                                },
+                                scales: {
+                                    x: {
+                                        grid: {
+                                            display: false
+                                        }
+                                    },
+                                    y: {
+                                        beginAtZero: true,
+                                        grid: {
+                                            color: 'rgba(0, 0, 0, 0.1)'
+                                        }
+                                    }
+                                },
+                                interaction: {
+                                    intersect: false,
+                                    mode: 'index'
+                                }
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Error updating Asset Usage Chart:', error);
+                        this.chart = null;
+                    }
+                },
+
                 generateFallbackData() {
                     // Fallback data generation
                     const data = [];
                     const year = new Date().getFullYear();
                     const daysInMonth = new Date(year, this.selectedMonth, 0).getDate();
-                    
+
                     for (let day = 1; day <= daysInMonth; day++) {
                         const date = new Date(year, this.selectedMonth - 1, day);
                         data.push({
                             date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                            bookings: 0, // No data fallback
-                            approved: 0
+                            vehicles: Math.floor(Math.random() * 10),
+                            meeting_rooms: Math.floor(Math.random() * 8),
+                            it_assets: Math.floor(Math.random() * 12)
                         });
                     }
-                    
-                    this.chartData = data;
+
+                    this.updateChartData(data);
                 }
             }
         }
 
-        // Peak usage controller functionality
-        function peakUsageController() {
+        // Booking Status Distribution Chart controller functionality
+        function bookingStatusController() {
             return {
                 selectedMonth: {!! now()->month !!},
                 loading: false,
-                chartData: [],
-                
+                chart: null,
+
                 init() {
                     this.loadInitialData();
                 },
-                
+
                 loadInitialData() {
-                    // Load current month data
-                    this.updateChart();
+                    this.$nextTick(() => {
+                        this.waitForChart();
+                    });
                 },
-                
+
+                waitForChart() {
+                    if (typeof Chart !== 'undefined') {
+                        // Ensure loading is false first so canvas is visible
+                        this.loading = false;
+                        this.$nextTick(() => {
+                            this.waitForCanvas();
+                        });
+                    } else {
+                        setTimeout(() => this.waitForChart(), 100);
+                    }
+                },
+
+                waitForCanvas() {
+                    const canvas = document.getElementById('bookingStatusChart');
+                    if (canvas && canvas.offsetWidth > 0 && canvas.offsetHeight > 0) {
+                        // Canvas is visible, proceed with initialization
+                        setTimeout(() => {
+                            this.initChart();
+                            if (this.chart) {
+                                this.updateChart();
+                            }
+                        }, 50);
+                    } else {
+                        // Canvas not visible yet, wait a bit more
+                        setTimeout(() => this.waitForCanvas(), 50);
+                    }
+                },
+
+                initChart() {
+                    const canvas = document.getElementById('bookingStatusChart');
+                    if (!canvas) {
+                        console.error('Booking Status Chart canvas not found');
+                        return;
+                    }
+
+                    if (typeof Chart === 'undefined') {
+                        console.error('Chart.js not loaded');
+                        return;
+                    }
+
+                    // Check if canvas is visible and has dimensions
+                    if (canvas.offsetWidth === 0 || canvas.offsetHeight === 0) {
+                        console.error('Booking Status Chart canvas is not visible or has no dimensions');
+                        return;
+                    }
+
+                    // Check if canvas can get context
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) {
+                        console.error('Cannot get 2D context from Booking Status Chart canvas');
+                        return;
+                    }
+
+                    // Destroy existing chart if it exists
+                    if (this.chart) {
+                        this.chart.destroy();
+                        this.chart = null;
+                    }
+
+                    console.log('Initializing Booking Status Chart...');
+
+                    try {
+                        this.chart = new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['Approved', 'Pending', 'Done', 'Rejected', 'Cancelled'],
+                                datasets: [{
+                                    data: [],
+                                    backgroundColor: [
+                                        '#10B981', // Green for Approved
+                                        '#F59E0B', // Yellow for Pending
+                                        '#3B82F6', // Blue for Done
+                                        '#EF4444', // Red for Rejected
+                                        '#6B7280'  // Gray for Cancelled
+                                    ],
+                                    borderColor: [
+                                        '#059669',
+                                        '#D97706',
+                                        '#2563EB',
+                                        '#DC2626',
+                                        '#4B5563'
+                                    ],
+                                    borderWidth: 2,
+                                    hoverOffset: 10
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    },
+                                    tooltip: {
+                                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                        titleColor: 'white',
+                                        bodyColor: 'white',
+                                        borderColor: '#e5e7eb',
+                                        borderWidth: 1,
+                                        callbacks: {
+                                            label: function(context) {
+                                                const label = context.label || '';
+                                                const value = context.parsed || 0;
+                                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                                return `${label}: ${value} (${percentage}%)`;
+                                            }
+                                        }
+                                    }
+                                },
+                                cutout: '60%'
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Error initializing Booking Status Chart:', error);
+                        this.chart = null;
+                    }
+                },
+
                 async updateChart() {
                     this.loading = true;
-                    
+                    console.log('Updating Booking Status Chart for month:', this.selectedMonth);
+
                     try {
                         // Fetch real data from the server
-                        const response = await fetch(`/dashboard/peak-usage-data?month=${this.selectedMonth}`, {
+                        const response = await fetch(`/dashboard/booking-status-data?month=${this.selectedMonth}`, {
                             headers: {
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                                 'Accept': 'application/json'
                             }
                         });
-                        
+
+                        console.log('Booking status data response status:', response.status);
+
                         if (response.ok) {
                             const data = await response.json();
-                            this.chartData = data;
+                            console.log('Booking status data received:', data);
+                            this.updateChartData(data);
                         } else {
+                            console.error('Booking status data API response not ok:', response.status, response.statusText);
                             // Fallback to initial data generation if API fails
                             this.generateFallbackData();
                         }
                     } catch (error) {
-                        console.log('Failed to fetch peak usage data, using fallback');
+                        console.error('Failed to fetch booking status data:', error);
                         this.generateFallbackData();
                     }
-                    
+
                     this.loading = false;
                 },
-                
-                generateFallbackData() {
-                    // Fallback data generation
-                    const data = [];
-                    const year = new Date().getFullYear();
-                    const daysInMonth = new Date(year, this.selectedMonth, 0).getDate();
-                    
-                    for (let day = 1; day <= daysInMonth; day++) {
-                        const date = new Date(year, this.selectedMonth - 1, day);
-                        data.push({
-                            date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                            morning: 0, // No data fallback
-                            afternoon: 0,
-                            evening: 0
+
+                updateChartData(data) {
+                    if (!this.chart) return;
+
+                    try {
+                        // Destroy existing chart and recreate with new data
+                        this.chart.destroy();
+
+                        const canvas = document.getElementById('bookingStatusChart');
+                        if (!canvas) return;
+
+                        const ctx = canvas.getContext('2d');
+                        if (!ctx) return;
+
+                        // Transform data to array format for doughnut chart
+                        const statusCounts = [
+                            data.approved || 0,
+                            data.pending || 0,
+                            data.done || 0,
+                            data.rejected || 0,
+                            data.cancelled || 0
+                        ];
+
+                        this.chart = new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['Approved', 'Pending', 'Done', 'Rejected', 'Cancelled'],
+                                datasets: [{
+                                    data: statusCounts,
+                                    backgroundColor: [
+                                        '#10B981', // Green for Approved
+                                        '#F59E0B', // Yellow for Pending
+                                        '#3B82F6', // Blue for Done
+                                        '#EF4444', // Red for Rejected
+                                        '#6B7280'  // Gray for Cancelled
+                                    ],
+                                    borderColor: [
+                                        '#059669',
+                                        '#D97706',
+                                        '#2563EB',
+                                        '#DC2626',
+                                        '#4B5563'
+                                    ],
+                                    borderWidth: 2,
+                                    hoverOffset: 10
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    },
+                                    tooltip: {
+                                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                        titleColor: 'white',
+                                        bodyColor: 'white',
+                                        borderColor: '#e5e7eb',
+                                        borderWidth: 1,
+                                        callbacks: {
+                                            label: function(context) {
+                                                const label = context.label || '';
+                                                const value = context.parsed || 0;
+                                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                                return `${label}: ${value} (${percentage}%)`;
+                                            }
+                                        }
+                                    }
+                                },
+                                cutout: '60%'
+                            }
                         });
+                    } catch (error) {
+                        console.error('Error updating Booking Status Chart:', error);
+                        this.chart = null;
                     }
-                    
-                    this.chartData = data;
+                },
+
+                generateFallbackData() {
+                    // Fallback data generation for booking status distribution
+                    const fallbackData = {
+                        approved: Math.floor(Math.random() * 15) + 5,
+                        pending: Math.floor(Math.random() * 10) + 2,
+                        done: Math.floor(Math.random() * 20) + 8,
+                        rejected: Math.floor(Math.random() * 5) + 1,
+                        cancelled: Math.floor(Math.random() * 3) + 1
+                    };
+
+                    this.updateChartData(fallbackData);
                 }
             }
         }

@@ -133,8 +133,8 @@ class CalendarController extends Controller
             return [
                 'id' => $booking->id,
                 'title' => $this->generateEventTitle($booking),
-                'start' => $booking->start_time->toISOString(),
-                'end' => $booking->end_time->toISOString(),
+                'start' => $booking->start_time?->toISOString() ?? now()->toISOString(),
+                'end' => $booking->end_time?->toISOString() ?? now()->addHour()->toISOString(),
                 'backgroundColor' => $this->getStatusColor($booking->status),
                 'borderColor' => $this->getStatusBorderColor($booking->status),
                 'textColor' => $this->getTextColor($booking->status),
@@ -155,10 +155,10 @@ class CalendarController extends Controller
                     'isUpcoming' => $booking->isUpcoming(),
                     'isActive' => $booking->isActive(),
                     'isPast' => $booking->isPast(),
-                    'assetName' => $booking->asset->name,
-                    'assetModel' => $booking->asset->model, // for vehicles
-                    'assetPlateNumber' => $booking->asset->plate_number, // for vehicles
-                    'assetTag' => $booking->asset->asset_tag, // for IT assets                    
+                    'assetName' => $booking->asset?->name ?? 'Asset not found',
+                    'assetModel' => $booking->asset?->model ?? null, // for vehicles
+                    'assetPlateNumber' => $booking->asset?->plate_number ?? null, // for vehicles
+                    'assetTag' => $booking->asset?->asset_tag ?? null, // for IT assets
                 ]
             ];
         });
@@ -624,5 +624,30 @@ class CalendarController extends Controller
         if ($performedAt) return '#059669'; // green-600
         if ($isUpcoming) return '#d97706'; // yellow-600
         return '#4b5563'; // gray-600
+    }
+
+    /**
+     * Get booking status distribution data
+     */
+    public function getBookingStatusData(Request $request)
+    {
+        $month = $request->get('month', now()->month);
+        $year = now()->year;
+
+        // Get bookings for the specified month
+        $bookings = Booking::whereYear('start_time', $year)
+            ->whereMonth('start_time', $month)
+            ->get();
+
+        // Count bookings by status
+        $statusCounts = [
+            'approved' => $bookings->where('status', 'approved')->count(),
+            'pending' => $bookings->where('status', 'pending')->count(),
+            'done' => $bookings->where('status', 'done')->count(),
+            'rejected' => $bookings->where('status', 'rejected')->count(),
+            'cancelled' => $bookings->where('status', 'cancelled')->count(),
+        ];
+
+        return response()->json($statusCounts);
     }
 }

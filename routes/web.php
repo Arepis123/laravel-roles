@@ -41,9 +41,9 @@ Route::get('/dashboard/chart-data', [App\Http\Controllers\Api\CalendarController
     ->middleware(['auth'])
     ->name('dashboard.chart-data');
 
-Route::get('/dashboard/peak-usage-data', [App\Http\Controllers\Api\CalendarController::class, 'getPeakUsageData'])
+Route::get('/dashboard/booking-status-data', [App\Http\Controllers\Api\CalendarController::class, 'getBookingStatusData'])
     ->middleware(['auth'])
-    ->name('dashboard.peak-usage-data');
+    ->name('dashboard.booking-status-data');
 
 Route::get('/user-manual', function () {
     return response()->file(public_path('user-manual.html'));
