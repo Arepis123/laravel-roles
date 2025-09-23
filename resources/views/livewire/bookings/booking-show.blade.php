@@ -651,15 +651,29 @@
 
                     @if($gasFilledUp)
                         <flux:field>
-                            <flux:label>Fuel Amount (RM)</flux:label>
-                            <flux:input 
-                                wire:model="gasAmount" 
-                                type="number" 
+                            <flux:label>Fuel Cost (RM)</flux:label>
+                            <flux:input
+                                wire:model="gasAmount"
+                                type="number"
                                 placeholder="Enter amount spent on fuel"
                                 min="0"
                                 step="0.01"
                             />
                             @error('gasAmount')
+                                <flux:error>{{ $message }}</flux:error>
+                            @enderror
+                        </flux:field>
+
+                        <flux:field>
+                            <flux:label>Fuel Amount (Liters)</flux:label>
+                            <flux:input
+                                wire:model="gasLiters"
+                                type="number"
+                                placeholder="Enter amount of fuel in liters"
+                                min="0"
+                                step="0.1"
+                            />
+                            @error('gasLiters')
                                 <flux:error>{{ $message }}</flux:error>
                             @enderror
                         </flux:field>

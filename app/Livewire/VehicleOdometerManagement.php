@@ -21,6 +21,8 @@ class VehicleOdometerManagement extends Component
     public $odometer_reading = '';
     public $reading_type = 'manual';
     public $distance_traveled = '';
+    public $calculated_distance = '';
+    public $is_manual_distance = false;
     public $recorded_at = '';
     public $notes = '';
     public $performed_by = '';
@@ -66,12 +68,17 @@ class VehicleOdometerManagement extends Component
 
     public function updatedVehicleId()
     {
+        // Reset distance calculation flags when vehicle changes
+        $this->calculated_distance = '';
+        $this->is_manual_distance = false;
+        $this->distance_traveled = '';
+
         // Auto-populate latest odometer reading if available
         if ($this->vehicle_id) {
             $latestReading = VehicleOdometerLog::getLatestReadingForVehicle($this->vehicle_id);
             if ($latestReading) {
-                // Suggest next reading (current + 1 for manual entry)
-                $this->odometer_reading = $latestReading->odometer_reading + 1;
+                // Don't auto-fill odometer, let user enter it
+                // But show the latest reading for reference
             }
         }
     }
@@ -82,7 +89,16 @@ class VehicleOdometerManagement extends Component
         if ($this->vehicle_id && $this->odometer_reading) {
             $latestReading = VehicleOdometerLog::getLatestReadingForVehicle($this->vehicle_id);
             if ($latestReading && $this->odometer_reading > $latestReading->odometer_reading) {
-                $this->distance_traveled = $this->odometer_reading - $latestReading->odometer_reading;
+                $this->calculated_distance = $this->odometer_reading - $latestReading->odometer_reading;
+                // Only auto-fill if user hasn't manually entered distance
+                if (!$this->is_manual_distance) {
+                    $this->distance_traveled = $this->calculated_distance;
+                }
+            } else {
+                $this->calculated_distance = '';
+                if (!$this->is_manual_distance) {
+                    $this->distance_traveled = '';
+                }
             }
         }
     }
@@ -115,6 +131,8 @@ class VehicleOdometerManagement extends Component
         $this->odometer_reading = $log->odometer_reading;
         $this->reading_type = $log->reading_type;
         $this->distance_traveled = $log->distance_traveled;
+        $this->calculated_distance = '';
+        $this->is_manual_distance = true; // Assume manual when editing existing log
         $this->recorded_at = $log->recorded_at->format('Y-m-d\TH:i');
         $this->notes = $log->notes;
         $this->performed_by = $log->performed_by ?? auth()->user()->name ?? '';
@@ -137,6 +155,15 @@ class VehicleOdometerManagement extends Component
             'notes' => $this->notes ?: null,
             'performed_by' => $this->performed_by,
         ];
+
+        // Add note about manual vs calculated distance
+        if ($this->is_manual_distance && $this->calculated_distance && $this->distance_traveled != $this->calculated_distance) {
+            $calculationNote = "[Manual Distance Entry] User entered {$this->distance_traveled} km (system calculated {$this->calculated_distance} km)";
+            $data['notes'] = $data['notes'] ? $data['notes'] . "\n\n" . $calculationNote : $calculationNote;
+        } elseif ($this->calculated_distance && $this->distance_traveled == $this->calculated_distance) {
+            $calculationNote = "[Auto-calculated Distance] Based on previous odometer reading";
+            $data['notes'] = $data['notes'] ? $data['notes'] . "\n\n" . $calculationNote : $calculationNote;
+        }
 
         if ($this->editingLog) {
             $log = VehicleOdometerLog::findOrFail($this->editingLog);
@@ -173,6 +200,31 @@ class VehicleOdometerManagement extends Component
         $this->dispatch('close-modal');
     }
 
+    public function updatedDistanceTraveled()
+    {
+        // Mark as manual entry when user modifies distance
+        if ($this->distance_traveled !== $this->calculated_distance) {
+            $this->is_manual_distance = true;
+        } else {
+            $this->is_manual_distance = false;
+        }
+    }
+
+    public function useCalculatedDistance()
+    {
+        $this->distance_traveled = $this->calculated_distance;
+        $this->is_manual_distance = false;
+    }
+
+    public function getLatestOdometerForSelectedVehicle()
+    {
+        if ($this->vehicle_id) {
+            $latestReading = VehicleOdometerLog::getLatestReadingForVehicle($this->vehicle_id);
+            return $latestReading ? $latestReading->odometer_reading : null;
+        }
+        return null;
+    }
+
     private function resetForm()
     {
         $this->editingLog = null;
@@ -181,6 +233,8 @@ class VehicleOdometerManagement extends Component
         $this->odometer_reading = '';
         $this->reading_type = 'manual';
         $this->distance_traveled = '';
+        $this->calculated_distance = '';
+        $this->is_manual_distance = false;
         $this->recorded_at = now()->format('Y-m-d\TH:i');
         $this->notes = '';
         $this->performed_by = auth()->user()->name ?? '';

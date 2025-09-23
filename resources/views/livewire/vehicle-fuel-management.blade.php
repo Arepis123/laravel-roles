@@ -346,7 +346,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <flux:field>
-                    <flux:label>Fuel Cost ($)</flux:label>
+                    <flux:label>Fuel Cost (RM)</flux:label>
                     <flux:input type="number" wire:model="fuel_cost" placeholder="Cost of fuel" min="0" max="10000" step="0.01" />
                     <flux:error name="fuel_cost" />
                 </flux:field>

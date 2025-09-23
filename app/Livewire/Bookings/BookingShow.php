@@ -32,6 +32,7 @@ class BookingShow extends Component
     public string $currentOdometer = '';
     public bool $gasFilledUp = false;
     public string $gasAmount = '';
+    public string $gasLiters = '';
     public string $fuelLevel = '4';
 
     protected $assetTypeConfig = [
@@ -73,6 +74,7 @@ class BookingShow extends Component
             $this->currentOdometer = $doneDetails['odometer'] ?? '';
             $this->gasFilledUp = $doneDetails['gas_filled'] ?? false;
             $this->gasAmount = $doneDetails['gas_amount'] ?? '';
+            $this->gasLiters = $doneDetails['gas_liters'] ?? '';
             $this->fuelLevel = $doneDetails['fuel_level'] ?? '4';
         }
     }
@@ -95,6 +97,7 @@ class BookingShow extends Component
         $this->currentOdometer = '';
         $this->gasFilledUp = false;
         $this->gasAmount = '';
+        $this->gasLiters = '';
         $this->fuelLevel = '4';
     }
 
@@ -118,6 +121,7 @@ class BookingShow extends Component
                 'currentOdometer' => 'required|numeric|min:0',
                 'fuelLevel' => 'required|integer|min:1|max:8',
                 'gasAmount' => $this->gasFilledUp ? 'required|numeric|min:0' : 'nullable',
+                'gasLiters' => $this->gasFilledUp ? 'required|numeric|min:0' : 'nullable',
             ], [
                 'currentOdometer.required' => 'Current odometer reading is required.',
                 'currentOdometer.numeric' => 'Odometer must be a valid number.',
@@ -125,8 +129,10 @@ class BookingShow extends Component
                 'fuelLevel.integer' => 'Fuel level must be a valid number.',
                 'fuelLevel.min' => 'Fuel level must be at least 1.',
                 'fuelLevel.max' => 'Fuel level must be at most 8.',
-                'gasAmount.required' => 'Gas amount is required when gas filled up is checked.',
-                'gasAmount.numeric' => 'Gas amount must be a valid number.',
+                'gasAmount.required' => 'Fuel cost is required when fuel was filled up.',
+                'gasAmount.numeric' => 'Fuel cost must be a valid number.',
+                'gasLiters.required' => 'Fuel amount in liters is required when fuel was filled up.',
+                'gasLiters.numeric' => 'Fuel amount must be a valid number.',
             ]);
         } else {
             // For meeting room and IT assets
@@ -141,23 +147,39 @@ class BookingShow extends Component
         if ($this->asset_type === 'vehicle') {
             // For vehicles, save to dedicated tables instead of done_details
             
+            // Calculate distance from previous reading for the notes
+            $previousReading = VehicleOdometerLog::where('vehicle_id', $this->booking->asset_id)
+                ->where('recorded_at', '<', now())
+                ->orderBy('recorded_at', 'desc')
+                ->first();
+
+            $calculatedDistance = $previousReading ?
+                max(0, $this->currentOdometer - $previousReading->odometer_reading) : 0;
+
+            $notes = 'Booking completion - odometer reading';
+            if ($calculatedDistance > 0) {
+                $notes .= "\n[Auto-calculated Distance] Distance: {$calculatedDistance} km based on previous reading";
+            }
+
             // Save odometer log
             VehicleOdometerLog::create([
                 'booking_id' => $this->booking->id,
                 'vehicle_id' => $this->booking->asset_id,
                 'odometer_reading' => $this->currentOdometer,
                 'reading_type' => 'end',
+                'distance_traveled' => $calculatedDistance,
                 'recorded_by' => auth()->id(),
                 'recorded_at' => now(),
-                'notes' => 'Booking completion - odometer reading'
+                'notes' => $notes
             ]);
 
             // Save fuel log if gas was filled
-            if ($this->gasFilledUp && $this->gasAmount) {
+            if ($this->gasFilledUp && $this->gasAmount && $this->gasLiters) {
                 VehicleFuelLog::create([
                     'booking_id' => $this->booking->id,
                     'vehicle_id' => $this->booking->asset_id,
                     'fuel_cost' => $this->gasAmount,
+                    'fuel_amount' => $this->gasLiters,
                     'fuel_type' => 'petrol', // Default to petrol, can be made dynamic later
                     'odometer_at_fill' => $this->currentOdometer,
                     'filled_by' => auth()->id(),

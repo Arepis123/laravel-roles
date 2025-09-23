@@ -179,15 +179,30 @@ class BookingMyShow extends Component
         if ($this->asset_type === 'vehicle') {
             // For vehicles, save to dedicated tables instead of done_details
             
+            // Calculate distance from previous reading for the notes
+            $previousReading = VehicleOdometerLog::where('vehicle_id', $this->booking->asset_id)
+                ->where('recorded_at', '<', now())
+                ->orderBy('recorded_at', 'desc')
+                ->first();
+
+            $calculatedDistance = $previousReading ?
+                max(0, $this->currentOdometer - $previousReading->odometer_reading) : 0;
+
+            $notes = 'Booking completion - odometer reading';
+            if ($calculatedDistance > 0) {
+                $notes .= "\n[Auto-calculated Distance] Distance: {$calculatedDistance} km based on previous reading";
+            }
+
             // Save odometer log
             VehicleOdometerLog::create([
                 'booking_id' => $this->booking->id,
                 'vehicle_id' => $this->booking->asset_id,
                 'odometer_reading' => $this->currentOdometer,
                 'reading_type' => 'end',
+                'distance_traveled' => $calculatedDistance,
                 'recorded_by' => auth()->id(),
                 'recorded_at' => now(),
-                'notes' => 'Booking completion - odometer reading'
+                'notes' => $notes
             ]);
 
             // Save fuel log if gas was filled

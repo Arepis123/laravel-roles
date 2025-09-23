@@ -247,7 +247,24 @@
                             
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                 @if($log->distance_traveled)
-                                    {{ number_format($log->distance_traveled) }} km
+                                    <div class="flex items-center space-x-2">
+                                        <span>{{ number_format($log->distance_traveled) }} km</span>
+                                        @if(str_contains($log->notes ?? '', '[Manual Distance Entry]'))
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                </svg>
+                                                Manual
+                                            </span>
+                                        @elseif(str_contains($log->notes ?? '', '[Auto-calculated Distance]'))
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 0l-3-3m3 3l-3 3m-3 4h6m0 0l-3-3m3 3l-3 3"/>
+                                                </svg>
+                                                Auto
+                                            </span>
+                                        @endif
+                                    </div>
                                 @else
                                     <span class="text-gray-400">-</span>
                                 @endif
@@ -351,7 +368,78 @@
 
                 <flux:field>
                     <flux:label>Distance Traveled (km)</flux:label>
-                    <flux:input type="number" wire:model="distance_traveled" placeholder="Distance for this trip" min="0" max="99999" step="0.1" />
+
+                    @if($calculated_distance && $vehicle_id && $odometer_reading)
+                        <div class="space-y-3">
+                            <!-- Calculated Distance Info -->
+                            <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 0l-3-3m3 3l-3 3m-3 4h6m0 0l-3-3m3 3l-3 3"/>
+                                        </svg>
+                                        <span class="text-sm text-blue-700 dark:text-blue-300">
+                                            System calculated: <strong>{{ number_format($calculated_distance) }} km</strong>
+                                        </span>
+                                    </div>
+                                    @if($is_manual_distance)
+                                        <flux:button
+                                            size="sm"
+                                            variant="ghost"
+                                            wire:click="useCalculatedDistance"
+                                            class="text-blue-600 hover:text-blue-800 dark:text-blue-400"
+                                        >
+                                            Use calculated
+                                        </flux:button>
+                                    @endif
+                                </div>
+                                @if($this->getLatestOdometerForSelectedVehicle())
+                                    <p class="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                        Based on previous reading: {{ number_format($this->getLatestOdometerForSelectedVehicle()) }} km
+                                    </p>
+                                @endif
+                            </div>
+
+                            <!-- Distance Input -->
+                            <div class="relative">
+                                <flux:input
+                                    type="number"
+                                    wire:model.live="distance_traveled"
+                                    placeholder="Enter manual distance or use calculated"
+                                    min="0"
+                                    max="99999"
+                                    step="0.1"
+                                    class="{{ $is_manual_distance ? 'border-orange-300 focus:border-orange-500 focus:ring-orange-200' : '' }}"
+                                />
+                                @if($is_manual_distance)
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                        <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        </svg>
+                                    </div>
+                                @endif
+                            </div>
+
+                            @if($is_manual_distance && $calculated_distance != $distance_traveled)
+                                <div class="text-xs text-orange-600 dark:text-orange-400">
+                                    <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                                    </svg>
+                                    Manual entry: differs from calculated distance
+                                </div>
+                            @endif
+                        </div>
+                    @else
+                        <flux:input
+                            type="number"
+                            wire:model.live="distance_traveled"
+                            placeholder="Distance for this trip (will auto-calculate when odometer entered)"
+                            min="0"
+                            max="99999"
+                            step="0.1"
+                        />
+                    @endif
+
                     <flux:error name="distance_traveled" />
                 </flux:field>
             </div>
