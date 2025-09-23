@@ -31,11 +31,11 @@
                         <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wider">{{ __('ADMIN') }}</h3>
                     </div>
                     @if(auth()->user()->hasRole(['Admin', 'Super Admin']))
-                    <flux:sidebar.item icon="calendar" :href="route('bookings.index')" :current="request()->routeIs('bookings.index')" wire:navigate badge>
-                        {{ __('Admin Booking') }}
-                        <x-slot:badge>
+                    <flux:sidebar.item icon="calendar" :href="route('bookings.index')" :current="request()->routeIs('bookings.index')" wire:navigate>
+                        <div class="flex items-center justify-between w-full">
+                            <span>{{ __('Admin Booking') }}</span>
                             <livewire:pending-bookings-badge wire:poll.30s="loadCount" />
-                        </x-slot:badge>
+                        </div>
                     </flux:sidebar.item>
                     @endif
                     @if(auth()->user()->can('user.view') || auth()->user()->can('user.create') || auth()->user()->can('user.edit') || auth()->user()->can('user.delete'))
@@ -45,7 +45,11 @@
                     <flux:sidebar.item icon="key" :href="route('roles.index')" :current="request()->routeIs('roles.index')" wire:navigate>{{ __('Role') }}</flux:sidebar.item>
                     @endif
                     @if(auth()->user()->can('asset.view') || auth()->user()->can('asset.create') || auth()->user()->can('asset.edit') || auth()->user()->can('asset.delete'))
-                    <flux:sidebar.item icon="squares-2x2" :href="route('assets')" :current="request()->routeIs('assets')" wire:navigate>{{ __('Asset') }}</flux:sidebar.item>
+                    {{-- <flux:sidebar.item icon="squares-2x2" :href="route('assets')" :current="request()->routeIs('assets')" wire:navigate>{{ __('Asset') }}</flux:sidebar.item> --}}
+                    <flux:sidebar.group expandable icon="squares-2x2" heading="Asset" class="grid">
+                        <flux:sidebar.item :href="route('assets')">Main</flux:sidebar.item>
+                        <flux:sidebar.item :href="route('assets.qr-codes')">QR Code</flux:sidebar.item>
+                    </flux:sidebar.group>                    
                     @endif
                     @if(auth()->user()->can('report.view') || auth()->user()->can('report.create') || auth()->user()->can('report.edit') || auth()->user()->can('report.delete'))
                     <flux:sidebar.item icon="document" :href="route('reports')" :current="request()->routeIs('reports')" wire:navigate>{{ __('Report') }}</flux:sidebar.item>

@@ -70,7 +70,13 @@ class BookingMyShow extends Component
         $this->additional_booking = $this->booking->additional_booking ?? [];
         $this->refreshment_details = $this->booking->refreshment_details ?? '';
         $this->status = $this->booking->status ?? 'pending';
-        
+
+        // Check if we should auto-open completion modal (from QR code scan)
+        if (session('auto_open_completion_modal') || request('auto_open_completion_modal')) {
+            $this->showDoneModal = true;
+            session()->forget('auto_open_completion_modal'); // Clear it after using
+        }
+
         // Load existing done details if available
         if ($this->booking->done_details) {
             $doneDetails = $this->booking->done_details;

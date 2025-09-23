@@ -27,9 +27,9 @@
                         </div>
                         <div>
                             <flux:select wire:model.live="asset_type" label="Asset Type" required>
-                                <flux:option value="">Select Type</flux:option>
+                                <flux:select.option value="">Select Type</flux:select.option>
                                 @foreach($assetTypes as $key => $value)
-                                    <flux:option value="{{ $key }}">{{ $value }}</flux:option>
+                                    <flux:select.option value="{{ $key }}">{{ $value }}</flux:select.option>
                                 @endforeach
                             </flux:select>
                         </div>
@@ -55,7 +55,7 @@
                         <div>
                             <flux:select wire:model="status" label="Status" required>
                                 @foreach($assetStatuses as $key => $value)
-                                    <flux:option value="{{ $key }}">{{ $value }}</flux:option>
+                                    <flux:select.option value="{{ $key }}">{{ $value }}</flux:select.option>
                                 @endforeach
                             </flux:select>
                         </div>

@@ -29,6 +29,10 @@ class AssetManagement extends Component
     // Delete Modal properties
     public $showDeleteModal = false;
     public $assetToDelete = [];
+
+    // QR Code Modal properties
+    public $showQrModal = false;
+    public $selectedAssetForQr = null;
     
     // Meeting Room specific fields
     #[Validate('required|string|max:255')]
@@ -774,6 +778,67 @@ class AssetManagement extends Component
             ->where('status', 'active')
             ->orderBy('name')
             ->get();
+    }
+
+    // QR Code methods
+    public function showQrCode($assetType, $assetId)
+    {
+        $asset = $this->findAssetModel($assetType, $assetId);
+
+        if ($asset) {
+            $this->selectedAssetForQr = $asset;
+            $this->showQrModal = true;
+        }
+    }
+
+    public function generateQrCode($assetType, $assetId)
+    {
+        $asset = $this->findAssetModel($assetType, $assetId);
+
+        if ($asset) {
+            // Force regenerate QR code identifier (creates new identifier even if one exists)
+            $asset->regenerateQrCodeIdentifier();
+            $this->selectedAssetForQr = $asset->fresh(); // Refresh the model
+
+            // Open modal if not already open
+            if (!$this->showQrModal) {
+                $this->showQrModal = true;
+            }
+
+            session()->flash('success', 'QR code regenerated successfully!');
+        }
+    }
+
+    public function downloadQrCode()
+    {
+        if ($this->selectedAssetForQr && $this->selectedAssetForQr->getQrCodeIdentifier()) {
+            // Use SVG format instead of PNG to avoid imagick dependency
+            $qrCodeSvg = $this->selectedAssetForQr->getQrCodeSvg(300);
+            $filename = 'qr-code-' . strtolower(class_basename($this->selectedAssetForQr)) . '-' . $this->selectedAssetForQr->id . '.svg';
+
+            return response()->streamDownload(function () use ($qrCodeSvg) {
+                echo $qrCodeSvg;
+            }, $filename, [
+                'Content-Type' => 'image/svg+xml',
+            ]);
+        }
+    }
+
+    public function closeQrModal()
+    {
+        $this->showQrModal = false;
+        $this->selectedAssetForQr = null;
+    }
+
+
+    private function findAssetModel($assetType, $assetId)
+    {
+        return match ($assetType) {
+            'Vehicle', 'vehicle' => Vehicle::find($assetId),
+            'MeetingRoom', 'meeting_room' => MeetingRoom::find($assetId),
+            'ItAsset', 'it_asset' => ItAsset::find($assetId),
+            default => null
+        };
     }
 
     public function render()

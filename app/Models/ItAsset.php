@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\HasQrCode;
 use Illuminate\Database\Eloquent\Model;
 
 class ItAsset extends Model
 {
-    protected $fillable = ['name', 'asset_tag', 'location', 'specs', 'notes'];
+    use HasQrCode;
+
+    protected $fillable = ['name', 'asset_tag', 'location', 'specs', 'notes', 'qr_code_identifier'];
 
     public function bookings()
     {

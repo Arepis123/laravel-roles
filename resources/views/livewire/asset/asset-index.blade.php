@@ -21,25 +21,25 @@
             </div>
             <div>
                 <flux:select wire:model.live="typeFilter">
-                    <flux:option value="">All Types</flux:option>
+                    <flux:select.option value="">All Types</flux:select.option>
                     @foreach($assetTypes as $key => $value)
-                        <flux:option value="{{ $key }}">{{ $value }}</flux:option>
+                        <flux:select.option value="{{ $key }}">{{ $value }}</flux:select.option>
                     @endforeach
                 </flux:select>
             </div>
             <div>
                 <flux:select wire:model.live="statusFilter">
-                    <flux:option value="">All Statuses</flux:option>
+                    <flux:select.option value="">All Statuses</flux:select.option>
                     @foreach($assetStatuses as $key => $value)
-                        <flux:option value="{{ $key }}">{{ $value }}</flux:option>
+                        <flux:select.option value="{{ $key }}">{{ $value }}</flux:select.option>
                     @endforeach
                 </flux:select>
             </div>
             <div>
                 <flux:select wire:model.live="bookableFilter">
-                    <flux:option value="">All Assets</flux:option>
-                    <flux:option value="1">Bookable Only</flux:option>
-                    <flux:option value="0">Non-Bookable</flux:option>
+                    <flux:select.option value="">All Assets</flux:select.option>
+                    <flux:select.option value="1">Bookable Only</flux:select.option>
+                    <flux:select.option value="0">Non-Bookable</flux:select.option>
                 </flux:select>
             </div>
         </div>

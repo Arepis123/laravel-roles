@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\HasQrCode;
 use Illuminate\Database\Eloquent\Model;
 
 class MeetingRoom extends Model
 {
-    protected $fillable = ['name', 'location', 'capacity', 'has_projector', 'notes'];
+    use HasQrCode;
+
+    protected $fillable = ['name', 'location', 'capacity', 'has_projector', 'notes', 'qr_code_identifier'];
 
     public function bookings()
     {

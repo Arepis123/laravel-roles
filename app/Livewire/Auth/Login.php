@@ -82,6 +82,33 @@ class Login extends Component
             );
         }
 
+        // Check if we have QR completion parameters in session
+        $qrParams = session('qr_completion_params');
+        \Log::info('Login: Checking QR completion params', [
+            'qr_params' => $qrParams,
+            'user_id' => auth()->id(),
+            'session_id' => session()->getId(),
+            'request_url' => request()->fullUrl()
+        ]);
+
+        if ($qrParams && isset($qrParams['action']) && $qrParams['action'] === 'qr_complete') {
+            session()->forget('qr_completion_params'); // Clear it after using
+
+            $redirectUrl = route('booking.complete-qr', [
+                'type' => $qrParams['type'],
+                'identifier' => $qrParams['identifier']
+            ]);
+
+            \Log::info('Login: Redirecting to QR completion', [
+                'redirect_url' => $redirectUrl,
+                'params' => $qrParams
+            ]);
+
+            // Use Livewire redirect
+            $this->redirect($redirectUrl, navigate: true);
+            return;
+        }
+
         $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
     }
 

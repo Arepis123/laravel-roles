@@ -108,6 +108,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
 
     Route::get('assets/assets', AssetManagement::class)->name('assets')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
+    Route::get('assets/qr-codes', \App\Livewire\Admin\QrCodeManagement::class)->name('assets.qr-codes')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
     
     // Vehicle Management Routes
     Route::get('vehicles/fuel', VehicleFuelManagement::class)->name('vehicles.fuel')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
@@ -258,8 +259,20 @@ Route::middleware(['auth'])->group(function () {
             abort(500, 'Error downloading file: ' . $e->getMessage());
         }
     })->name('reports.download');
- 
+
 });
+
+// QR Code Booking Routes (Outside auth middleware so users can scan without logging in first)
+Route::get('/qr-booking/complete/{type}/{identifier}', [App\Http\Controllers\QrBookingController::class, 'completeBooking'])
+    ->name('booking.complete-qr');
+
+// QR redirect now handled via session parameters in Login component
+
+
+
+// QR completion now uses existing booking show workflow
+// Old completion form routes removed - now redirects to booking-my-show with modal auto-open
+
 
 
 require __DIR__.'/auth.php';

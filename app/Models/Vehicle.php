@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\HasQrCode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Vehicle extends Model
 {
-    protected $fillable = ['model', 'plate_number', 'capacity', 'driver_name', 'notes', 'status', 'allowed_positions', 'allowed_users', 'parking_required'];
+    use HasQrCode;
+
+    protected $fillable = ['model', 'plate_number', 'capacity', 'driver_name', 'notes', 'status', 'allowed_positions', 'allowed_users', 'parking_required', 'qr_code_identifier'];
 
     protected $casts = [
         'capacity' => 'integer',

@@ -545,6 +545,10 @@
         });
 
         $wire.on('maintenance-export', (data) => {
+            // Debug logging
+            console.log('Maintenance export data received:', data);
+            console.log('Format received:', data.format);
+            
             const params = new URLSearchParams({
                 vehicle_id: data.vehicle_id || '',
                 date_from: data.date_from || '',
@@ -556,13 +560,15 @@
             // Create export URL
             const exportUrl = `/vehicle-analytics/export?${params}`;
             
+            console.log('Constructed URL:', exportUrl);
+            
             // Download the file
             window.open(exportUrl, '_blank');
             
             // Show success message
             $flux.toast({
                 title: 'Export Started',
-                body: `${data.format.toUpperCase()} export is being generated...`,
+                body: `${(data.format || 'Unknown').toUpperCase()} export is being generated...`,
                 variant: 'success'
             });
         });

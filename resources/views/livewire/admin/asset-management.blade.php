@@ -202,6 +202,11 @@
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">
                             <div class="flex items-center gap-1">
+                                {{ __('QR Code') }}
+                            </div>
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">
+                            <div class="flex items-center gap-1">
                                 {{ __('Bookings') }}
                             </div>
                         </th>
@@ -285,6 +290,16 @@
                                 @else
                                     <flux:text>{{ $asset['status'] }}</flux:text>
                                 @endif
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <flux:button size="sm" wire:click="showQrCode('{{ $asset['type'] }}', {{ $asset['id'] }})" variant="ghost" tooltip="View QR Code">
+                                        <flux:icon name="qr-code" class="w-4 h-4" />
+                                    </flux:button>
+                                    <flux:button size="sm" wire:click="generateQrCode('{{ $asset['type'] }}', {{ $asset['id'] }})" variant="ghost" tooltip="Generate/Regenerate QR Code">
+                                        <flux:icon name="arrow-path" class="w-4 h-4" />
+                                    </flux:button>
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <div class="text-sm font-medium text-gray-900 dark:text-neutral-200">
@@ -702,6 +717,67 @@
 
         <div class="flex justify-end">
             <flux:button wire:click="closeStatsModal" variant="ghost">
+                Close
+            </flux:button>
+        </div>
+    </flux:modal>
+
+
+    <!-- QR Code Modal -->
+    <flux:modal wire:model="showQrModal" class="w-full max-w-md">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Asset QR Code</flux:heading>
+                <flux:subheading>Scan this QR code to complete bookings for this asset</flux:subheading>
+            </div>
+
+            @if($selectedAssetForQr)
+                <div class="text-center">
+                    <div class="mb-4">
+                        <flux:heading size="sm" class="text-gray-900 dark:text-white">
+                            {{ $selectedAssetForQr->getAssetDisplayName() }}
+                        </flux:heading>
+                        <flux:subheading class="text-gray-600 dark:text-gray-400">
+                            {{ class_basename($selectedAssetForQr) }}
+                        </flux:subheading>
+                    </div>
+
+                    @if($selectedAssetForQr->getQrCodeIdentifier())
+                        <div class="bg-white p-4 rounded-lg border border-gray-200 dark:border-gray-700 inline-block mb-4">
+                            {!! $selectedAssetForQr->getQrCodeSvg(200) !!}
+                        </div>
+
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mb-4 space-y-1">
+                            <p>QR Code ID: {{ $selectedAssetForQr->getQrCodeIdentifier() }}</p>
+                            <p>Users can scan this code to mark their bookings as complete</p>
+                        </div>
+
+                        <div class="flex justify-center gap-2 mb-4">
+                            <flux:button size="sm" wire:click="downloadQrCode" variant="outline">
+                                {{-- <flux:icon name="arrow-down-tray" class="w-4 h-4 mr-1" /> --}}
+                                Download SVG
+                            </flux:button>
+                            <flux:button size="sm" wire:click="generateQrCode('{{ class_basename($selectedAssetForQr) }}', {{ $selectedAssetForQr->id }})" variant="outline">
+                                {{-- <flux:icon name="arrow-path" class="w-4 h-4 mr-1" /> --}}
+                                Regenerate
+                            </flux:button>
+                        </div>
+                    @else
+                        <div class="text-center py-8">
+                            <flux:icon name="qr-code" class="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                            <p class="text-gray-500 dark:text-gray-400 mb-4">No QR code generated yet</p>
+                            <flux:button wire:click="generateQrCode('{{ class_basename($selectedAssetForQr) }}', {{ $selectedAssetForQr->id }})" variant="primary">
+                                <flux:icon name="plus" class="w-4 h-4 mr-1" />
+                                Generate QR Code
+                            </flux:button>
+                        </div>
+                    @endif
+                </div>
+            @endif
+        </div>
+
+        <div class="flex justify-end">
+            <flux:button wire:click="closeQrModal" variant="ghost">
                 Close
             </flux:button>
         </div>

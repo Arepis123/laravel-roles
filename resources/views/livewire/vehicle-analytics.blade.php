@@ -678,7 +678,7 @@
             // Show success message
             $flux.toast({
                 title: 'Export Started',
-                body: `${data.format.toUpperCase()} export is being generated...`,
+                body: `${(data.format || 'Unknown').toUpperCase()} export is being generated...`,
                 variant: 'success'
             });
         });

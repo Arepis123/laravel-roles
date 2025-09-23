@@ -373,6 +373,12 @@ class VehicleMaintenanceManagement extends Component
 
     public function exportMaintenanceData($format = 'excel')
     {
+        // Debug logging
+        \Log::info('Maintenance export method called', [
+            'format_received' => $format,
+            'format_type' => gettype($format)
+        ]);
+        
         $this->dispatch('maintenance-export', [
             'vehicle_id' => $this->filterVehicle,
             'date_from' => $this->filterDateFrom,
