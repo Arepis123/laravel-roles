@@ -6,13 +6,9 @@
                 <flux:heading size="xl">QR Code Management</flux:heading>
                 <flux:subheading>Manage QR codes for all assets</flux:subheading>
             </div>
-            <div class="flex gap-2">
-                <flux:button wire:click="generateMissingQr" variant="primary" size="sm">
-                    <flux:icon.qr-code class="size-4" />
-                    Generate Missing QR Codes
-                </flux:button>
-                <flux:button wire:click="showAnalytics" variant="ghost" size="sm">
-                    <flux:icon.chart-bar class="size-4" />
+            <div>
+                <flux:button wire:click="showAnalytics" variant="primary">
+                    <flux:icon.chart-bar class="size-4 inline" />
                     Analytics
                 </flux:button>
             </div>
@@ -57,78 +53,14 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <flux:subheading>Recent Activity</flux:subheading>
-                        <flux:heading size="lg">{{ $stats['recent_scans']->count() + rand(15, 25) }}</flux:heading>
-                        <div class="text-xs text-green-600 mt-1">+12% this week</div>
+                        <flux:heading size="lg">{{ $stats['recent_scans']->count() }}</flux:heading>
+                        <div class="text-xs text-gray-600 mt-1">Last 7 days</div>
                     </div>
-                    <div class="relative">
-                        <flux:icon.clock class="size-8 text-orange-500" />
-                        <div class="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                    </div>
+                    <flux:icon.clock class="size-8 text-orange-500" />
                 </div>
             </flux:card>
         </div>
 
-        <!-- Quick Coverage Chart -->
-        <flux:card class="p-4 mb-6">
-            <div class="flex items-center justify-between mb-4">
-                <flux:heading size="base">QR Code Coverage by Asset Type</flux:heading>
-                <flux:button wire:click="generateMissingQr" variant="ghost" size="sm">
-                    <flux:icon.plus class="size-4" />
-                    Generate Missing
-                </flux:button>
-            </div>
-            <div class="h-32 relative">
-                <canvas id="coverageChart" class="w-full h-full"></canvas>
-            </div>
-        </flux:card>
-
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const coverageCtx = document.getElementById('coverageChart');
-                if (coverageCtx) {
-                    new Chart(coverageCtx, {
-                        type: 'bar',
-                        data: {
-                            labels: ['Vehicles', 'Meeting Rooms', 'IT Assets'],
-                            datasets: [
-                                {
-                                    label: 'With QR Codes',
-                                    data: [{{ $stats['with_qr']['vehicles'] }}, {{ $stats['with_qr']['meeting_rooms'] }}, {{ $stats['with_qr']['it_assets'] }}],
-                                    backgroundColor: 'rgba(34, 197, 94, 0.8)',
-                                },
-                                {
-                                    label: 'Without QR Codes',
-                                    data: [
-                                        {{ $stats['total_assets']['vehicles'] - $stats['with_qr']['vehicles'] }},
-                                        {{ $stats['total_assets']['meeting_rooms'] - $stats['with_qr']['meeting_rooms'] }},
-                                        {{ $stats['total_assets']['it_assets'] - $stats['with_qr']['it_assets'] }}
-                                    ],
-                                    backgroundColor: 'rgba(239, 68, 68, 0.8)',
-                                }
-                            ]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    position: 'right',
-                                }
-                            },
-                            scales: {
-                                x: {
-                                    stacked: true,
-                                },
-                                y: {
-                                    stacked: true,
-                                    beginAtZero: true
-                                }
-                            }
-                        }
-                    });
-                }
-            });
-        </script>
     </div>
 
     <!-- Filters and Search -->
@@ -163,14 +95,12 @@
 
             <div class="flex gap-2">
                 @if(count($selectedAssets) > 0)
-                    <flux:button wire:click="$set('showBulkModal', true)" variant="primary" size="sm">
-                        <flux:icon.cog class="size-4" />
+                    <flux:button wire:click="$set('showBulkModal', true)" variant="primary">
                         Bulk Actions ({{ count($selectedAssets) }})
                     </flux:button>
                 @endif
 
-                <flux:button wire:click="$set('showTemplateModal', true)" variant="ghost" size="sm">
-                    <flux:icon.printer class="size-4" />
+                <flux:button wire:click="$set('showTemplateModal', true)" variant="primary">
                     Print Templates
                 </flux:button>
             </div>
@@ -178,41 +108,117 @@
     </flux:card>
 
     <!-- Assets Table -->
-    <flux:card>
+    <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-700 overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead>
-                    <tr class="border-b border-gray-200">
-                        <th class="text-left p-4">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-zinc-700">
+                <thead class="bg-gray-50 dark:bg-zinc-800">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             <flux:checkbox
                                 wire:model.live="selectAll"
-                                wire:change="updatedSelectAll"
                             />
                         </th>
-                        <th class="text-left p-4 font-medium">Asset</th>
-                        <th class="text-left p-4 font-medium">Type</th>
-                        <th class="text-left p-4 font-medium">QR Status</th>
-                        <th class="text-left p-4 font-medium">Bookings</th>
-                        <th class="text-left p-4 font-medium">Last Used</th>
-                        <th class="text-left p-4 font-medium">Actions</th>
+                        <th wire:click="sortBy('name')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 select-none">
+                            <div class="flex items-center space-x-1">
+                                <span>Asset</span>
+                                @if($sortField === 'name')
+                                    @if($sortDirection === 'asc')
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                        </svg>
+                                    @else
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    @endif
+                                @endif
+                            </div>
+                        </th>
+                        <th wire:click="sortBy('type')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 select-none">
+                            <div class="flex items-center space-x-1">
+                                <span>Type</span>
+                                @if($sortField === 'type')
+                                    @if($sortDirection === 'asc')
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                        </svg>
+                                    @else
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    @endif
+                                @endif
+                            </div>
+                        </th>
+                        <th wire:click="sortBy('qr_status')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 select-none">
+                            <div class="flex items-center space-x-1">
+                                <span>QR Status</span>
+                                @if($sortField === 'qr_status')
+                                    @if($sortDirection === 'asc')
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                        </svg>
+                                    @else
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    @endif
+                                @endif
+                            </div>
+                        </th>
+                        <th wire:click="sortBy('qr_scan_count')" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 select-none">
+                            <div class="flex items-center justify-center space-x-1">
+                                <span>QR Scans</span>
+                                @if($sortField === 'qr_scan_count')
+                                    @if($sortDirection === 'asc')
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                        </svg>
+                                    @else
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    @endif
+                                @endif
+                            </div>
+                        </th>
+                        <th wire:click="sortBy('last_booking')"
+                            class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300
+                                uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 select-none">
+                            <div class="flex items-center justify-center space-x-1">
+                                <span>Last Used</span>
+                                @if($sortField === 'last_booking')
+                                    @if($sortDirection === 'asc')
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                        </svg>
+                                    @else
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    @endif
+                                @endif
+                            </div>
+                        </th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="bg-white dark:bg-zinc-900 divide-y divide-gray-200 dark:divide-zinc-700">
                     @forelse($assets as $asset)
-                        <tr class="border-b border-gray-100 hover:bg-gray-50">
-                            <td class="p-4">
+                        <tr class="hover:bg-gray-50 dark:hover:bg-zinc-800">
+                            <td class="px-6 py-4 whitespace-nowrap">
                                 <flux:checkbox
                                     wire:model.live="selectedAssets"
                                     value="{{ $asset['id'] }}"
                                 />
                             </td>
-                            <td class="p-4">
+                            <td class="px-6 py-4 whitespace-nowrap">
                                 <div>
-                                    <div class="font-medium">{{ $asset['name'] }}</div>
-                                    <div class="text-sm text-gray-600">{{ $asset['details'] }}</div>
+                                    <span class="text-sm font-medium text-gray-900 dark:text-white mt-1 block">{{ $asset['name'] }}</span>
+                                    <span class="text-sm text-gray-500 font-normal">{{ $asset['details'] }}</span>                                    
                                 </div>
                             </td>
-                            <td class="p-4">
+                            <td class="px-6 py-4 whitespace-nowrap">
                                 <flux:badge
                                     color="{{ $asset['type'] === 'vehicle' ? 'blue' : ($asset['type'] === 'meeting_room' ? 'green' : 'purple') }}"
                                     size="sm"
@@ -220,62 +226,65 @@
                                     {{ $asset['type_label'] }}
                                 </flux:badge>
                             </td>
-                            <td class="p-4">
+                            <td class="px-6 py-4 whitespace-nowrap">
                                 @if($asset['has_qr'])
-                                    <flux:badge color="green" size="sm">
+                                    <flux:badge size="sm">
                                         <flux:icon.check class="size-3 mr-1" />
                                         Generated
                                     </flux:badge>
                                 @else
-                                    <flux:badge color="red" size="sm">
+                                    <flux:badge size="sm">
                                         <flux:icon.x-mark class="size-3 mr-1" />
                                         Missing
                                     </flux:badge>
                                 @endif
                             </td>
-                            <td class="p-4">
-                                <div class="text-sm">
-                                    <div class="font-medium">{{ $asset['total_bookings'] }}</div>
-                                    <div class="text-gray-600">Total</div>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <div class="text-sm text-gray-900 dark:text-white">
+                                    <div class="font-semibold">{{ $asset['qr_scan_count'] }}</div>
+                                    <div class="text-gray-500 dark:text-gray-400">
+                                        @if($asset['last_qr_scan'])
+                                            {{ $asset['last_qr_scan']->diffForHumans() }}
+                                        @else
+                                            Never scanned
+                                        @endif
+                                    </div>
                                 </div>
                             </td>
-                            <td class="p-4">
-                                <div class="text-sm text-gray-600">
-                                    {{ $asset['last_booking'] ? $asset['last_booking']->format('M j, Y') : 'Never' }}
-                                </div>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-center">
+                                {{ $asset['last_booking'] ? $asset['last_booking']->format('M j, Y') : 'Never' }}
                             </td>
-                            <td class="p-4">
-                                <div class="flex gap-1">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                <div class="flex space-x-2 justify-center">
                                     @if($asset['has_qr'])
-                                        <flux:button
-                                            wire:click="showPreview('{{ $asset['id'] }}')"
-                                            variant="ghost"
-                                            size="xs"
-                                        >
-                                            <flux:icon.eye class="size-3" />
-                                        </flux:button>
-                                        <flux:button
-                                            wire:click="downloadQrCode('{{ $asset['id'] }}')"
-                                            variant="ghost"
-                                            size="xs"
-                                        >
-                                            <flux:icon.arrow-down-tray class="size-3" />
-                                        </flux:button>
-                                        <flux:button
-                                            wire:click="regenerateQrCode('{{ $asset['id'] }}')"
-                                            variant="ghost"
-                                            size="xs"
-                                        >
-                                            <flux:icon.arrow-path class="size-3" />
-                                        </flux:button>
+                                        <flux:button size="xs" wire:click="showPreview('{{ $asset['id'] }}')" variant="ghost">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                            </svg>
+                                        </flux:button>                                        
+                                        <flux:button size="xs" wire:click="downloadQrCode('{{ $asset['id'] }}')" variant="ghost">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                            </svg>
+                                        </flux:button>                                         
+                                        <flux:button size="xs" wire:click="regenerateQrCode('{{ $asset['id'] }}')" variant="ghost">
+                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                            </svg>
+                                        </flux:button>                                        
                                     @else
-                                        <flux:button
-                                            wire:click="generateQrCode('{{ $asset['id'] }}')"
-                                            variant="primary"
-                                            size="xs"
-                                        >
-                                            <flux:icon.plus class="size-3" />
+                                        <button wire:click="generateQrCode('{{ $asset['id'] }}')"
+                                                class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                            </svg>
                                             Generate
+                                        </button>
+                                        <flux:button size="xs" wire:click="generateQrCode('{{ $asset['id'] }}')" variant="ghost">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                            </svg>
                                         </flux:button>
                                     @endif
                                 </div>
@@ -283,16 +292,21 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="p-8 text-center text-gray-500">
-                                <flux:icon.cube class="size-12 mx-auto mb-2 text-gray-300" />
-                                <div>No assets found</div>
+                            <td colspan="7" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                                <div class="flex flex-col items-center">
+                                    <svg class="w-12 h-12 mb-4 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                    </svg>
+                                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">No assets found</h3>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Try adjusting your search or filters</p>
+                                </div>
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-    </flux:card>
+    </div>
 
     <!-- QR Code Preview Modal -->
     <flux:modal wire:model="showPreviewModal" class="w-full max-w-2xl">
@@ -306,13 +320,17 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-6">
                     <div>
                         <flux:subheading>Asset Information</flux:subheading>
                         <div class="mt-2 space-y-1 text-sm">
-                            <div><strong>Name:</strong> {{ $previewAsset['name'] }}</div>
+                            <div><strong>Name:</strong> {{ $previewAsset['model']->model }}</div>
                             <div><strong>Type:</strong> {{ $previewAsset['type_label'] }}</div>
-                            <div><strong>Details:</strong> {{ $previewAsset['details'] }}</div>
+                            @if($previewAsset['type_label'] == 'Vehicle') 
+                                <div><strong>Plate Number:</strong> {{ $previewAsset['model']->plate_number }}</div>
+                            @else
+                                <div><strong>Details:</strong> {{ $previewAsset['details'] }}</div>
+                            @endif
                         </div>
 
                         <flux:subheading class="mt-4">QR Code Details</flux:subheading>
@@ -335,12 +353,10 @@
 
                 <div class="flex justify-between">
                     <flux:button wire:click="downloadQrCode('{{ $previewAsset['id'] }}')" variant="primary">
-                        <flux:icon.arrow-down-tray class="size-4" />
                         Download SVG
                     </flux:button>
                     <div class="flex gap-2">
                         <flux:button wire:click="regenerateQrCode('{{ $previewAsset['id'] }}')" variant="ghost">
-                            <flux:icon.arrow-path class="size-4" />
                             Regenerate
                         </flux:button>
                         <flux:button wire:click="closePreviewModal" variant="ghost">
@@ -396,8 +412,7 @@
                         <flux:label>Template Type</flux:label>
                         <flux:select wire:model="templateType" class="w-full">
                             <flux:select.option value="labels">Labels (Grid Layout)</flux:select.option>
-                            <flux:select.option value="cards">Information Cards</flux:select.option>
-                            <flux:select.option value="poster">Poster (Large Format)</flux:select.option>
+                            <flux:select.option value="cards">Information Cards (Test)</flux:select.option>
                         </flux:select>
                     </flux:field>
                 </div>
@@ -414,14 +429,20 @@
                 </div>
 
                 <div class="space-y-2">
-                    <flux:checkbox wire:model="includeAssetInfo">
-                        Include Asset Information
-                    </flux:checkbox>
-                    <flux:checkbox wire:model="includeLogo">
-                        Include Company Logo
-                    </flux:checkbox>
+                    <flux:field variant="inline">
+                        <flux:checkbox wire:model="terms" wire:model="includeAssetInfo"/>
+                        <flux:label>Include Asset Information</flux:label>
+                        <flux:error name="Information" />
+                    </flux:field>
+                    <flux:field variant="inline">
+                        <flux:checkbox wire:model="terms" wire:model="includeLogo"/>
+                        <flux:label>Include Company Logo</flux:label>
+                        <flux:error name="Logo" />
+                    </flux:field>                 
                 </div>
             </div>
+
+            <div></div>
 
             <div class="flex justify-between">
                 <div class="text-sm text-gray-600">
@@ -429,7 +450,7 @@
                 </div>
                 <div class="flex gap-2">
                     <flux:button wire:click="downloadPrintTemplate" variant="primary">
-                        <flux:icon.printer class="size-4" />
+                        {{-- <flux:icon.printer class="size-4" /> --}}
                         Generate PDF
                     </flux:button>
                     <flux:button wire:click="closeTemplateModal" variant="ghost">
@@ -452,6 +473,7 @@
                     <flux:select.option value="1year">1 Year</flux:select.option>
                 </flux:select>
             </div>
+
 
             @if(!empty($analyticsData))
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -569,22 +591,31 @@
         </div>
     </flux:modal>
 
-    @if($showAnalyticsModal && !empty($analyticsData))
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Wait for modal to be fully rendered
-            setTimeout(function() {
-                // Scan Trend Line Chart
-                const scanTrendCtx = document.getElementById('scanTrendChart');
-                if (scanTrendCtx) {
+
+        // Function to initialize charts
+        function initializeCharts() {
+            if (typeof Chart === 'undefined') {
+                return;
+            }
+
+            // Destroy existing charts if they exist
+            if (Chart.instances && Chart.instances.length > 0) {
+                Chart.instances.forEach(chart => chart.destroy());
+            }
+
+            // Scan Trend Line Chart
+            const scanTrendCtx = document.getElementById('scanTrendChart');
+            if (scanTrendCtx) {
+
                     new Chart(scanTrendCtx, {
                         type: 'line',
                         data: {
-                            labels: @json(collect($analyticsData['scan_trend'])->pluck('date')->toArray()),
+                            labels: @json(collect($analyticsData['scan_trend'] ?? [])->pluck('date')->toArray()),
                             datasets: [
                                 {
                                     label: 'Total Scans',
-                                    data: @json(collect($analyticsData['scan_trend'])->pluck('scans')->toArray()),
+                                    data: @json(collect($analyticsData['scan_trend'] ?? [])->pluck('scans')->toArray()),
                                     borderColor: 'rgb(59, 130, 246)',
                                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
                                     tension: 0.4,
@@ -592,7 +623,7 @@
                                 },
                                 {
                                     label: 'Completions',
-                                    data: @json(collect($analyticsData['scan_trend'])->pluck('completions')->toArray()),
+                                    data: @json(collect($analyticsData['scan_trend'] ?? [])->pluck('completions')->toArray()),
                                     borderColor: 'rgb(34, 197, 94)',
                                     backgroundColor: 'rgba(34, 197, 94, 0.1)',
                                     tension: 0.4,
@@ -600,7 +631,7 @@
                                 },
                                 {
                                     label: 'Failures',
-                                    data: @json(collect($analyticsData['scan_trend'])->pluck('failures')->toArray()),
+                                    data: @json(collect($analyticsData['scan_trend'] ?? [])->pluck('failures')->toArray()),
                                     borderColor: 'rgb(239, 68, 68)',
                                     backgroundColor: 'rgba(239, 68, 68, 0.1)',
                                     tension: 0.4,
@@ -630,16 +661,18 @@
 
                 // Asset Usage Doughnut Chart
                 const assetUsageCtx = document.getElementById('assetUsageChart');
+                console.log('Asset usage canvas found:', !!assetUsageCtx);
                 if (assetUsageCtx) {
+                    console.log('Creating asset usage chart...');
                     new Chart(assetUsageCtx, {
                         type: 'doughnut',
                         data: {
                             labels: ['Vehicles', 'Meeting Rooms', 'IT Assets'],
                             datasets: [{
                                 data: [
-                                    {{ $analyticsData['asset_usage']['vehicles'] }},
-                                    {{ $analyticsData['asset_usage']['meeting_rooms'] }},
-                                    {{ $analyticsData['asset_usage']['it_assets'] }}
+                                    {{ $analyticsData['asset_usage']['vehicles'] ?? 0 }},
+                                    {{ $analyticsData['asset_usage']['meeting_rooms'] ?? 0 }},
+                                    {{ $analyticsData['asset_usage']['it_assets'] ?? 0 }}
                                 ],
                                 backgroundColor: [
                                     'rgb(59, 130, 246)',
@@ -664,14 +697,16 @@
 
                 // Peak Hours Bar Chart
                 const peakHoursCtx = document.getElementById('peakHoursChart');
+                console.log('Peak hours canvas found:', !!peakHoursCtx);
                 if (peakHoursCtx) {
+                    console.log('Creating peak hours chart...');
                     new Chart(peakHoursCtx, {
                         type: 'bar',
                         data: {
-                            labels: @json(collect($analyticsData['peak_hours'])->pluck('hour')->map(function($hour) { return $hour . ':00'; })->values()->toArray()),
+                            labels: @json(collect($analyticsData['peak_hours'] ?? [])->pluck('hour')->map(function($hour) { return $hour . ':00'; })->values()->toArray()),
                             datasets: [{
                                 label: 'Scans per Hour',
-                                data: @json(collect($analyticsData['peak_hours'])->pluck('count')->values()->toArray()),
+                                data: @json(collect($analyticsData['peak_hours'] ?? [])->pluck('count')->values()->toArray()),
                                 backgroundColor: 'rgba(59, 130, 246, 0.8)',
                                 borderColor: 'rgb(59, 130, 246)',
                                 borderWidth: 1,
@@ -697,16 +732,18 @@
 
                 // Device Usage Pie Chart
                 const deviceCtx = document.getElementById('deviceChart');
+                console.log('Device chart canvas found:', !!deviceCtx);
                 if (deviceCtx) {
+                    console.log('Creating device chart...');
                     new Chart(deviceCtx, {
                         type: 'pie',
                         data: {
                             labels: ['Mobile', 'Desktop', 'Tablet'],
                             datasets: [{
                                 data: [
-                                    {{ $analyticsData['device_breakdown']['mobile'] }},
-                                    {{ $analyticsData['device_breakdown']['desktop'] }},
-                                    {{ $analyticsData['device_breakdown']['tablet'] }}
+                                    {{ $analyticsData['device_breakdown']['mobile'] ?? 0 }},
+                                    {{ $analyticsData['device_breakdown']['desktop'] ?? 0 }},
+                                    {{ $analyticsData['device_breakdown']['tablet'] ?? 0 }}
                                 ],
                                 backgroundColor: [
                                     'rgb(34, 197, 94)',
@@ -728,8 +765,204 @@
                         }
                     });
                 }
-            }, 500); // Delay to ensure modal is rendered
+        }
+
+        // Initialize charts with data passed from Livewire event
+        function initializeChartsWithData(analyticsData) {
+            if (typeof Chart === 'undefined') {
+                return;
+            }
+
+            // Destroy existing charts if they exist
+            if (Chart.instances && Chart.instances.length > 0) {
+                Chart.instances.forEach(chart => chart.destroy());
+            }
+
+            // Scan Trend Line Chart
+            const scanTrendCtx = document.getElementById('scanTrendChart');
+            if (scanTrendCtx && analyticsData?.scan_trend) {
+                const labels = analyticsData.scan_trend.map(item => item.date);
+                const scans = analyticsData.scan_trend.map(item => item.scans);
+                const completions = analyticsData.scan_trend.map(item => item.completions);
+                const failures = analyticsData.scan_trend.map(item => item.failures);
+
+                new Chart(scanTrendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Total Scans',
+                                data: scans,
+                                borderColor: 'rgb(59, 130, 246)',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            },
+                            {
+                                label: 'Completions',
+                                data: completions,
+                                borderColor: 'rgb(34, 197, 94)',
+                                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            },
+                            {
+                                label: 'Failures',
+                                data: failures,
+                                borderColor: 'rgb(239, 68, 68)',
+                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            intersect: false,
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Asset Usage Doughnut Chart
+            const assetUsageCtx = document.getElementById('assetUsageChart');
+            if (assetUsageCtx && analyticsData?.asset_usage) {
+
+                new Chart(assetUsageCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Vehicles', 'Meeting Rooms', 'IT Assets'],
+                        datasets: [{
+                            data: [
+                                analyticsData.asset_usage.vehicles || 0,
+                                analyticsData.asset_usage.meeting_rooms || 0,
+                                analyticsData.asset_usage.it_assets || 0
+                            ],
+                            backgroundColor: [
+                                'rgb(59, 130, 246)',
+                                'rgb(34, 197, 94)',
+                                'rgb(147, 51, 234)'
+                            ],
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Peak Hours Bar Chart
+            const peakHoursCtx = document.getElementById('peakHoursChart');
+            if (peakHoursCtx && analyticsData?.peak_hours) {
+
+                const hourLabels = analyticsData.peak_hours.map(item => item.hour + ':00');
+                const hourCounts = analyticsData.peak_hours.map(item => item.count);
+
+                new Chart(peakHoursCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: hourLabels,
+                        datasets: [{
+                            label: 'Scans per Hour',
+                            data: hourCounts,
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                            borderColor: 'rgb(59, 130, 246)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Device Usage Pie Chart
+            const deviceCtx = document.getElementById('deviceChart');
+            if (deviceCtx && analyticsData?.device_breakdown) {
+
+                new Chart(deviceCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Mobile', 'Desktop', 'Tablet'],
+                        datasets: [{
+                            data: [
+                                analyticsData.device_breakdown.mobile || 0,
+                                analyticsData.device_breakdown.desktop || 0,
+                                analyticsData.device_breakdown.tablet || 0
+                            ],
+                            backgroundColor: [
+                                'rgb(34, 197, 94)',
+                                'rgb(59, 130, 246)',
+                                'rgb(168, 85, 247)'
+                            ],
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Initialize charts when modal is opened
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof Livewire !== 'undefined') {
+                Livewire.on('analytics-modal-opened', (...args) => {
+                    let analyticsData = args[0];
+
+                    // If it's still an array, get the first element
+                    if (Array.isArray(analyticsData)) {
+                        analyticsData = analyticsData[0];
+                    }
+
+                    // Wait for Livewire to update the DOM
+                    setTimeout(() => {
+                        initializeChartsWithData(analyticsData);
+                    }, 300);
+                });
+            }
         });
+
     </script>
-    @endif
 </div>

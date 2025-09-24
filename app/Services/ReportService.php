@@ -924,7 +924,7 @@ class ReportService
     <meta charset="UTF-8">
     <title>' . ucfirst($type) . ' Report</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
+        body { margin: 20px; }
         .header { background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }

@@ -753,7 +753,7 @@
                         </div>
 
                         <div class="flex justify-center gap-2 mb-4">
-                            <flux:button size="sm" wire:click="downloadQrCode" variant="outline">
+                            <flux:button size="sm" variant="primary" wire:click="downloadQrCode">
                                 {{-- <flux:icon name="arrow-down-tray" class="w-4 h-4 mr-1" /> --}}
                                 Download SVG
                             </flux:button>

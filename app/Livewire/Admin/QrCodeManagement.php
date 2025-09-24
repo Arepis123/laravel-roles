@@ -25,6 +25,10 @@ class QrCodeManagement extends Component
     public $selectedAssets = [];
     public $selectAll = false;
 
+    // Sorting properties
+    public $sortField = 'name';
+    public $sortDirection = 'asc';
+
     // Modal states
     public $showPreviewModal = false;
     public $showAnalyticsModal = false;
@@ -35,7 +39,7 @@ class QrCodeManagement extends Component
     public $previewAsset = null;
 
     // Template settings
-    public $templateType = 'labels'; // labels, cards, poster
+    public $templateType = 'labels'; // labels, cards (test)
     public $qrSize = 'medium'; // small, medium, large
     public $includeAssetInfo = true;
     public $includeLogo = false;
@@ -47,6 +51,9 @@ class QrCodeManagement extends Component
     public function mount()
     {
         $this->resetPage();
+
+        // Initialize analytics data on mount
+        $this->analyticsData = [];
     }
 
     public function updatedSearch()
@@ -68,6 +75,18 @@ class QrCodeManagement extends Component
         $this->selectAll = false;
     }
 
+    public function sortBy($field)
+    {
+        if ($this->sortField === $field) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortField = $field;
+            $this->sortDirection = 'asc';
+        }
+
+        $this->resetPage();
+    }
+
     public function updatedSelectAll()
     {
         if ($this->selectAll) {
@@ -75,6 +94,12 @@ class QrCodeManagement extends Component
         } else {
             $this->selectedAssets = [];
         }
+    }
+
+    public function toggleSelectAll()
+    {
+        $this->selectAll = !$this->selectAll;
+        $this->updatedSelectAll();
     }
 
     public function getQrStatistics()
@@ -201,6 +226,8 @@ class QrCodeManagement extends Component
                     'qr_identifier' => $vehicle->qr_code_identifier,
                     'last_booking' => $this->getLastBookingDate('App\Models\Vehicle', $vehicle->id),
                     'total_bookings' => Booking::where('asset_type', 'App\Models\Vehicle')->where('asset_id', $vehicle->id)->count(),
+                    'qr_scan_count' => $this->getQrScanCount('App\Models\Vehicle', $vehicle->id),
+                    'last_qr_scan' => $this->getLastQrScan('App\Models\Vehicle', $vehicle->id),
                     'model' => $vehicle
                 ];
             });
@@ -232,6 +259,8 @@ class QrCodeManagement extends Component
                     'qr_identifier' => $room->qr_code_identifier,
                     'last_booking' => $this->getLastBookingDate('App\Models\MeetingRoom', $room->id),
                     'total_bookings' => Booking::where('asset_type', 'App\Models\MeetingRoom')->where('asset_id', $room->id)->count(),
+                    'qr_scan_count' => $this->getQrScanCount('App\Models\MeetingRoom', $room->id),
+                    'last_qr_scan' => $this->getLastQrScan('App\Models\MeetingRoom', $room->id),
                     'model' => $room
                 ];
             });
@@ -263,13 +292,56 @@ class QrCodeManagement extends Component
                     'qr_identifier' => $asset->qr_code_identifier,
                     'last_booking' => $this->getLastBookingDate('App\Models\ItAsset', $asset->id),
                     'total_bookings' => Booking::where('asset_type', 'App\Models\ItAsset')->where('asset_id', $asset->id)->count(),
+                    'qr_scan_count' => $this->getQrScanCount('App\Models\ItAsset', $asset->id),
+                    'last_qr_scan' => $this->getLastQrScan('App\Models\ItAsset', $asset->id),
                     'model' => $asset
                 ];
             });
             $assets = $assets->merge($itAssets);
         }
 
-        return $assets->sortBy('name');
+        // Apply sorting
+        if ($this->sortField === 'name') {
+            $assets = $this->sortDirection === 'asc'
+                ? $assets->sortBy('name')
+                : $assets->sortByDesc('name');
+        } elseif ($this->sortField === 'type') {
+            $assets = $this->sortDirection === 'asc'
+                ? $assets->sortBy('type_label')
+                : $assets->sortByDesc('type_label');
+        } elseif ($this->sortField === 'last_booking') {
+            $assets = $this->sortDirection === 'asc'
+                ? $assets->sortBy(function($asset) {
+                    return $asset['last_booking'] ? $asset['last_booking']->timestamp : 0;
+                })
+                : $assets->sortByDesc(function($asset) {
+                    return $asset['last_booking'] ? $asset['last_booking']->timestamp : 0;
+                });
+        } elseif ($this->sortField === 'total_bookings') {
+            $assets = $this->sortDirection === 'asc'
+                ? $assets->sortBy('total_bookings')
+                : $assets->sortByDesc('total_bookings');
+        } elseif ($this->sortField === 'qr_scan_count') {
+            $assets = $this->sortDirection === 'asc'
+                ? $assets->sortBy('qr_scan_count')
+                : $assets->sortByDesc('qr_scan_count');
+        } elseif ($this->sortField === 'last_qr_scan') {
+            $assets = $this->sortDirection === 'asc'
+                ? $assets->sortBy(function($asset) {
+                    return $asset['last_qr_scan'] ? $asset['last_qr_scan']->timestamp : 0;
+                })
+                : $assets->sortByDesc(function($asset) {
+                    return $asset['last_qr_scan'] ? $asset['last_qr_scan']->timestamp : 0;
+                });
+        } elseif ($this->sortField === 'qr_status') {
+            $assets = $this->sortDirection === 'asc'
+                ? $assets->sortBy('has_qr')
+                : $assets->sortByDesc('has_qr');
+        } else {
+            $assets = $assets->sortBy('name');
+        }
+
+        return $assets;
     }
 
     private function getLastBookingDate($assetType, $assetId)
@@ -280,6 +352,25 @@ class QrCodeManagement extends Component
             ->first();
 
         return $lastBooking ? $lastBooking->end_time : null;
+    }
+
+    private function getQrScanCount($assetType, $assetId)
+    {
+        return QrCodeLog::scans()
+            ->where('asset_type', $assetType)
+            ->where('asset_id', $assetId)
+            ->count();
+    }
+
+    private function getLastQrScan($assetType, $assetId)
+    {
+        $lastScan = QrCodeLog::scans()
+            ->where('asset_type', $assetType)
+            ->where('asset_id', $assetId)
+            ->latest('created_at')
+            ->first();
+
+        return $lastScan ? $lastScan->created_at : null;
     }
 
     public function showPreview($assetId)
@@ -420,6 +511,16 @@ class QrCodeManagement extends Component
             'includeLogo' => $this->includeLogo
         ]);
 
+        // Configure PDF options for better image rendering
+        $pdf->setOptions([
+            'dpi' => 150,
+            'defaultFont' => 'Helvetica',
+            'isFontSubsettingEnabled' => false,
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => false,
+            'defaultMediaType' => 'print'
+        ]);
+
         return response()->streamDownload(function () use ($pdf) {
             echo $pdf->output();
         }, 'qr-codes-' . $this->templateType . '-' . date('Y-m-d') . '.pdf');
@@ -427,8 +528,20 @@ class QrCodeManagement extends Component
 
     public function showAnalytics()
     {
+        // Force load analytics data first
         $this->loadAnalyticsData();
+
+
         $this->showAnalyticsModal = true;
+
+        // Dispatch the event with the analytics data directly
+        $this->dispatch('analytics-modal-opened', $this->analyticsData);
+    }
+
+    public function updatedSelectedAnalyticsPeriod()
+    {
+        $this->loadAnalyticsData();
+        $this->dispatch('analytics-modal-opened');
     }
 
     private function loadAnalyticsData()
@@ -442,68 +555,36 @@ class QrCodeManagement extends Component
                 default => 7
             };
 
-            // Real analytics data from QR code logs
-            $realData = QrCodeLog::getAnalytics($days);
+            // Get real analytics data from QR code logs
+            $this->analyticsData = QrCodeLog::getAnalytics($days);
 
-            // Initialize analytics data with safe defaults
-            $this->analyticsData = [];
-
-            // Merge with dummy data for demonstration
-            $this->analyticsData = array_merge($realData ?? [], $this->getDummyAnalyticsData($days));
-
-            // Add additional computed data with dummy enhancement
-            $this->analyticsData['scan_trend'] = $this->getScanTrendDataWithDummy($days);
-            $this->analyticsData['asset_usage'] = $this->getAssetUsageDataWithDummy($days);
-            $this->analyticsData['completion_rate'] = max($this->getCompletionRateData($days), 75); // Min 75% for demo
-            $this->analyticsData['peak_hours'] = $this->getPeakHoursDataWithDummy($days);
+            // Add computed data
+            $this->analyticsData['scan_trend'] = $this->getScanTrendData($days);
+            $this->analyticsData['asset_usage'] = $this->getAssetUsageData($days);
+            $this->analyticsData['peak_hours'] = $this->getPeakHoursData($days);
             $this->analyticsData['device_breakdown'] = $this->getDeviceBreakdownData();
+            $this->analyticsData['completion_rate'] = $this->getCompletionRateData($days);
             $this->analyticsData['user_engagement'] = $this->getUserEngagementData();
+
         } catch (\Exception $e) {
-            // Fallback to dummy data only if there's an error
+            // Fallback to empty data structure
             $this->analyticsData = [
-                'total_scans' => 150,
-                'unique_users' => 35,
-                'successful_completions' => 125,
-                'failed_attempts' => 8,
-                'scan_trend' => $this->generateFallbackScanTrend(7),
-                'asset_usage' => ['vehicles' => 80, 'meeting_rooms' => 60, 'it_assets' => 40],
-                'completion_rate' => 83,
-                'peak_hours' => $this->generateFallbackPeakHours(),
-                'device_breakdown' => ['mobile' => 75, 'desktop' => 20, 'tablet' => 5],
-                'user_engagement' => ['first_time_users' => 45, 'returning_users' => 40, 'power_users' => 8],
+                'total_scans' => 0,
+                'unique_users' => 0,
+                'successful_completions' => 0,
+                'failed_attempts' => 0,
+                'completion_rate' => 0,
+                'scan_trend' => [],
+                'asset_usage' => ['vehicles' => 0, 'meeting_rooms' => 0, 'it_assets' => 0],
+                'peak_hours' => [],
+                'device_breakdown' => ['mobile' => 0, 'desktop' => 0, 'tablet' => 0],
+                'user_engagement' => ['first_time_users' => 0, 'returning_users' => 0, 'power_users' => 0, 'avg_scans_per_user' => 0],
                 'top_assets' => [],
-            ];
-
-            \Log::warning('QR Analytics data loading failed', ['error' => $e->getMessage()]);
-        }
-    }
-
-    private function generateFallbackScanTrend($days)
-    {
-        $data = [];
-        for ($i = $days - 1; $i >= 0; $i--) {
-            $date = now()->subDays($i);
-            $scans = rand(10, 30);
-            $data[] = [
-                'date' => $date->format('M j'),
-                'scans' => $scans,
-                'completions' => round($scans * 0.8),
-                'failures' => round($scans * 0.1),
+                'daily_scans' => []
             ];
         }
-        return $data;
     }
 
-    private function generateFallbackPeakHours()
-    {
-        return [
-            ['hour' => '09', 'count' => 25],
-            ['hour' => '11', 'count' => 30],
-            ['hour' => '14', 'count' => 28],
-            ['hour' => '16', 'count' => 22],
-            ['hour' => '10', 'count' => 20],
-        ];
-    }
 
     private function getScanTrendData($days)
     {
@@ -514,9 +595,17 @@ class QrCodeManagement extends Component
             $scans = QrCodeLog::scans()
                 ->whereDate('created_at', $date)
                 ->count();
+            $completions = QrCodeLog::byAction('booking_completed')
+                ->whereDate('created_at', $date)
+                ->count();
+            $failures = QrCodeLog::byAction('scan_failed')
+                ->whereDate('created_at', $date)
+                ->count();
             $data[] = [
                 'date' => $date->format('M j'),
-                'scans' => $scans
+                'scans' => $scans,
+                'completions' => $completions,
+                'failures' => $failures
             ];
         }
         return $data;
@@ -570,91 +659,63 @@ class QrCodeManagement extends Component
             ->toArray();
     }
 
-    private function getDummyAnalyticsData($days)
-    {
-        // Generate realistic dummy data for demonstration
-        return [
-            'total_scans' => max($this->analyticsData['total_scans'] ?? 0, rand(150, 300)),
-            'unique_users' => max($this->analyticsData['unique_users'] ?? 0, rand(25, 50)),
-            'successful_completions' => max($this->analyticsData['successful_completions'] ?? 0, rand(120, 250)),
-            'failed_attempts' => max($this->analyticsData['failed_attempts'] ?? 0, rand(5, 15)),
-        ];
-    }
 
-    private function getScanTrendDataWithDummy($days)
-    {
-        $realData = $this->getScanTrendData($days);
-        $data = [];
 
-        foreach ($realData as $index => $dayData) {
-            // Enhance real data with dummy data for demonstration
-            $baseScans = $dayData['scans'];
-            $dummyScans = rand(5, 25); // Add 5-25 dummy scans per day
 
-            $data[] = [
-                'date' => $dayData['date'],
-                'scans' => $baseScans + $dummyScans,
-                'completions' => round(($baseScans + $dummyScans) * 0.8), // 80% completion rate
-                'failures' => round(($baseScans + $dummyScans) * 0.1), // 10% failure rate
-            ];
-        }
-
-        return $data;
-    }
-
-    private function getAssetUsageDataWithDummy($days)
-    {
-        $realData = $this->getAssetUsageData($days);
-
-        return [
-            'vehicles' => max($realData['vehicles'], rand(80, 120)),
-            'meeting_rooms' => max($realData['meeting_rooms'], rand(60, 100)),
-            'it_assets' => max($realData['it_assets'], rand(40, 80)),
-        ];
-    }
-
-    private function getPeakHoursDataWithDummy($days)
-    {
-        $realData = $this->getPeakHoursData($days);
-
-        // Generate typical business hour peaks
-        $dummyPeaks = [
-            ['hour' => '09', 'count' => rand(15, 25)],
-            ['hour' => '11', 'count' => rand(20, 30)],
-            ['hour' => '14', 'count' => rand(18, 28)],
-            ['hour' => '16', 'count' => rand(12, 22)],
-            ['hour' => '10', 'count' => rand(10, 20)],
-        ];
-
-        // Convert realData to array and merge with dummy data
-        $realArray = $realData instanceof \Illuminate\Support\Collection ? $realData->toArray() : $realData;
-
-        // Merge real and dummy data, prioritizing higher counts
-        $allData = collect($realArray)->merge(collect($dummyPeaks))
-            ->sortByDesc('count')
-            ->take(5)
-            ->values()
-            ->toArray(); // Convert to array
-
-        return $allData;
-    }
 
     private function getDeviceBreakdownData()
     {
+        // Get real device data from user agent analysis
+        $logs = QrCodeLog::selectRaw('user_agent, COUNT(*) as count')
+            ->whereNotNull('user_agent')
+            ->groupBy('user_agent')
+            ->get();
+
+        $mobile = 0;
+        $desktop = 0;
+        $tablet = 0;
+
+        foreach ($logs as $log) {
+            $userAgent = strtolower($log->user_agent);
+            if (str_contains($userAgent, 'mobile') || str_contains($userAgent, 'android') || str_contains($userAgent, 'iphone')) {
+                $mobile += $log->count;
+            } elseif (str_contains($userAgent, 'tablet') || str_contains($userAgent, 'ipad')) {
+                $tablet += $log->count;
+            } else {
+                $desktop += $log->count;
+            }
+        }
+
+        $total = $mobile + $desktop + $tablet;
+        if ($total === 0) {
+            return ['mobile' => 0, 'desktop' => 0, 'tablet' => 0];
+        }
+
         return [
-            'mobile' => rand(60, 80),
-            'desktop' => rand(15, 25),
-            'tablet' => rand(5, 15),
+            'mobile' => round(($mobile / $total) * 100),
+            'desktop' => round(($desktop / $total) * 100),
+            'tablet' => round(($tablet / $total) * 100),
         ];
     }
 
     private function getUserEngagementData()
     {
+        $userCounts = QrCodeLog::selectRaw('user_id, COUNT(*) as scan_count')
+            ->whereNotNull('user_id')
+            ->groupBy('user_id')
+            ->get();
+
+        $firstTimeUsers = $userCounts->where('scan_count', 1)->count();
+        $powerUsers = $userCounts->where('scan_count', '>=', 10)->count();
+        $returningUsers = $userCounts->where('scan_count', '>', 1)->where('scan_count', '<', 10)->count();
+        $totalScans = $userCounts->sum('scan_count');
+        $totalUsers = $userCounts->count();
+
         return [
-            'first_time_users' => rand(40, 60),
-            'returning_users' => rand(35, 55),
-            'power_users' => rand(5, 15), // Users with 10+ scans
-            'avg_scans_per_user' => round(rand(25, 45) / 10, 1),
+            'first_time_users' => $firstTimeUsers,
+            'returning_users' => $returningUsers,
+            'power_users' => $powerUsers,
+            'avg_scans_per_user' => $totalUsers > 0 ? round($totalScans / $totalUsers, 1) : 0,
         ];
     }
 

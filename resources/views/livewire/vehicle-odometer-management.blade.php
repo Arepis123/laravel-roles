@@ -16,53 +16,53 @@
     </div>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
-        <div class="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-lg shadow-sm dark:shadow-zinc-700 border border-gray-200 dark:border-zinc-700">
-            <div class="flex items-center">
-                <div class="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
+    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+        <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+            <div class="flex flex-col items-center justify-center text-center sm:flex-row sm:items-center sm:justify-start sm:text-left">
+                <div class="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg hidden sm:block">
                     <svg class="w-6 h-6 text-blue-600 dark:text-blue-400 lucide lucide-land-plot-icon lucide-land-plot" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m12 14 4-4"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.34 19a10 10 0 1 1 17.32 0"/>
-                    </svg>                     
+                    </svg>                         
                 </div>
-                <div class="ml-4">
-                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Distance</h3>
-                    <p class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">{{ number_format($stats['total_distance']) }} km</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-lg shadow-sm dark:shadow-zinc-700 border border-gray-200 dark:border-zinc-700">
-            <div class="flex items-center">
-                <div class="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
-                    <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                </div>
-                <div class="ml-4">
-                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Readings</h3>
-                    <p class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">{{ number_format($stats['total_readings']) }}</p>
+                <div class="ml-0 sm:ml-4">
+                    <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Total Distance</flux:heading>
+                    <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">{{ number_format($stats['total_distance']) }} km</flux:text>
                 </div>
             </div>
-        </div>
-
-        <div class="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-lg shadow-sm dark:shadow-zinc-700 border border-gray-200 dark:border-zinc-700">
-            <div class="flex items-center">
-                <div class="p-2 bg-yellow-100 dark:bg-yellow-900/50 rounded-lg">
+        </flux:card>  
+        
+        <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+            <div class="flex flex-col items-center justify-center text-center sm:flex-row sm:items-center sm:justify-start sm:text-left">
+                <div class="p-2 bg-yellow-100 dark:bg-yellow-900/50 rounded-lg hidden sm:block">
                     <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                     </svg>
                 </div>
-                <div class="ml-4">
-                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Avg Distance/Trip</h3>
-                    <p class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">{{ number_format($stats['avg_distance_per_trip'], 1) }} km</p>
+                <div class="ml-0 sm:ml-4">
+                    <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Avg Distance/Trip</flux:heading>
+                    <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">{{ number_format($stats['avg_distance_per_trip'], 1) }} km</flux:text>
                 </div>
             </div>
-        </div>
+        </flux:card>
 
-        <div class="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-lg shadow-sm dark:shadow-zinc-700 border border-gray-200 dark:border-zinc-700">
-            <div class="flex items-center">
-                <div class="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
+        <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+            <div class="flex flex-col items-center justify-center text-center sm:flex-row sm:items-center sm:justify-start sm:text-left">
+                <div class="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg hidden sm:block">
+                    <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>  
+                </div>
+                <div class="ml-0 sm:ml-4">
+                    <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Total Readings</flux:heading>
+                    <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">{{ number_format($stats['total_readings']) }}</flux:text>
+                </div>
+            </div>
+        </flux:card>   
+
+        <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+            <div class="flex flex-col items-center justify-center text-center sm:flex-row sm:items-center sm:justify-start sm:text-left">
+                <div class="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg hidden sm:block">
                     <svg class="w-6 h-6 text-purple-600 dark:text-purple-400 lucide lucide-car-front-icon lucide-car-front" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.646 5H8.4a2 2 0 0 0-1.903 1.257L5 10 3 8"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 14h.01"/>
@@ -70,15 +70,15 @@
                         <rect stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="18" height="8" x="3" y="10" rx="2"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 18v2"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 18v2"/>
-                    </svg>                                                         
+                    </svg>                     
                 </div>
-                <div class="ml-4">
-                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Vehicles Tracked</h3>
-                    <p class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">{{ $stats['vehicles_tracked'] }}</p>
+                <div class="ml-0 sm:ml-4">
+                    <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Vehicles Tracked</flux:heading>
+                    <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">{{ $stats['vehicles_tracked'] }}</flux:text>
                 </div>
             </div>
-        </div>
-    </div>
+        </flux:card>
+    </div>    
 
     <!-- Filters -->
     <div class="mb-6 mx-2">
@@ -125,7 +125,7 @@
                     </div>
 
                     <!-- Export Buttons -->
-                    <div class="flex gap-3 pt-4 mx-3 border-t border-gray-200 dark:border-zinc-700">
+                    <div class="flex gap-3 pt-4 mx-3">
                         <flux:button variant="filled" size="sm" wire:click="exportOdometerData('excel')" icon="document-arrow-down" class="bg-green-600 hover:bg-green-700">
                             Export Excel
                         </flux:button>
@@ -192,7 +192,27 @@
                                 @endif
                             </div>
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
+                        <th class="px-6 py-3">
+                            <div class="flex items-center">
+                                <span class="text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</span>
+                                <flux:tooltip toggleable>
+                                    <flux:button size="xs" variant="ghost" class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
+                                        <svg width="15" height="15" viewBox="0 0 24 23" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <path d="M12 16v-4"/>
+                                            <path d="M12 8h.01"/>
+                                        </svg>
+                                    </flux:button>
+                                    <flux:tooltip.content class="max-w-[20rem] space-y-2">
+                                        <p><strong>Manual</strong>: tesaa</p>
+                                        <p><strong>Trip Start</strong>: aser</p>
+                                        <p><strong>Trip End</strong>: </p>
+                                        <p><strong>Service</strong>: </p>
+                                    </flux:tooltip.content>
+                                </flux:tooltip>
+                            </div>
+
+                        </th>
                         <th wire:click="sortBy('distance_traveled')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 select-none">
                             <div class="flex items-center space-x-1">
                                 <span>Distance</span>
@@ -222,8 +242,8 @@
                             </td>
                             
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <h3 class="font-semibold text-gray-900 dark:text-white">{{ $log->vehicle->model ?? 'N/A' }}</h3> 
-                                <span class="text-sm text-gray-500 font-normal">{{ $log->vehicle->plate_number ?? 'N/A' }}</span>  
+                                <span class="text-sm font-medium text-gray-900 dark:text-neutral-200 mt-1">{{ $log->vehicle->model ?? 'N/A' }}</span>
+                                <span class="text-sm text-gray-500 font-normal">({{ $log->vehicle->plate_number }})</span>                                 
                             </td>
                             
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900 dark:text-white">
@@ -285,22 +305,20 @@
                             
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div class="flex space-x-2">
-                                    <button 
-                                        wire:click="editLog({{ $log->id }})"
-                                    >
+                                    @can('vehicle.edit')
+                                    <flux:button size="xs" wire:click="editLog({{ $log->id }})" variant="ghost">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
-                                    </button>
-                                    <button 
-                                        wire:click="deleteLog({{ $log->id }})" 
-                                        wire:confirm="Are you sure you want to delete this odometer reading?"
-                                        class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                                    >
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    </flux:button>
+                                    @endcan
+                                    @can('vehicle.delete')
+                                    <flux:button size="xs" wire:click="deleteLog({{ $log->id }})" wire:confirm="Are you sure you want to delete this fuel log?" variant="ghost">
+                                        <svg class="w-4 h-4 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                         </svg>
-                                    </button>
+                                    </flux:button>
+                                    @endcan                                      
                                 </div>
                             </td>
                         </tr>

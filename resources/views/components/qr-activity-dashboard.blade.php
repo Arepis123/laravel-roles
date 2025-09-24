@@ -3,24 +3,24 @@
 <div class="space-y-4">
     <!-- QR Statistics Summary -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <flux:card class="p-4 text-center">
-            <div class="text-2xl font-bold text-blue-600">{{ $stats['total_scans'] ?? 0 }}</div>
-            <div class="text-sm text-gray-600">Total Scans</div>
+        <flux:card class="p-3 text-center">
+            <div class="text-xl font-bold text-black">{{ $stats['total_scans'] ?? 0 }}</div>
+            <flux:subheading>Total Scans</flux:subheading>
         </flux:card>
 
-        <flux:card class="p-4 text-center">
-            <div class="text-2xl font-bold text-green-600">{{ $stats['successful_completions'] ?? 0 }}</div>
-            <div class="text-sm text-gray-600">Completed</div>
+        <flux:card class="p-3 text-center">
+            <div class="text-xl font-bold text-green-600">{{ $stats['successful_completions'] ?? 0 }}</div>            
+            <flux:subheading>Completed</flux:subheading>
         </flux:card>
 
-        <flux:card class="p-4 text-center">
-            <div class="text-2xl font-bold text-red-600">{{ $stats['failed_attempts'] ?? 0 }}</div>
-            <div class="text-sm text-gray-600">Failed</div>
+        <flux:card class="p-3 text-center">
+            <div class="text-xl font-bold text-red-600">{{ $stats['failed_attempts'] ?? 0 }}</div>
+            <flux:subheading>Failed</flux:subheading>
         </flux:card>
 
-        <flux:card class="p-4 text-center">
-            <div class="text-2xl font-bold text-purple-600">{{ $stats['unique_users'] ?? 0 }}</div>
-            <div class="text-sm text-gray-600">Unique Users</div>
+        <flux:card class="p-3 text-center">
+            <div class="text-xl font-bold text-blue-600">{{ $stats['unique_users'] ?? 0 }}</div>
+            <flux:subheading>Unique Users</flux:subheading>
         </flux:card>
     </div>
 
@@ -107,10 +107,10 @@
                 </div>
             @endif
         @else
-            <div class="text-center py-8 text-gray-500">
-                <flux:icon.clock class="size-12 mx-auto mb-2 text-gray-300" />
-                <div>No QR activity recorded yet</div>
-                <div class="text-sm">Activity will appear here once the QR code is used</div>
+            <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <flux:icon.clock class="size-6 mx-auto mb-2 text-gray-300" />
+                <flux:subheading class="text-gray-900 dark:text-white">No QR activity recorded yet</flux:subheading>
+                <flux:subheading class="text-gray-500 dark:text-gray-400">Activity will appear here once the QR code is used</flux:subheading>                
             </div>
         @endif
     </flux:card>

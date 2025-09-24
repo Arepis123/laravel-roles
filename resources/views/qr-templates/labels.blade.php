@@ -5,9 +5,9 @@
     <title>QR Code Labels</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
+            font-family: Helvetica, sans-serif;
         }
 
         .label-grid {
@@ -66,7 +66,15 @@
         @foreach($assets as $asset)
             <div class="label">
                 <div class="qr-code">
-                    {!! $asset['model']->getQrCodeSvg($qrSize === 'small' ? 80 : ($qrSize === 'medium' ? 100 : 120)) !!}
+                    @php
+                        $size = $qrSize === 'small' ? 80 : ($qrSize === 'medium' ? 100 : 120);
+                        $qrCode = $asset['model']->getQrCodeForPdf($size);
+                    @endphp
+                    @if(str_starts_with($qrCode, 'data:image/'))
+                        <img src="{{ $qrCode }}" alt="QR Code" style="width: {{ $size }}px; height: {{ $size }}px;" />
+                    @else
+                        {!! $qrCode !!}
+                    @endif
                 </div>
 
                 @if($includeAssetInfo)

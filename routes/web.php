@@ -111,11 +111,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('assets/qr-codes', \App\Livewire\Admin\QrCodeManagement::class)->name('assets.qr-codes')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
     
     // Vehicle Management Routes
-    Route::get('vehicles/fuel', VehicleFuelManagement::class)->name('vehicles.fuel')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
-    Route::get('vehicles/odometer', VehicleOdometerManagement::class)->name('vehicles.odometer')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
-    Route::get('vehicles/maintenance', VehicleMaintenanceManagement::class)->name('vehicles.maintenance')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
-    Route::get('vehicles/analytics', VehicleAnalytics::class)->name('vehicles.analytics')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
-    Route::get('vehicle-analytics/export', [App\Http\Controllers\VehicleAnalyticsController::class, 'export'])->name('vehicle.analytics.export')->middleware('permission:asset.view');
+    Route::get('vehicles/fuel', VehicleFuelManagement::class)->name('vehicles.fuel')->middleware('permission:vehicle.view|vehicle.create|vehicle.edit|vehicle.delete');
+    Route::get('vehicles/odometer', VehicleOdometerManagement::class)->name('vehicles.odometer')->middleware('permission:vehicle.view|vehicle.create|vehicle.edit|vehicle.delete');
+    Route::get('vehicles/maintenance', VehicleMaintenanceManagement::class)->name('vehicles.maintenance')->middleware('permission:vehicle.view|vehicle.create|vehicle.edit|vehicle.delete');
+    Route::get('vehicles/analytics', VehicleAnalytics::class)->name('vehicles.analytics')->middleware('permission:vehicle.view|vehicle.create|vehicle.edit|vehicle.delete');
+    Route::get('vehicle-analytics/export', [App\Http\Controllers\VehicleAnalyticsController::class, 'export'])->name('vehicle.analytics.export')->middleware('permission:vehicle.view');
     
     // Test route for PDF debugging
     Route::get('test-pdf', function() {

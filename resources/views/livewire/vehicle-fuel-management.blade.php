@@ -16,70 +16,70 @@
     </div>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
-        <div class="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-lg shadow-sm dark:shadow-zinc-700 border border-gray-200 dark:border-zinc-700">
-            <div class="flex items-center">
-                <div class="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
+    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+        <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+            <div class="flex flex-col items-center justify-center text-center sm:flex-row sm:items-center sm:justify-start sm:text-left">
+                <div class="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg hidden sm:block">
                     <svg class="w-6 h-6 text-blue-600 dark:text-blue-400 lucide lucide-fuel-icon lucide-fuel" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <line stroke-linecap="round" stroke-linejoin="round" stroke-width="2" x1="3" x2="15" y1="22" y2="22"/><line x1="4" x2="14" y1="9" y2="9"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2a2 2 0 0 0 2-2V9.83a2 2 0 0 0-.59-1.42L18 5"/>
-                    </svg>                    
+                    </svg>                         
                 </div>
-                <div class="ml-4">
-                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Fuel</h3>
-                    <p class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">{{ number_format($stats['total_fuel']) }} L</p>
+                <div class="ml-0 sm:ml-4">
+                    <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Total Fuel</flux:heading>
+                    <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">{{ number_format($stats['total_fuel']) }} L</flux:text>
                 </div>
             </div>
-        </div>
+        </flux:card>
 
-        <div class="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-lg shadow-sm dark:shadow-zinc-700 border border-gray-200 dark:border-zinc-700">
-            <div class="flex items-center">
-                <div class="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
+        <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+            <div class="flex flex-col items-center justify-center text-center sm:flex-row sm:items-center sm:justify-start sm:text-left">
+                <div class="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg hidden sm:block">
                     <svg class="w-6 h-6 text-green-600 dark:text-green-400 lucide lucide-circle-dollar-sign-icon lucide-circle-dollar-sign" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <circle stroke-linecap="round" stroke-linejoin="round" stroke-width="2" cx="12" cy="12" r="10"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18V6"/>
                     </svg>   
                 </div>
-                <div class="ml-4">
-                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Cost</h3>
-                    <p class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">RM{{ number_format($stats['total_cost'], 2) }}</p>
+                <div class="ml-0 sm:ml-4">
+                    <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Total Cost</flux:heading>
+                    <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">RM{{ number_format($stats['total_cost'], 2) }}</flux:text>
                 </div>
             </div>
-        </div>
+        </flux:card>  
 
-        <div class="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-lg shadow-sm dark:shadow-zinc-700 border border-gray-200 dark:border-zinc-700">
-            <div class="flex items-center">
-                <div class="p-2 bg-yellow-100 dark:bg-yellow-900/50 rounded-lg">
-                    <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                    </svg>
-                </div>
-                <div class="ml-4">
-                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Sessions</h3>
-                    <p class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">{{ number_format($stats['total_sessions']) }}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-lg shadow-sm dark:shadow-zinc-700 border border-gray-200 dark:border-zinc-700">
-            <div class="flex items-center">
-                <div class="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
+        <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+            <div class="flex flex-col items-center justify-center text-center sm:flex-row sm:items-center sm:justify-start sm:text-left">
+                <div class="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg hidden sm:block">
                     <svg class="w-6 h-6 text-purple-600 dark:text-purple-400 lucide lucide-wallet-icon lucide-wallet" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"  d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"  d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>
                     </svg>                      
                 </div>
-                <div class="ml-4">
-                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Avg Cost/Liter</h3>
-                    <p class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">RM{{ number_format($stats['avg_cost_per_liter'], 3) }}</p>
+                <div class="ml-0 sm:ml-4">
+                    <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Avg Cost/Liter</flux:heading>
+                    <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">RM{{ number_format($stats['avg_cost_per_liter'], 3) }}</flux:text>
                 </div>
             </div>
-        </div>
+        </flux:card>   
+        
+        <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+            <div class="flex flex-col items-center justify-center text-center sm:flex-row sm:items-center sm:justify-start sm:text-left">
+                <div class="p-2 bg-yellow-100 dark:bg-yellow-900/50 rounded-lg hidden sm:block">
+                    <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                </div>
+                <div class="ml-0 sm:ml-4">
+                    <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Total Sessions</flux:heading>
+                    <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">{{ number_format($stats['total_sessions']) }}</flux:text>
+                </div>
+            </div>
+        </flux:card>
     </div>
-
-    <!-- Filters -->
+    
+     <!-- Filters -->
     <div class="mb-6 mx-2">
         <flux:accordion>
             <flux:accordion.item>
@@ -125,7 +125,7 @@
                     </div>
 
                     <!-- Export Buttons -->
-                    <div class="flex gap-3 pt-4 mx-3 border-t border-gray-200 dark:border-zinc-700">
+                    <div class="flex gap-3 pt-4 mx-3">
                         <flux:button variant="filled" size="sm" wire:click="exportFuelData('excel')" icon="document-arrow-down" class="bg-green-600 hover:bg-green-700">
                             Export Excel
                         </flux:button>
@@ -222,8 +222,8 @@
                             </td>
                             
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <h3 class="font-semibold text-gray-900 dark:text-white">{{ $log->vehicle->model ?? 'N/A' }}</h3> 
-                                <span class="text-sm text-gray-500 font-normal">{{ $log->vehicle->plate_number ?? 'N/A' }}</span>  
+                                <span class="text-sm font-medium text-gray-900 dark:text-neutral-200 mt-1">{{ $log->vehicle->model ?? 'N/A' }}</span>
+                                <span class="text-sm text-gray-500 font-normal">({{ $log->vehicle->plate_number }})</span>
                             </td>
                             
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900 dark:text-white">
@@ -247,27 +247,25 @@
                             </td>
                             
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                {{ $log->filledBy->name ?? 'N/A' }}
+                                {{ $log->filledBy->name ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $log->filledBy->name) : ($log->filledBy->name ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $log->filledBy->name) : 'N/A') }}
                             </td>
                             
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div class="flex space-x-2">
-                                    <button 
-                                        wire:click="editLog({{ $log->id }})"
-                                    >
+                                    @can('vehicle.edit')
+                                    <flux:button size="xs" wire:click="editLog({{ $log->id }})" variant="ghost">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
-                                    </button>
-                                    <button 
-                                        wire:click="deleteLog({{ $log->id }})" 
-                                        wire:confirm="Are you sure you want to delete this fuel log?"
-                                        class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                                    >
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    </flux:button>
+                                    @endcan
+                                    @can('vehicle.delete')
+                                    <flux:button size="xs" wire:click="deleteLog({{ $log->id }})" wire:confirm="Are you sure you want to delete this fuel log?" variant="ghost">
+                                        <svg class="w-4 h-4 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                         </svg>
-                                    </button>
+                                    </flux:button>
+                                    @endcan                                     
                                 </div>
                             </td>
                         </tr>
