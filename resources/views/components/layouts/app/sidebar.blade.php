@@ -47,7 +47,7 @@
                     @if(auth()->user()->can('asset.view') || auth()->user()->can('asset.create') || auth()->user()->can('asset.edit') || auth()->user()->can('asset.delete'))
                     {{-- <flux:sidebar.item icon="squares-2x2" :href="route('assets')" :current="request()->routeIs('assets')" wire:navigate>{{ __('Asset') }}</flux:sidebar.item> --}}
                     <flux:sidebar.group expandable icon="squares-2x2" heading="Asset" class="grid">
-                        <flux:sidebar.item :href="route('assets')">Main</flux:sidebar.item>
+                        <flux:sidebar.item :href="route('assets')">Asset lists</flux:sidebar.item>
                         <flux:sidebar.item :href="route('assets.qr-codes')">QR Code</flux:sidebar.item>
                     </flux:sidebar.group>                    
                     @endif

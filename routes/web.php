@@ -273,6 +273,4 @@ Route::get('/qr-booking/complete/{type}/{identifier}', [App\Http\Controllers\QrB
 // QR completion now uses existing booking show workflow
 // Old completion form routes removed - now redirects to booking-my-show with modal auto-open
 
-
-
 require __DIR__.'/auth.php';

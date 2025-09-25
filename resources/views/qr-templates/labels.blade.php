@@ -55,6 +55,13 @@
             font-size: 8px;
         }
 
+        .company-logo {
+            max-width: 96px;
+            max-height: 48px;
+            margin-bottom: 8px;
+            opacity: 0.8;
+        }
+
         @media print {
             body { margin: 0; padding: 10px; }
             .label { page-break-inside: avoid; }
@@ -65,6 +72,27 @@
     <div class="label-grid">
         @foreach($assets as $asset)
             <div class="label">
+                @if($includeLogo)
+                    @php
+                        $logoPath = public_path('image/company-logo.png');
+                        $logoExists = file_exists($logoPath);
+                        $logoBase64 = null;
+
+                        if ($logoExists) {
+                            try {
+                                $logoData = file_get_contents($logoPath);
+                                $logoBase64 = 'data:image/png;base64,' . base64_encode($logoData);
+                            } catch (Exception $e) {
+                                $logoBase64 = null;
+                            }
+                        }
+                    @endphp
+
+                    @if($logoBase64)
+                        <img src="{{ $logoBase64 }}" alt="Company Logo" class="company-logo" />
+                    @endif
+                @endif
+
                 <div class="qr-code">
                     @php
                         $size = $qrSize === 'small' ? 80 : ($qrSize === 'medium' ? 100 : 120);

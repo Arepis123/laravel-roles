@@ -323,15 +323,24 @@ trait HasQrCode
      */
     public function getQrStatistics(int $days = 30): array
     {
-        $logs = $this->qrCodeLogs()->where('created_at', '>=', now()->subDays($days));
+        // Get all logs for this asset within the time period
+        $allLogs = QrCodeLog::forAsset(get_class($this), $this->id)
+            ->where('created_at', '>=', now()->subDays($days))
+            ->get();
+
+        // Get scan-related logs (excluding generation/regeneration)
+        $scanLogs = $allLogs->whereIn('action', ['scanned', 'booking_completed', 'scan_failed']);
+
+        // Count unique users from scan logs
+        $uniqueUsers = $scanLogs->whereNotNull('user_id')->pluck('user_id')->unique()->count();
 
         return [
-            'total_scans' => $logs->scans()->count(),
-            'successful_completions' => $logs->byAction('booking_completed')->count(),
-            'failed_attempts' => $logs->byAction('scan_failed')->count(),
-            'unique_users' => $logs->scans()->distinct('user_id')->count('user_id'),
-            'last_scan' => $logs->scans()->latest()->first()?->created_at,
-            'generation_count' => $logs->whereIn('action', ['generated', 'regenerated'])->count(),
+            'total_scans' => $scanLogs->count(),
+            'successful_completions' => $allLogs->where('action', 'booking_completed')->count(),
+            'failed_attempts' => $allLogs->where('action', 'scan_failed')->count(),
+            'unique_users' => $uniqueUsers,
+            'last_scan' => $scanLogs->sortByDesc('created_at')->first()?->created_at,
+            'generation_count' => $allLogs->whereIn('action', ['generated', 'regenerated'])->count(),
         ];
     }
 }

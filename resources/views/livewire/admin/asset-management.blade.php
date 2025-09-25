@@ -1,94 +1,94 @@
 <div>
     <!-- Header -->
-    <div class="mb-8">
+    <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Asset Management</h1>
         <p class="text-gray-600 mt-1 dark:text-gray-400">Manage all your assets from one centralized location</p>
         <flux:separator variant="subtle" class="my-4" />
     </div>
 
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 mb-4 sm:mb-6">
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 mb-6">
         <!-- Meeting Rooms Card -->
-        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4 cursor-pointer hover:shadow-xs hover:scale-102 transition-all"
-             wire:click="$set('selectedStatType', 'meeting_rooms')" 
-             wire:click="loadStatsModalData" 
-             wire:click="$set('showStatsModal', true)">
-            <div class="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
-                <div class="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <flux:card class="p-4 sm:p-6 dark:bg-zinc-900 cursor-pointer hover:shadow-md hover:scale-[1.02] hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200"
+                   wire:click="openStatsModal('meeting_rooms')">
+            <div class="flex flex-col items-center justify-center text-center sm:flex-row sm:items-center sm:justify-start sm:text-left">
+                <div class="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg hidden sm:block">
+                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                     </svg>
                 </div>
-                <div class="min-w-0 flex-1">
-                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Meeting Rooms</p>
-                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-blue-400">{{ $stats['meeting_rooms'] }}</p>
+                <div class="ml-0 sm:ml-4">
+                    <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Meeting Rooms</flux:heading>
+                    <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">{{ $stats['meeting_rooms'] }}</flux:text>
                 </div>
             </div>
-        </div>
+        </flux:card>
 
         <!-- Vehicles Card -->
-        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4 cursor-pointer hover:shadow-xs hover:scale-102 transition-all"
-             wire:click="openStatsModal('vehicles')">
-            <div class="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
-                <div class="p-1.5 sm:p-2 bg-green-100 rounded-lg flex-shrink-0">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+        <flux:card class="p-4 sm:p-6 dark:bg-zinc-900 cursor-pointer hover:shadow-md hover:scale-[1.02] hover:border-green-300 dark:hover:border-green-600 transition-all duration-200"
+                   wire:click="openStatsModal('vehicles')">
+            <div class="flex flex-col items-center justify-center text-center sm:flex-row sm:items-center sm:justify-start sm:text-left">
+                <div class="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg hidden sm:block">
+                    <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
+                        <circle stroke-linecap="round" stroke-linejoin="round" stroke-width="2" cx="7" cy="17" r="2"/><path d="M9 17h6"/>
+                        <circle stroke-linecap="round" stroke-linejoin="round" stroke-width="2" cx="17" cy="17" r="2"/>
                     </svg>
                 </div>
-                <div class="min-w-0 flex-1">
-                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Vehicles</p>
-                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-green-400">{{ $stats['vehicles'] }}</p>
+                <div class="ml-0 sm:ml-4">
+                    <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Vehicles</flux:heading>
+                    <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">{{ $stats['vehicles'] }}</flux:text>
                 </div>
             </div>
-        </div>
+        </flux:card>
 
         <!-- IT Assets Card -->
-        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4 cursor-pointer hover:shadow-xs hover:scale-102 transition-all"
-             wire:click="openStatsModal('it_assets')">
-            <div class="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
-                <div class="p-1.5 sm:p-2 bg-fuchsia-100 rounded-lg flex-shrink-0">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-fuchsia-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <flux:card class="p-4 sm:p-6 dark:bg-zinc-900 cursor-pointer hover:shadow-md hover:scale-[1.02] hover:border-purple-300 dark:hover:border-purple-600 transition-all duration-200"
+                   wire:click="openStatsModal('it_assets')">
+            <div class="flex flex-col items-center justify-center text-center sm:flex-row sm:items-center sm:justify-start sm:text-left">
+                <div class="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg hidden sm:block">
+                    <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                     </svg>
                 </div>
-                <div class="min-w-0 flex-1">
-                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">IT Assets</p>
-                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-fuchsia-400">{{ $stats['it_assets'] }}</p>
+                <div class="ml-0 sm:ml-4">
+                    <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">IT Assets</flux:heading>
+                    <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">{{ $stats['it_assets'] }}</flux:text>
                 </div>
             </div>
-        </div>
+        </flux:card>
 
         <!-- Available Assets Card -->
-        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4 cursor-pointer hover:shadow-xs hover:scale-102 transition-all"
-             wire:click="openStatsModal('available_assets')">
-            <div class="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
-                <div class="p-1.5 sm:p-2 bg-lime-200 dark:bg-lime-100 rounded-lg flex-shrink-0">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-lime-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <flux:card class="p-4 sm:p-6 dark:bg-zinc-900 cursor-pointer hover:shadow-md hover:scale-[1.02] hover:border-green-300 dark:hover:border-green-600 transition-all duration-200"
+                   wire:click="openStatsModal('available_assets')">
+            <div class="flex flex-col items-center justify-center text-center sm:flex-row sm:items-center sm:justify-start sm:text-left">
+                <div class="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg hidden sm:block">
+                    <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </div>
-                <div class="min-w-0 flex-1">
-                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Available Assets</p>
-                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-emerald-400">{{ $stats['available_assets'] }}</p>
+                <div class="ml-0 sm:ml-4">
+                    <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Available Assets</flux:heading>
+                    <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">{{ $stats['available_assets'] }}</flux:text>
                 </div>
             </div>
-        </div>
+        </flux:card>
 
         <!-- Active Bookings Card -->
-        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4 cursor-pointer hover:shadow-xs hover:scale-102 transition-all"
-             wire:click="openStatsModal('active_bookings')">
-            <div class="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
-                <div class="p-1.5 sm:p-2 bg-amber-100 rounded-lg flex-shrink-0">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <flux:card class="p-4 sm:p-6 dark:bg-zinc-900 cursor-pointer hover:shadow-md hover:scale-[1.02] hover:border-orange-300 dark:hover:border-orange-600 transition-all duration-200"
+                   wire:click="openStatsModal('active_bookings')">
+            <div class="flex flex-col items-center justify-center text-center sm:flex-row sm:items-center sm:justify-start sm:text-left">
+                <div class="p-2 bg-orange-100 dark:bg-orange-900/50 rounded-lg hidden sm:block">
+                    <svg class="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </div>
-                <div class="min-w-0 flex-1">
-                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Active Bookings</p>
-                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-red-400">{{ $stats['active_bookings'] }}</p>
+                <div class="ml-0 sm:ml-4">
+                    <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Active Bookings</flux:heading>
+                    <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">{{ $stats['active_bookings'] }}</flux:text>
                 </div>
             </div>
-        </div>
+        </flux:card>
     </div>
 
     <!-- Flash Messages -->
@@ -150,8 +150,7 @@
             <!-- Add Asset Dropdown -->
             @can('asset.create')
             <flux:dropdown>
-                <flux:button variant="filled" icon-trailing="chevron-down" class="bg-blue-600 hover:bg-blue-700">
-                    <flux:icon.plus class="size-4" />
+                <flux:button variant="primary">
                     Add Asset
                 </flux:button>
                 <flux:menu>
@@ -170,70 +169,53 @@
         </div>
     </div>
 
-    <div class="border border-gray-200 rounded-xl shadow-2xs overflow-hidden dark:bg-neutral-800 dark:border-neutral-700">
+    <!-- Assets Table -->
+    <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-700 overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-                <thead class="bg-gray-50 dark:bg-neutral-700">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-zinc-700">
+                <thead class="bg-gray-50 dark:bg-zinc-800">
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">
-                            <div class="flex items-center gap-1">
-                                {{ __('No') }}
-                            </div>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            {{ __('No') }}
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">
-                            <div class="flex items-center gap-1">
-                                {{ __('Asset') }}
-                            </div>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            {{ __('Asset') }}
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">
-                            <div class="flex items-center gap-1">
-                                {{ __('Type') }}
-                            </div>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            {{ __('Type') }}
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">
-                            <div class="flex items-center gap-1">
-                                {{ __('Access') }}
-                            </div>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            {{ __('Access') }}
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">
-                            <div class="flex items-center gap-1">
-                                {{ __('Status') }}
-                            </div>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            {{ __('Status') }}
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">
-                            <div class="flex items-center gap-1">
-                                {{ __('QR Code') }}
-                            </div>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            {{ __('QR Code') }}
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">
-                            <div class="flex items-center gap-1">
-                                {{ __('Bookings') }}
-                            </div>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            {{ __('Bookings') }}
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">
-                            <div class="flex items-center gap-1">
-                                {{ __('Actions') }}
-                            </div>
-                        </th>                      
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            {{ __('Actions') }}
+                        </th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200 dark:bg-neutral-800 dark:divide-neutral-700">
+                <tbody class="bg-white dark:bg-zinc-900 divide-y divide-gray-200 dark:divide-zinc-700">
                     @forelse($assets as $asset)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors duration-200">
+                        <tr class="hover:bg-gray-50 dark:hover:bg-zinc-800">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900 dark:text-neutral-200">
-                                    {{ $loop->iteration }}
-                                </div>                                
+                                <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $loop->iteration }}</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900 dark:text-neutral-200">
-                                    {{ $asset['name'] }}
+                                <div>
+                                    <span class="text-sm font-medium text-gray-900 dark:text-white mt-1 block">{{ $asset['name'] }}</span>
                                     @if(!empty($asset['model']->plate_number))
-                                        <div class="text-xs text-gray-500 block">{{ Str::limit($asset['model']->plate_number, 50) }}</div>                             
+                                        <span class="text-sm text-gray-500 font-normal">{{ Str::limit($asset['model']->plate_number, 50) }}</span>
                                     @else
-                                        <div class="text-xs text-gray-500 block">{{ Str::limit($asset['model']->notes, 50) }}</div>
-                                    @endif                                  
-                                </div>                                
+                                        <span class="text-sm text-gray-500 font-normal">{{ Str::limit($asset['model']->notes, 50) }}</span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <flux:badge size="sm" icon="{{ $asset['type'] === 'vehicle' ? 'car' : ($asset['type'] === 'meeting_room' ? 'building-office' : 'computer-desktop') }}" color="{{ $asset['type'] === 'vehicle' ? 'green' : ($asset['type'] === 'meeting_room' ? 'blue' : 'fuchsia') }}">
@@ -257,7 +239,7 @@
                                     <div class="space-y-2">
                                         @if($hasPositions)
                                             <div>                                               
-                                                <flux:text class="text-black dark:text-white">{{ implode(', ', $asset['model']->allowed_positions) }}</flux:text>
+                                                <span class="text-sm text-gray-900 dark:text-white">{{ implode(', ', $asset['model']->allowed_positions) }}</span>
                                             </div>
                                         @endif
                                         
@@ -275,16 +257,16 @@
                                         @endif
                                         
                                         @if(!$hasPositions && !$hasUsers)
-                                            <flux:text class="text-black dark:text-white">All Users</flux:text>
+                                            <span class="text-sm text-gray-900 dark:text-white">All Users</span>
                                         @endif
                                     </div>
                                 @else                                    
-                                    <flux:text class="text-black dark:text-white">-</flux:text>
+                                    <span class="text-sm text-gray-900 dark:text-white">-</span>
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if($asset['status'] === 'Available')
-                                    <flux:text color="green">{{ $asset['status'] }}</flux:text>
+                                    <flux:text class="text-lime-500">{{ $asset['status'] }}</flux:text>
                                 @elseif($asset['status'] === 'In Use')
                                     <flux:text color="red">{{ $asset['status'] }}</flux:text>
                                 @else
@@ -294,17 +276,12 @@
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <div class="flex items-center justify-center gap-2">
                                     <flux:button size="sm" wire:click="showQrCode('{{ $asset['type'] }}', {{ $asset['id'] }})" variant="ghost" tooltip="View QR Code">
-                                        <flux:icon name="qr-code" class="w-4 h-4" />
-                                    </flux:button>
-                                    <flux:button size="sm" wire:click="generateQrCode('{{ $asset['type'] }}', {{ $asset['id'] }})" variant="ghost" tooltip="Generate/Regenerate QR Code">
-                                        <flux:icon name="arrow-path" class="w-4 h-4" />
-                                    </flux:button>
+                                        <flux:icon.qr-code name="qr-code" class="w-4 h-4" />
+                                    </flux:button>                                    
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
-                                <div class="text-sm font-medium text-gray-900 dark:text-neutral-200">
-                                    {{ $asset['bookings_count'] }}
-                                </div>                                
+                                <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $asset['bookings_count'] }}</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <flux:button.group>
@@ -323,10 +300,13 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-12 text-center">
-                                <div class="flex flex-col items-center gap-2">
-                                    <flux:icon name="car" class="w-8 h-8 text-gray-400" />
-                                    <div class="text-gray-500">No assets found</div>                                    
+                            <td colspan="8" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                                <div class="flex flex-col items-center">
+                                    <svg class="w-12 h-12 mb-4 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                    </svg>
+                                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">No assets found</h3>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Try adjusting your search or filters</p>
                                 </div>
                             </td>
                         </tr>
@@ -753,13 +733,9 @@
                         </div>
 
                         <div class="flex justify-center gap-2 mb-4">
-                            <flux:button size="sm" variant="primary" wire:click="downloadQrCode">
-                                {{-- <flux:icon name="arrow-down-tray" class="w-4 h-4 mr-1" /> --}}
-                                Download SVG
-                            </flux:button>
-                            <flux:button size="sm" wire:click="generateQrCode('{{ class_basename($selectedAssetForQr) }}', {{ $selectedAssetForQr->id }})" variant="outline">
-                                {{-- <flux:icon name="arrow-path" class="w-4 h-4 mr-1" /> --}}
-                                Regenerate
+                            <flux:button size="sm" variant="primary" wire:click="redirectToQrManagement">
+                                {{-- <flux:icon name="eye" class="w-4 h-4 mr-1" /> --}}
+                                View More
                             </flux:button>
                         </div>
                     @else

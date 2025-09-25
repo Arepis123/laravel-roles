@@ -54,6 +54,55 @@ class QrCodeManagement extends Component
 
         // Initialize analytics data on mount
         $this->analyticsData = [];
+
+        // Check for URL parameters to auto-open QR modal for specific asset
+        if (request('open_modal') && request('asset_type') && request('asset_id')) {
+            $assetType = request('asset_type');
+            $assetId = request('asset_id');
+
+            // Find the asset and show preview
+            $this->autoOpenPreview($assetType, $assetId);
+        }
+    }
+
+    private function autoOpenPreview($assetType, $assetId)
+    {
+        // Convert asset type to match the format used in getFilteredAssets
+        // class_basename() returns: Vehicle, MeetingRoom, ItAsset
+        $assetTypeMap = [
+            'vehicle' => 'vehicles',
+            'meetingroom' => 'meeting_rooms',
+            'meeting_room' => 'meeting_rooms',
+            'itasset' => 'it_assets',
+            'it_asset' => 'it_assets'
+        ];
+
+        $mappedType = $assetTypeMap[strtolower($assetType)] ?? 'all';
+
+        // Set the filter to show only this asset type
+        $this->selectedAssetType = $mappedType;
+
+        // Create the asset ID in the format used by the component based on the original asset type
+        $assetIdMap = [
+            'vehicle' => 'vehicle_' . $assetId,
+            'meetingroom' => 'meeting_room_' . $assetId,
+            'meeting_room' => 'meeting_room_' . $assetId,
+            'itasset' => 'it_asset_' . $assetId,
+            'it_asset' => 'it_asset_' . $assetId
+        ];
+
+        $fullAssetId = $assetIdMap[strtolower($assetType)] ?? null;
+
+        if ($fullAssetId) {
+            // Try to find the asset in filtered results
+            $assets = $this->getFilteredAssets();
+            $foundAsset = $assets->firstWhere('id', $fullAssetId);
+
+            if ($foundAsset) {
+                $this->previewAsset = $foundAsset;
+                $this->showPreviewModal = true;
+            }
+        }
     }
 
     public function updatedSearch()
@@ -746,10 +795,31 @@ class QrCodeManagement extends Component
         $this->showTemplateModal = false;
     }
 
+    public function getPaginatedAssets()
+    {
+        $assets = $this->getFilteredAssets();
+
+        // Convert collection to paginated result
+        $perPage = 15;
+        $currentPage = request()->get('page', 1);
+        $items = $assets->forPage($currentPage, $perPage);
+
+        return new \Illuminate\Pagination\LengthAwarePaginator(
+            $items,
+            $assets->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => request()->url(),
+                'pageName' => 'page',
+            ]
+        );
+    }
+
     public function render()
     {
         return view('livewire.admin.qr-code-management', [
-            'assets' => $this->getFilteredAssets(),
+            'assets' => $this->getPaginatedAssets(),
             'stats' => $this->getQrStatistics(),
         ]);
     }

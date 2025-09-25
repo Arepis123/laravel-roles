@@ -3,8 +3,8 @@
     <div class="mb-6">
         <div class="flex justify-between items-center mb-4">
             <div>
-                <flux:heading size="xl">QR Code Management</flux:heading>
-                <flux:subheading>Manage QR codes for all assets</flux:subheading>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">QR Code Management</h1>
+                <p class="text-gray-600 mt-1 dark:text-gray-400">Manage QR codes for all assets</p>
             </div>
             <div>
                 <flux:button wire:click="showAnalytics" variant="primary">
@@ -13,50 +13,64 @@
                 </flux:button>
             </div>
         </div>
+        <flux:separator variant="subtle" class="my-4" />
 
         <!-- Statistics Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <flux:card class="p-4">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <flux:subheading>Total Assets</flux:subheading>
-                        <flux:heading size="lg">{{ $stats['total_assets']['all'] }}</flux:heading>
+        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+            <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+                <div class="flex flex-col items-center justify-center text-center sm:flex-row sm:items-center sm:justify-start sm:text-left">
+                    <div class="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg hidden sm:block">
+                        <flux:icon.cube class="w-6 h-6 text-blue-600 dark:text-blue-400" />
                     </div>
-                    <flux:icon.cube class="size-8 text-blue-500" />
+                    <div class="ml-0 sm:ml-4">
+                        <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Total Assets</flux:heading>
+                        <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">{{ $stats['total_assets']['all'] }}</flux:text>
+                    </div>
                 </div>
             </flux:card>
 
-            <flux:card class="p-4">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <flux:subheading>QR Codes Generated</flux:subheading>
-                        <flux:heading size="lg">{{ $stats['with_qr']['all'] }}</flux:heading>
+            <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+                <div class="flex flex-col items-center justify-center text-center sm:flex-row sm:items-center sm:justify-start sm:text-left">
+                    <div class="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg hidden sm:block">
+                        <flux:icon.qr-code class="w-6 h-6 text-green-600 dark:text-green-400" />
                     </div>
-                    <flux:icon.qr-code class="size-8 text-green-500" />
+                    <div class="ml-0 sm:ml-4">
+                        <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">QR Codes Generated</flux:heading>
+                        <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">{{ $stats['with_qr']['all'] }}</flux:text>
+                    </div>
                 </div>
             </flux:card>
 
-            <flux:card class="p-4">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <flux:subheading>Coverage</flux:subheading>
-                        <flux:heading size="lg">{{ $stats['coverage']['all'] }}%</flux:heading>
-                        <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
-                            <div class="bg-purple-500 h-2 rounded-full transition-all duration-300" style="width: {{ $stats['coverage']['all'] }}%"></div>
+            <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+                <div class="flex flex-col items-center justify-center text-center sm:flex-row sm:items-center sm:justify-start sm:text-left">
+                    <div class="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg hidden sm:block">
+                        <flux:icon.chart-pie class="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div class="ml-0 sm:ml-4">
+                        <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Coverage</flux:heading>
+                        <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">{{ $stats['coverage']['all'] }}%</flux:text>
+                    </div>
+                </div>
+            </flux:card>
+
+            <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+                <div class="flex flex-col items-center justify-center text-center sm:flex-row sm:items-center sm:justify-start sm:text-left">
+                    <div class="p-2 bg-orange-100 dark:bg-orange-900/50 rounded-lg hidden sm:block">
+                        <flux:icon.clock class="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                    </div>
+                    <div class="ml-0 sm:ml-4">
+                        <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">
+                            Recent Activity
+                        </flux:heading>
+
+                        <div class="flex items-center gap-1">
+                            <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">
+                                {{ $stats['recent_scans']->count() }}
+                            </flux:text>
+                            <span class="text-gray-500 dark:text-gray-400">•</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">Last 7 days</span>
                         </div>
                     </div>
-                    <flux:icon.chart-pie class="size-8 text-purple-500" />
-                </div>
-            </flux:card>
-
-            <flux:card class="p-4">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <flux:subheading>Recent Activity</flux:subheading>
-                        <flux:heading size="lg">{{ $stats['recent_scans']->count() }}</flux:heading>
-                        <div class="text-xs text-gray-600 mt-1">Last 7 days</div>
-                    </div>
-                    <flux:icon.clock class="size-8 text-orange-500" />
                 </div>
             </flux:card>
         </div>
@@ -257,22 +271,28 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                                 <div class="flex space-x-2 justify-center">
                                     @if($asset['has_qr'])
-                                        <flux:button size="xs" wire:click="showPreview('{{ $asset['id'] }}')" variant="ghost">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                            </svg>
-                                        </flux:button>                                        
-                                        <flux:button size="xs" wire:click="downloadQrCode('{{ $asset['id'] }}')" variant="ghost">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                            </svg>
-                                        </flux:button>                                         
-                                        <flux:button size="xs" wire:click="regenerateQrCode('{{ $asset['id'] }}')" variant="ghost">
-                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                                            </svg>
-                                        </flux:button>                                        
+                                        <flux:tooltip content="View details">
+                                            <flux:button size="xs" wire:click="showPreview('{{ $asset['id'] }}')" variant="ghost">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                                </svg>
+                                            </flux:button>  
+                                        </flux:tooltip>
+                                        <flux:tooltip content="Download SVG">                                  
+                                            <flux:button size="xs" wire:click="downloadQrCode('{{ $asset['id'] }}')" variant="ghost">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                </svg>
+                                            </flux:button> 
+                                        </flux:tooltip>
+                                        <flux:tooltip content="Regenerate code">                                        
+                                            <flux:button size="xs" wire:click="regenerateQrCode('{{ $asset['id'] }}')" variant="ghost">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                                </svg>
+                                            </flux:button> 
+                                        </flux:tooltip>                                       
                                     @else
                                         <button wire:click="generateQrCode('{{ $asset['id'] }}')"
                                                 class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
@@ -305,6 +325,11 @@
                     @endforelse
                 </tbody>
             </table>
+
+            <!-- Pagination inside table -->
+            <div class="bg-white dark:bg-zinc-900 px-6 py-3 border-t border-gray-200 dark:border-zinc-700">
+                {{ $assets->links() }}
+            </div>
         </div>
     </div>
 
@@ -377,17 +402,14 @@
 
                 <div class="space-y-3">
                     <flux:button wire:click="bulkGenerateQr" variant="primary" class="w-full">
-                        <flux:icon.plus class="size-4" />
                         Generate QR Codes (Missing Only)
                     </flux:button>
 
-                    <flux:button wire:click="bulkRegenerateQr" variant="ghost" class="w-full">
-                        <flux:icon.arrow-path class="size-4" />
+                    <flux:button wire:click="bulkRegenerateQr" variant="primary" class="w-full">
                         Regenerate All QR Codes
                     </flux:button>
 
-                    <flux:button wire:click="downloadBulkQr" variant="ghost" class="w-full">
-                        <flux:icon.arrow-down-tray class="size-4" />
+                    <flux:button wire:click="downloadBulkQr" variant="primary" class="w-full">
                         Download as ZIP
                     </flux:button>
                 </div>
@@ -412,7 +434,7 @@
                         <flux:label>Template Type</flux:label>
                         <flux:select wire:model="templateType" class="w-full">
                             <flux:select.option value="labels">Labels (Grid Layout)</flux:select.option>
-                            <flux:select.option value="cards">Information Cards (Test)</flux:select.option>
+                            <flux:select.option value="cards">Information Cards</flux:select.option>
                         </flux:select>
                     </flux:field>
                 </div>
@@ -444,11 +466,11 @@
 
             <div></div>
 
-            <div class="flex justify-between">
-                <div class="text-sm text-gray-600">
+            <div class="">
+                <div class="text-sm text-gray-600 dark:text-gray-300 mb-2">
                     {{ count($selectedAssets) }} assets selected for printing
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 justify-end">
                     <flux:button wire:click="downloadPrintTemplate" variant="primary">
                         {{-- <flux:icon.printer class="size-4" /> --}}
                         Generate PDF

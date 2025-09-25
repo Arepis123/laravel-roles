@@ -830,6 +830,23 @@ class AssetManagement extends Component
         $this->selectedAssetForQr = null;
     }
 
+    public function redirectToQrManagement()
+    {
+        if (!$this->selectedAssetForQr) {
+            session()->flash('error', 'No asset selected for QR code management.');
+            return;
+        }
+
+        $assetType = class_basename($this->selectedAssetForQr);
+        $assetId = $this->selectedAssetForQr->id;
+
+        // Redirect to QR Code management page with asset parameters
+        return redirect()->route('assets.qr-codes', [
+            'asset_type' => strtolower($assetType),
+            'asset_id' => $assetId,
+            'open_modal' => true
+        ]);
+    }
 
     private function findAssetModel($assetType, $assetId)
     {

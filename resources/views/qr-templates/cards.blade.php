@@ -72,12 +72,40 @@
         .detail-row {
             margin-bottom: 4px;
         }
+
+        .company-logo {
+            max-width: 144px;
+            max-height: 72px;
+            margin-bottom: 15px;
+            filter: brightness(0) invert(1); /* Make logo white for dark background */
+        }
     </style>
 </head>
 <body>
     <div class="card-container">
         @foreach($assets as $asset)
             <div class="card">
+                @if($includeLogo)
+                    @php
+                        $logoPath = public_path('image/company-logo.png');
+                        $logoExists = file_exists($logoPath);
+                        $logoBase64 = null;
+
+                        if ($logoExists) {
+                            try {
+                                $logoData = file_get_contents($logoPath);
+                                $logoBase64 = 'data:image/png;base64,' . base64_encode($logoData);
+                            } catch (Exception $e) {
+                                $logoBase64 = null;
+                            }
+                        }
+                    @endphp
+
+                    @if($logoBase64)
+                        <img src="{{ $logoBase64 }}" alt="Company Logo" class="company-logo" />
+                    @endif
+                @endif
+
                 <!-- QR Code Section -->
                 <div class="qr-section">
                     @php

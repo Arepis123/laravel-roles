@@ -203,11 +203,11 @@
                                             <path d="M12 8h.01"/>
                                         </svg>
                                     </flux:button>
-                                    <flux:tooltip.content class="max-w-[20rem] space-y-2">
-                                        <p><strong>Manual</strong>: tesaa</p>
-                                        <p><strong>Trip Start</strong>: aser</p>
-                                        <p><strong>Trip End</strong>: </p>
-                                        <p><strong>Service</strong>: </p>
+                                    <flux:tooltip.content class="max-w-[20rem] space-y-2 text-left">
+                                        <p><strong>Manual</strong>: Manual odometer reading entry</p>
+                                        <p><strong>Trip Start</strong>: Odometer reading when a vehicle trip begins</p>
+                                        <p><strong>Trip End</strong>: Odometer reading when a vehicle trip ends</p>
+                                        <p><strong>Service</strong>: Odometer reading during vehicle service/maintenance</p>
                                     </flux:tooltip.content>
                                 </flux:tooltip>
                             </div>
@@ -253,16 +253,14 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @php
                                     $badgeColor = match($log->reading_type) {
-                                        'start' => 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
-                                        'end' => 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300',
-                                        'manual' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300',
-                                        'service' => 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300',
-                                        default => 'bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-300'
+                                        'start' => 'lime',
+                                        'end' => 'rose',
+                                        'manual' => 'sky',
+                                        'service' => 'amber',
+                                        default => 'zinc'
                                     };
                                 @endphp
-                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $badgeColor }}">
-                                    {{ ucfirst($log->reading_type) }}
-                                </span>
+                                <flux:badge size="sm" color="{{ $badgeColor }}">{{ ucfirst($log->reading_type) }}</flux:badge>
                             </td>
                             
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
@@ -270,19 +268,9 @@
                                     <div class="flex items-center space-x-2">
                                         <span>{{ number_format($log->distance_traveled) }} km</span>
                                         @if(str_contains($log->notes ?? '', '[Manual Distance Entry]'))
-                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                                </svg>
-                                                Manual
-                                            </span>
+                                            <flux:badge size="sm">Manual</flux:badge>
                                         @elseif(str_contains($log->notes ?? '', '[Auto-calculated Distance]'))
-                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 0l-3-3m3 3l-3 3m-3 4h6m0 0l-3-3m3 3l-3 3"/>
-                                                </svg>
-                                                Auto
-                                            </span>
+                                            <flux:badge size="sm">Auto</flux:badge>
                                         @endif
                                     </div>
                                 @else
@@ -366,7 +354,25 @@
                 </flux:field>
 
                 <flux:field>
-                    <flux:label>Reading Type <span class="text-red-500 ms-1">*</span></flux:label>
+                    <flux:label>
+                        Reading Type
+                        <span class="text-red-500 ms-1">*</span>
+                        <flux:tooltip toggleable>
+                            <flux:button size="xs" variant="ghost" class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
+                                <svg width="15" height="15" viewBox="0 0 24 23" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="M12 16v-4"/>
+                                    <path d="M12 8h.01"/>
+                                </svg>
+                            </flux:button>
+                            <flux:tooltip.content class="max-w-[20rem] space-y-2 text-left">
+                                <p><strong>Manual</strong>: Manual odometer reading entry</p>
+                                <p><strong>Trip Start</strong>: Odometer reading when a vehicle trip begins</p>
+                                <p><strong>Trip End</strong>: Odometer reading when a vehicle trip ends</p>
+                                <p><strong>Service</strong>: Odometer reading during vehicle service/maintenance</p>
+                            </flux:tooltip.content>
+                        </flux:tooltip>
+                    </flux:label>
                     <flux:select wire:model="reading_type" placeholder="Select Type" >
                         <flux:select.option value="manual">Manual</flux:select.option>
                         <flux:select.option value="start">Trip Start</flux:select.option>
