@@ -66,3 +66,19 @@ select:focus[data-flux-control] {
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
+
+/* Hide vertical scrollbars system-wide */
+::-webkit-scrollbar:vertical {
+    width: 0px;
+    background: transparent;
+}
+
+/* For Firefox */
+* {
+    scrollbar-width: none;
+}
+
+/* For Internet Explorer and Edge */
+body {
+    -ms-overflow-style: none;
+}
