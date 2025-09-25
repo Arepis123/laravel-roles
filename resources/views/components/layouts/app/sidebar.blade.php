@@ -7,13 +7,14 @@
     <body class="min-h-screen bg-white dark:bg-zinc-800">
         <flux:sidebar sticky collapsible class="bg-zinc-50 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-700">
             <flux:sidebar.header>
+ 
                 <flux:sidebar.brand
                     href="{{ route('dashboard') }}"
                     wire:navigate
+                    logo="{{ asset('image/logo-clab.png') }}"
+                    logo:dark="{{ asset('image/logo-clab.png') }}"
                     name="e-Booking CLAB"
-                >
-                    <!-- <x-app-logo /> -->
-                </flux:sidebar.brand>
+                />                
                 <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
             </flux:sidebar.header>
 
@@ -31,7 +32,7 @@
                         <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wider">{{ __('ADMIN') }}</h3>
                     </div>
                     @if(auth()->user()->hasRole(['Admin', 'Super Admin']))
-                    <flux:sidebar.item icon="calendar" :href="route('bookings.index')" :current="request()->routeIs('bookings.index')" wire:navigate>
+                    <flux:sidebar.item icon="calendar" :href="route('bookings.index')" :current="request()->routeIs('bookings.index')" wire:navigate tooltip="Admin Booking">
                         <div class="flex items-center justify-between w-full">
                             <span>{{ __('Admin Booking') }}</span>
                             <livewire:pending-bookings-badge wire:poll.30s="loadCount" />
