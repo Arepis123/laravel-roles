@@ -268,7 +268,7 @@ class Vehicle extends Model
         if (!$startDate || !$endDate) {
             return $this->bookings();
         }
-        
+
         return $this->bookings()->where(function($q) use ($startDate, $endDate) {
             $q->whereDate('start_time', '>=', $startDate)
               ->whereDate('start_time', '<=', $endDate)
@@ -279,6 +279,109 @@ class Vehicle extends Model
                         ->whereDate('end_time', '>=', $endDate);
               });
         });
+    }
+
+    /**
+     * Check if vehicle has ongoing maintenance
+     */
+    public function hasOngoingMaintenance()
+    {
+        return $this->maintenanceLogs()
+            ->where('status', 'ongoing')
+            ->exists();
+    }
+
+    /**
+     * Check if vehicle has scheduled maintenance that conflicts with booking dates
+     */
+    public function hasScheduledMaintenanceInPeriod($startTime, $endTime)
+    {
+        return $this->maintenanceLogs()
+            ->where('status', 'scheduled')
+            ->where(function($query) use ($startTime, $endTime) {
+                $query->whereBetween('performed_at', [$startTime, $endTime])
+                      ->orWhere(function($q) use ($startTime, $endTime) {
+                          // Check if maintenance spans across the booking period
+                          $q->where('performed_at', '<=', $startTime)
+                            ->whereNotNull('next_maintenance_due')
+                            ->where('next_maintenance_due', '>=', $endTime);
+                      });
+            })
+            ->exists();
+    }
+
+    /**
+     * Check if vehicle is available for booking (including maintenance checks)
+     */
+    public function isAvailableForBooking($startTime, $endTime)
+    {
+        // Check if vehicle status allows booking
+        if ($this->status === 'inactive' || $this->status === 'maintenance') {
+            return false;
+        }
+
+        // Check for ongoing maintenance
+        if ($this->hasOngoingMaintenance()) {
+            return false;
+        }
+
+        // Check for scheduled maintenance conflicts
+        if ($this->hasScheduledMaintenanceInPeriod($startTime, $endTime)) {
+            return false;
+        }
+
+        // Check for existing booking conflicts
+        $conflictingBookings = $this->bookings()
+            ->whereIn('status', ['pending', 'approved', 'ongoing'])
+            ->where(function($query) use ($startTime, $endTime) {
+                $query->where(function($q) use ($startTime, $endTime) {
+                    // Booking starts before our end time and ends after our start time
+                    $q->where('start_time', '<', $endTime)
+                      ->where('end_time', '>', $startTime);
+                });
+            })
+            ->exists();
+
+        return !$conflictingBookings;
+    }
+
+    /**
+     * Get maintenance status for display
+     */
+    public function getMaintenanceStatusAttribute()
+    {
+        $ongoingMaintenance = $this->maintenanceLogs()
+            ->where('status', 'ongoing')
+            ->latest('performed_at')
+            ->first();
+
+        if ($ongoingMaintenance) {
+            return [
+                'status' => 'ongoing',
+                'message' => 'Vehicle under maintenance',
+                'maintenance' => $ongoingMaintenance
+            ];
+        }
+
+        $upcomingMaintenance = $this->maintenanceLogs()
+            ->where('status', 'scheduled')
+            ->where('performed_at', '>', now())
+            ->orderBy('performed_at')
+            ->first();
+
+        if ($upcomingMaintenance) {
+            return [
+                'status' => 'scheduled',
+                'message' => 'Maintenance scheduled for ' . $upcomingMaintenance->performed_at->format('M j, Y g:i A'),
+                'maintenance' => $upcomingMaintenance
+            ];
+        }
+
+        return [
+            'status' => 'available',
+            'message' => 'Available for booking',
+            'maintenance' => null
+        ];
     }
 }
 

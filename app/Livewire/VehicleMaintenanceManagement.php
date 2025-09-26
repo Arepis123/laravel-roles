@@ -360,13 +360,26 @@ class VehicleMaintenanceManagement extends Component
             'total_records' => $logs->count(),
             'avg_cost_per_service' => $logs->where('cost', '>', 0)->avg('cost') ?: 0,
             'vehicles_serviced' => $logs->pluck('vehicle_id')->unique()->count(),
-            'upcoming_maintenance' => VehicleMaintenanceLog::whereNotNull('next_maintenance_due')
-                ->where('next_maintenance_due', '>', now())
-                ->where('next_maintenance_due', '<=', now()->addDays(30))
-                ->count(),
-            'overdue_maintenance' => VehicleMaintenanceLog::whereNotNull('next_maintenance_due')
-                ->where('next_maintenance_due', '<', now())
-                ->count(),
+            'upcoming_maintenance' => VehicleMaintenanceLog::where(function($query) {
+                // Check for scheduled maintenance coming up in next 30 days
+                $query->where('status', 'scheduled')
+                      ->where('performed_at', '>', now())
+                      ->where('performed_at', '<=', now()->addDays(30));
+            })->orWhere(function($query) {
+                // Also check for next_maintenance_due (for completed maintenance)
+                $query->whereNotNull('next_maintenance_due')
+                      ->where('next_maintenance_due', '>', now())
+                      ->where('next_maintenance_due', '<=', now()->addDays(30));
+            })->count(),
+            'overdue_maintenance' => VehicleMaintenanceLog::where(function($query) {
+                // Check for scheduled maintenance that's overdue
+                $query->where('status', 'scheduled')
+                      ->where('performed_at', '<', now());
+            })->orWhere(function($query) {
+                // Also check for overdue next_maintenance_due (for completed maintenance)
+                $query->whereNotNull('next_maintenance_due')
+                      ->where('next_maintenance_due', '<', now());
+            })->count(),
             'maintenance_by_type' => $logs->groupBy('maintenance_type')->map->count()
         ];
     }
@@ -378,13 +391,34 @@ class VehicleMaintenanceManagement extends Component
             'format_received' => $format,
             'format_type' => gettype($format)
         ]);
-        
+
         $this->dispatch('maintenance-export', [
             'vehicle_id' => $this->filterVehicle,
             'date_from' => $this->filterDateFrom,
             'date_to' => $this->filterDateTo,
             'format' => $format
         ]);
+    }
+
+    /**
+     * Check if 'Scheduled' option should be shown in edit mode
+     */
+    public function getShowScheduledOptionProperty()
+    {
+        if (!$this->editingLog) {
+            return false;
+        }
+
+        // Only show 'Scheduled' option if the maintenance is currently scheduled and in the future
+        $log = VehicleMaintenanceLog::find($this->editingLog);
+        if (!$log) {
+            return false;
+        }
+
+        // Show 'Scheduled' option if:
+        // 1. Current status is 'scheduled' AND the performed_at is in the future
+        // 2. OR if user is editing and the performed_at date is in the future (regardless of current status)
+        return $log->status === 'scheduled' && $log->performed_at->isFuture();
     }
 
     public function render()

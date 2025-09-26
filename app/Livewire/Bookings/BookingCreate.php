@@ -222,11 +222,12 @@ class BookingCreate extends Component
         $model = $config['model'];
         $nameField = $config['name_field'];
 
-        // Special handling for vehicles to include plate number and access filtering
+        // Special handling for vehicles to include plate number, access filtering, and maintenance status
         if ($this->asset_type === 'vehicle') {
             $currentUser = auth()->user();
-            
+
             return $model::select('id', 'model', 'plate_number', 'allowed_positions', 'allowed_users')
+                ->with('maintenanceLogs')
                 ->get()
                 ->filter(function ($vehicle) use ($currentUser) {
                     return $vehicle->canUserBook($currentUser);
@@ -236,11 +237,23 @@ class BookingCreate extends Component
                     $item = new \stdClass();
                     $item->id = $vehicle->id;
                     $item->name = $vehicle->model . ' (' . $vehicle->plate_number . ')';
-                    
+
+                    // Check maintenance status and add to description
+                    $maintenanceStatus = $vehicle->maintenanceStatus;
+                    $statusMessage = '';
+
+                    if ($maintenanceStatus['status'] === 'ongoing') {
+                        $statusMessage = ' [🔧 Under Maintenance - Unavailable]';
+                    } elseif ($maintenanceStatus['status'] === 'scheduled') {
+                        $statusMessage = ' [📅 Maintenance Scheduled]';
+                    }
+
+                    $item->name .= $statusMessage;
+
                     // Add access restriction info as description
                     $hasPositions = !empty($vehicle->allowed_positions);
                     $hasUsers = !empty($vehicle->allowed_users);
-                    
+
                     if ($hasPositions && $hasUsers) {
                         $item->description = 'Position: ' . implode(', ', $vehicle->allowed_positions) . ' + Specific users';
                     } elseif ($hasUsers) {
@@ -250,7 +263,12 @@ class BookingCreate extends Component
                     } else {
                         $item->description = 'Available to all users';
                     }
-                    
+
+                    // Add maintenance status to description if present
+                    if ($maintenanceStatus['status'] !== 'available') {
+                        $item->description .= ' • ' . $maintenanceStatus['message'];
+                    }
+
                     return $item;
                 })
                 ->values(); // Reset array keys after filtering
@@ -379,11 +397,14 @@ class BookingCreate extends Component
         $this->start_time = '';
         $this->end_time = '';
         
-        // Check if selected vehicle is under maintenance
+        // Check if selected vehicle is under maintenance or has maintenance conflicts
         if ($this->asset_type === 'vehicle' && $this->asset_id) {
-            $this->vehicleUnderMaintenance = VehicleMaintenanceLog::where('vehicle_id', $this->asset_id)
-                ->where('status', 'ongoing')
-                ->exists();
+            $vehicle = Vehicle::find($this->asset_id);
+            if ($vehicle) {
+                $this->vehicleUnderMaintenance = $vehicle->hasOngoingMaintenance();
+            } else {
+                $this->vehicleUnderMaintenance = false;
+            }
         } else {
             $this->vehicleUnderMaintenance = false;
         }
@@ -565,12 +586,15 @@ class BookingCreate extends Component
             
             // Check for vehicle maintenance conflicts (vehicles only)
             if ($this->asset_type === 'vehicle') {
-                $maintenanceConflict = VehicleMaintenanceLog::where('vehicle_id', $this->asset_id)
-                    ->where('status', 'ongoing')
-                    ->exists();
-                    
-                if ($maintenanceConflict) {
-                    return false; // Vehicle is under maintenance, no time slots available
+                $vehicle = Vehicle::find($this->asset_id);
+                if ($vehicle) {
+                    // Check for ongoing maintenance
+                    if ($vehicle->hasOngoingMaintenance()) {
+                        return false; // Vehicle is under maintenance, no time slots available
+                    }
+
+                    // For date-specific checks, we'll validate during booking creation
+                    // since hasAvailableTimeSlots doesn't have date context
                 }
             }
             
@@ -947,13 +971,33 @@ class BookingCreate extends Component
         // Validate all fields
         $this->validate();
 
-        // Validate position-based access for vehicles
+        // Validate position-based access for vehicles and maintenance status
         if ($this->asset_type === 'vehicle') {
             $vehicle = Vehicle::find($this->asset_id);
             if ($vehicle && !$vehicle->canUserBook(auth()->user())) {
                 $this->saving = false;
                 $this->addError('asset_id', 'You are not authorized to book this vehicle based on your position.');
                 return;
+            }
+
+            // Check comprehensive availability including maintenance
+            if ($vehicle) {
+                $startDateTime = Carbon::parse($this->booking_date . ' ' . $this->start_time);
+                $endDateTime = Carbon::parse(($this->end_date ?: $this->booking_date) . ' ' . $this->end_time);
+
+                if (!$vehicle->isAvailableForBooking($startDateTime, $endDateTime)) {
+                    $this->saving = false;
+
+                    // Get specific reason for unavailability
+                    if ($vehicle->hasOngoingMaintenance()) {
+                        $this->addError('asset_id', 'This vehicle is currently under maintenance and cannot be booked.');
+                    } elseif ($vehicle->hasScheduledMaintenanceInPeriod($startDateTime, $endDateTime)) {
+                        $this->addError('booking_date', 'This vehicle has scheduled maintenance during your requested booking period.');
+                    } else {
+                        $this->addError('booking_date', 'This vehicle is not available for the selected time period.');
+                    }
+                    return;
+                }
             }
         }
 

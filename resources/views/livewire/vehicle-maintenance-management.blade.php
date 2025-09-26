@@ -494,12 +494,18 @@
                             <flux:tooltip.content class="max-w-[20rem] space-y-2">
                                 <p>Ongoing - Vehicle will be unavailable for booking</p>
                                 <p>Completed - Vehicle will be available for booking</p>
+                                @if($this->showScheduledOption)
+                                    <p>Scheduled - Maintenance planned for future date</p>
+                                @endif
                             </flux:tooltip.content>
                         </flux:tooltip>
-                    </flux:heading>                
+                    </flux:heading>
                     <flux:select variant="listbox" wire:model="status" >
                         <flux:select.option value="ongoing">Ongoing</flux:select.option>
                         <flux:select.option value="completed">Completed</flux:select.option>
+                        @if($this->showScheduledOption)
+                            <flux:select.option value="scheduled">Scheduled</flux:select.option>
+                        @endif
                     </flux:select>
                     <flux:error name="status" />
                 </flux:field>
