@@ -24,6 +24,8 @@ use App\Livewire\Admin\Reports;
 use App\Livewire\VehicleFuelManagement;
 use App\Livewire\VehicleOdometerManagement;
 use App\Livewire\VehicleMaintenanceManagement;
+use App\Livewire\VehicleCheckupManagement;
+use App\Livewire\CheckupTemplateManagement;
 use App\Livewire\VehicleAnalytics;
 use App\Livewire\VehicleDetail;
 use App\Models\ReportLog;
@@ -114,8 +116,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('vehicles/fuel', VehicleFuelManagement::class)->name('vehicles.fuel')->middleware('permission:vehicle.view|vehicle.create|vehicle.edit|vehicle.delete');
     Route::get('vehicles/odometer', VehicleOdometerManagement::class)->name('vehicles.odometer')->middleware('permission:vehicle.view|vehicle.create|vehicle.edit|vehicle.delete');
     Route::get('vehicles/maintenance', VehicleMaintenanceManagement::class)->name('vehicles.maintenance')->middleware('permission:vehicle.view|vehicle.create|vehicle.edit|vehicle.delete');
+    Route::get('vehicles/checkup', VehicleCheckupManagement::class)->name('vehicles.checkup')->middleware('permission:vehicle.view|vehicle.create|vehicle.edit|vehicle.delete');
+    Route::get('vehicles/checkup-templates', CheckupTemplateManagement::class)->name('vehicles.checkup-templates')->middleware('permission:vehicle.view|vehicle.create|vehicle.edit|vehicle.delete');
     Route::get('vehicles/analytics', VehicleAnalytics::class)->name('vehicles.analytics')->middleware('permission:vehicle.view|vehicle.create|vehicle.edit|vehicle.delete');
     Route::get('vehicle-analytics/export', [App\Http\Controllers\VehicleAnalyticsController::class, 'export'])->name('vehicle.analytics.export')->middleware('permission:vehicle.view');
+    Route::get('vehicle-checkup/export', [App\Http\Controllers\VehicleCheckupExportController::class, 'export'])->name('vehicle.checkup.export')->middleware('permission:vehicle.view');
     
     // Test route for PDF debugging
     Route::get('test-pdf', function() {

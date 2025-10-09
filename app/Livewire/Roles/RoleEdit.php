@@ -25,6 +25,16 @@ class RoleEdit extends Component
         return view('livewire.roles.role-edit');
     }
     
+    public function selectAll()
+    {
+        $this->permissions = $this->allPermissions->pluck('name')->toArray();
+    }
+
+    public function deselectAll()
+    {
+        $this->permissions = [];
+    }
+
     public function submit()
     {
         $this->validate([

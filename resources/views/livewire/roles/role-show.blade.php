@@ -4,13 +4,6 @@
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
             <div>
                 <div class="flex items-center gap-2 mb-1">
-                    @if($name === 'Super Admin')
-                        <flux:icon name="shield-check" class="w-6 h-6 text-red-500" />
-                    @elseif($name === 'Admin')
-                        <flux:icon name="shield-check" class="w-6 h-6 text-amber-500" />
-                    @else
-                        <flux:icon name="shield-check" class="w-6 h-6 text-blue-500" />
-                    @endif
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $name }}</h1>
                 </div>
                 <p class="text-gray-600 dark:text-gray-400">{{ __('Role details and permissions overview') }}</p>
@@ -40,10 +33,10 @@
     </div>
 
     <!-- Role Information Card -->
-    <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden mb-6">
-        <div class="px-6 py-3 bg-gray-50 dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-700">           
-            <flux:icon name="identification" class="w-5 h-5 inline text-gray-500 me-1" />
-            <div class="text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase inline">Role Information</div>
+    <div class="bg-white dark:bg-zinc-900  rounded-lg border border-gray-200 dark:border-zinc-700 overflow-hidden mb-6">
+        <div class="px-6 py-3 bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-700">           
+            <flux:icon name="identification" class="w-5 h-5 inline text-gray-900 dark:text-neutral-200 me-1" />
+            <div class="text-left text-xs font-medium text-gray-900 dark:text-neutral-200 uppercase inline">Role Information</div>
         </div>
         <div class="p-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -58,10 +51,10 @@
     </div>
 
     <!-- Permissions Card -->
-    <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden">
-        <div class="px-6 py-3 bg-gray-50 dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-700">        
-            <flux:icon name="key" class="w-5 h-5 inline text-gray-500 me-1" />
-            <div class="text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase inline">
+    <div class="bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-700 overflow-hidden">
+        <div class="px-6 py-3 bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-700">        
+            <flux:icon name="key" class="w-5 h-5 inline text-gray-900 dark:text-neutral-200 me-1" />
+            <div class="text-left text-xs font-medium text-gray-900 dark:text-neutral-200 uppercase inline">
                 Assigned Permissions ({{ is_array($permissions) ? count($permissions) : $permissions->count() }})
             </div>                           
         </div>

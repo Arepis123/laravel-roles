@@ -117,56 +117,78 @@
     @endif
 
     <!-- Filters and Actions -->
-    <div class="border border-gray-200 rounded-xl p-4 dark:bg-neutral-800 dark:border-neutral-700 overflow-hidden my-4">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-            <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-                <!-- Search -->
-                <div class="flex-1">
-                    <flux:input wire:model.live.debounce.300ms="search" variant="filled" icon="magnifying-glass" placeholder="Search assets..." class="w-full"/>                    
-                </div>
+    <div class="mb-6 mx-2">
+        <flux:accordion>
+            <flux:accordion.item>
+                <flux:accordion.heading>
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5 transition-transform duration-200 accordion-icon"
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                        </svg>
+                        Filters & Actions
+                    </span>
+                </flux:accordion.heading>
+                <flux:accordion.content>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pt-4 mx-3">
+                        <flux:field>
+                            <flux:label>Search Assets</flux:label>
+                            <flux:input
+                                wire:model.live.debounce.300ms="search"
+                                placeholder="Search by name..."
+                                class="w-full"
+                            >
+                                <flux:icon.magnifying-glass slot="leading" class="size-4" />
+                            </flux:input>
+                        </flux:field>
 
-                <!-- Filter -->
-                <div>
-                    <flux:dropdown>
-                        <flux:button variant="filled" icon-trailing="chevron-down">
-                            @if($selectedAssetType === 'all') All Assets
-                            @elseif($selectedAssetType === 'meeting_rooms') Meeting Rooms
-                            @elseif($selectedAssetType === 'vehicles') Vehicles
-                            @elseif($selectedAssetType === 'it_assets') IT Assets
-                            @else
-                                All Assets
-                            @endif
+                        <flux:field>
+                            <flux:label>Asset Type</flux:label>
+                            <flux:select variant="listbox" wire:model.live="selectedAssetType" placeholder="All Assets">
+                                <flux:select.option value="all">All Assets</flux:select.option>
+                                <flux:select.option value="meeting_rooms">Meeting Rooms</flux:select.option>
+                                <flux:select.option value="vehicles">Vehicles</flux:select.option>
+                                <flux:select.option value="it_assets">IT Assets</flux:select.option>
+                            </flux:select>
+                        </flux:field>
+
+                        <flux:field>
+                            <flux:label>Status</flux:label>
+                            <flux:select variant="listbox" wire:model.live="filterStatus" placeholder="All Status">
+                                <flux:select.option value="all">All Status</flux:select.option>
+                                <flux:select.option value="available">Available</flux:select.option>
+                                <flux:select.option value="in_use">In Use</flux:select.option>
+                                <flux:select.option value="maintenance">Maintenance</flux:select.option>
+                            </flux:select>
+                        </flux:field>
+
+                        <flux:field>
+                            <flux:label>Access</flux:label>
+                            <flux:select variant="listbox" wire:model.live="filterAccess" placeholder="All Access">
+                                <flux:select.option value="all">All Access</flux:select.option>
+                                <flux:select.option value="restricted">Restricted</flux:select.option>
+                                <flux:select.option value="unrestricted">All Users</flux:select.option>
+                            </flux:select>
+                        </flux:field>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    @can('asset.create')
+                    <div class="flex flex-wrap gap-3 pt-4 mx-3">
+                        <flux:button variant="filled" size="sm" wire:click="createAsset('meeting_room')" icon="building-office" class="bg-blue-600 hover:bg-blue-700">
+                            Add Meeting Room
                         </flux:button>
-                        <flux:menu>
-                            <flux:menu.item wire:click="$set('selectedAssetType', 'all')">All Assets</flux:menu.item>
-                            <flux:menu.item wire:click="$set('selectedAssetType', 'meeting_rooms')">Meeting Rooms</flux:menu.item>
-                            <flux:menu.item wire:click="$set('selectedAssetType', 'vehicles')">Vehicles</flux:menu.item>
-                            <flux:menu.item wire:click="$set('selectedAssetType', 'it_assets')">IT Assets</flux:menu.item>
-                        </flux:menu>
-                    </flux:dropdown>                   
-                </div>
-            </div>
-
-            <!-- Add Asset Dropdown -->
-            @can('asset.create')
-            <flux:dropdown>
-                <flux:button variant="primary">
-                    Add Asset
-                </flux:button>
-                <flux:menu>
-                    <flux:menu.item wire:click="createAsset('meeting_room')" icon="building-office">
-                        Add Meeting Room
-                    </flux:menu.item>
-                    <flux:menu.item wire:click="createAsset('vehicle')" icon="car">
-                        Add Vehicle
-                    </flux:menu.item>
-                    <flux:menu.item wire:click="createAsset('it_asset')" icon="computer-desktop">
-                        Add IT Asset
-                    </flux:menu.item>
-                </flux:menu>
-            </flux:dropdown>
-            @endcan
-        </div>
+                        <flux:button variant="filled" size="sm" wire:click="createAsset('vehicle')" icon="car" class="bg-green-600 hover:bg-green-700">
+                            Add Vehicle
+                        </flux:button>
+                        <flux:button variant="filled" size="sm" wire:click="createAsset('it_asset')" icon="computer-desktop" class="bg-purple-600 hover:bg-purple-700">
+                            Add IT Asset
+                        </flux:button>
+                    </div>
+                    @endcan
+                </flux:accordion.content>
+            </flux:accordion.item>
+        </flux:accordion>
     </div>
 
     <!-- Assets Table -->
@@ -178,23 +200,75 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             {{ __('No') }}
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            {{ __('Asset') }}
+                        <th wire:click="sortBy('name')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 select-none">
+                            <div class="flex items-center space-x-1">
+                                <span>{{ __('Asset') }}</span>
+                                @if($sortField === 'name')
+                                    @if($sortDirection === 'asc')
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                        </svg>
+                                    @else
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    @endif
+                                @endif
+                            </div>
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            {{ __('Type') }}
+                        <th wire:click="sortBy('type')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 select-none">
+                            <div class="flex items-center space-x-1">
+                                <span>{{ __('Type') }}</span>
+                                @if($sortField === 'type')
+                                    @if($sortDirection === 'asc')
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                        </svg>
+                                    @else
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    @endif
+                                @endif
+                            </div>
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             {{ __('Access') }}
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            {{ __('Status') }}
+                        <th wire:click="sortBy('status')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 select-none">
+                            <div class="flex items-center space-x-1">
+                                <span>{{ __('Status') }}</span>
+                                @if($sortField === 'status')
+                                    @if($sortDirection === 'asc')
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                        </svg>
+                                    @else
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    @endif
+                                @endif
+                            </div>
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             {{ __('QR Code') }}
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            {{ __('Bookings') }}
+                        <th wire:click="sortBy('bookings_count')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 select-none">
+                            <div class="flex items-center space-x-1">
+                                <span>{{ __('Bookings') }}</span>
+                                @if($sortField === 'bookings_count')
+                                    @if($sortDirection === 'asc')
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                        </svg>
+                                    @else
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    @endif
+                                @endif
+                            </div>
                         </th>
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             {{ __('Actions') }}

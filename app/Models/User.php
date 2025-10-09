@@ -66,6 +66,45 @@ class User extends Authenticatable implements CanResetPassword
         return $this->hasMany(Booking::class, 'booked_by');
     }
 
+    /**
+     * Get all favorite assets for this user
+     */
+    public function favoriteAssets()
+    {
+        return $this->hasMany(UserFavoriteAsset::class);
+    }
+
+    /**
+     * Check if user has favorited a specific asset
+     */
+    public function hasFavorited($assetType, $assetId): bool
+    {
+        return $this->favoriteAssets()
+            ->where('favorable_type', $assetType)
+            ->where('favorable_id', $assetId)
+            ->exists();
+    }
+
+    /**
+     * Toggle favorite status for an asset
+     */
+    public function toggleFavorite($assetType, $assetId): void
+    {
+        $favorite = $this->favoriteAssets()
+            ->where('favorable_type', $assetType)
+            ->where('favorable_id', $assetId)
+            ->first();
+
+        if ($favorite) {
+            $favorite->delete();
+        } else {
+            $this->favoriteAssets()->create([
+                'favorable_type' => $assetType,
+                'favorable_id' => $assetId,
+            ]);
+        }
+    }
+
     // Helper method to check if user is active
     public function isActive(): bool
     {

@@ -29,58 +29,85 @@
         </div>
     @endsession    
 
-    <!-- Create Button -->
-    @can('role.create')
-    <div class="flex justify-between items-center mb-6">
-        <div></div> <!-- Spacer for alignment -->
-        <flux:button variant="primary" href="{{ route('roles.create') }}" icon="plus" class="w-full sm:w-auto">
-            Create New Role
-        </flux:button>
+    <!-- Filters and Actions -->
+    <div class="mb-6 mx-2">
+        <flux:accordion>
+            <flux:accordion.item>
+                <flux:accordion.heading>
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5 transition-transform duration-200 accordion-icon"
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                        </svg>
+                        Filters & Actions
+                    </span>
+                </flux:accordion.heading>
+                <flux:accordion.content>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pt-4 mx-3">
+                        <flux:field>
+                            <flux:label>Search Roles</flux:label>
+                            <flux:input
+                                wire:model.live.debounce.300ms="search"
+                                type="search"
+                                placeholder="Search by role name..."
+                            >
+                                <flux:icon.magnifying-glass slot="leading" class="size-4" />
+                            </flux:input>
+                        </flux:field>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    @can('role.create')
+                    <div class="flex flex-wrap gap-3 pt-4 mx-3">
+                        <flux:button variant="filled" size="sm" href="{{ route('roles.create') }}" icon="plus" class="bg-blue-600 hover:bg-blue-700">
+                            Create New Role
+                        </flux:button>
+                    </div>
+                    @endcan
+                </flux:accordion.content>
+            </flux:accordion.item>
+        </flux:accordion>
     </div>
-    @endcan
 
     <!-- Desktop Table View (hidden on mobile) -->
-    <div class="hidden md:block bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden">
+    <div class="hidden md:block bg-white dark:bg-zinc-900 shadow-sm rounded-lg border border-gray-200 dark:border-zinc-700 overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-                <thead class="bg-gray-50 dark:bg-neutral-900">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-zinc-700">
+                <thead class="bg-gray-50 dark:bg-zinc-800">
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">
-                            <div class="flex items-center gap-1">
-                                <flux:icon name="hashtag" class="w-3 h-3" />
-                                No
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            No
+                        </th>
+                        <th wire:click="sortBy('name')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 select-none">
+                            <div class="flex items-center space-x-1">
+                                <span>Role Name</span>
+                                @if($sortField === 'name')
+                                    @if($sortDirection === 'asc')
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                        </svg>
+                                    @else
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    @endif
+                                @endif
                             </div>
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">
-                            <div class="flex items-center gap-1">
-                                <flux:icon name="shield-check" class="w-3 h-3" />
-                                Role Name
-                            </div>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Permissions
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">
-                            <div class="flex items-center gap-1">
-                                <flux:icon name="key" class="w-3 h-3" />
-                                Permissions
-                            </div>
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">Actions</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200 dark:bg-neutral-800 dark:divide-neutral-700">
+                <tbody class="bg-white dark:bg-zinc-900 divide-y divide-gray-200 dark:divide-zinc-700">
                     @forelse ($roles as $role)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
+                        <tr class="hover:bg-gray-50 dark:hover:bg-zinc-800">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                                 {{ $loop->iteration }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center gap-2">
-                                    @if($role->name === 'Super Admin')
-                                        <flux:icon name="shield-check" class="w-5 h-5 text-red-500" />
-                                    @elseif($role->name === 'Admin')
-                                        <flux:icon name="shield-check" class="w-5 h-5 text-amber-500" />
-                                    @else
-                                        <flux:icon name="shield-check" class="w-5 h-5 text-blue-500" />
-                                    @endif
                                     <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ $role->name }}</span>
                                 </div>
                             </td>

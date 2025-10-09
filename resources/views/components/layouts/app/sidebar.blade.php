@@ -23,8 +23,8 @@
                 <div class="px-3 py-2 in-data-flux-sidebar-collapsed-desktop:hidden">
                     <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wider">{{ __('MAIN') }}</h3>
                 </div>
-                <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:sidebar.item>
-                <flux:sidebar.item icon="calendar" :href="route('bookings.index.user')" :current="request()->routeIs('bookings.index.user')" wire:navigate>{{ __('Booking') }}</flux:sidebar.item>
+                <flux:sidebar.item icon="house" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:sidebar.item>
+                <flux:sidebar.item icon="calendar" :href="route('bookings.index.user')" :current="request()->routeIs('bookings.index.user')" wire:navigate>{{ __('My Bookings') }}</flux:sidebar.item>
 
                 @if(auth()->user()->hasRole(['Admin', 'Super Admin']))
                     <!-- Admin Section -->
@@ -32,9 +32,9 @@
                         <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wider">{{ __('ADMIN') }}</h3>
                     </div>
                     @if(auth()->user()->hasRole(['Admin', 'Super Admin']))
-                    <flux:sidebar.item icon="calendar" :href="route('bookings.index')" :current="request()->routeIs('bookings.index')" wire:navigate tooltip="Admin Booking">
+                    <flux:sidebar.item icon="calendar-days" :href="route('bookings.index')" :current="request()->routeIs('bookings.index')" wire:navigate tooltip="All Bookings">
                         <div class="flex items-center justify-between w-full">
-                            <span>{{ __('Admin Booking') }}</span>
+                            <span>{{ __('All Bookings') }}</span>
                             <livewire:pending-bookings-badge wire:poll.30s="loadCount" />
                         </div>
                     </flux:sidebar.item>
@@ -47,13 +47,13 @@
                     @endif
                     @if(auth()->user()->can('asset.view') || auth()->user()->can('asset.create') || auth()->user()->can('asset.edit') || auth()->user()->can('asset.delete'))
                     {{-- <flux:sidebar.item icon="squares-2x2" :href="route('assets')" :current="request()->routeIs('assets')" wire:navigate>{{ __('Asset') }}</flux:sidebar.item> --}}
-                    <flux:sidebar.group expandable icon="squares-2x2" heading="Asset" class="grid">
-                        <flux:sidebar.item :href="route('assets')">Asset lists</flux:sidebar.item>
-                        <flux:sidebar.item :href="route('assets.qr-codes')">QR Code</flux:sidebar.item>
+                    <flux:sidebar.group expandable icon="car-front" heading="Assets" class="grid">
+                        <flux:sidebar.item icon="circle-small" :href="route('assets')">Lists</flux:sidebar.item>
+                        <flux:sidebar.item icon="circle-small" :href="route('assets.qr-codes')">QR Code</flux:sidebar.item>
                     </flux:sidebar.group>                    
                     @endif
                     @if(auth()->user()->can('report.view') || auth()->user()->can('report.create') || auth()->user()->can('report.edit') || auth()->user()->can('report.delete'))
-                    <flux:sidebar.item icon="document" :href="route('reports')" :current="request()->routeIs('reports')" wire:navigate>{{ __('Report') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="file-text" :href="route('reports')" :current="request()->routeIs('reports')" wire:navigate>{{ __('Report') }}</flux:sidebar.item>
                     @endif
                 @endif
 
@@ -62,10 +62,12 @@
                     <div class="px-3 py-2 mt-4 in-data-flux-sidebar-collapsed-desktop:hidden">
                         <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wider">{{ __('VEHICLE MANAGEMENT') }}</h3>
                     </div>
-                    @if(auth()->user()->can('asset.view') || auth()->user()->can('asset.create') || auth()->user()->can('asset.edit') || auth()->user()->can('asset.delete'))
-                    <flux:sidebar.item icon="fire" :href="route('vehicles.fuel')" :current="request()->routeIs('vehicles.fuel')" wire:navigate>{{ __('Fuel Logs') }}</flux:sidebar.item>
-                    <flux:sidebar.item icon="chart-bar" :href="route('vehicles.odometer')" :current="request()->routeIs('vehicles.odometer')" wire:navigate>{{ __('Odometer Logs') }}</flux:sidebar.item>
-                    <flux:sidebar.item icon="wrench-screwdriver" :href="route('vehicles.maintenance')" :current="request()->routeIs('vehicles.maintenance')" wire:navigate>{{ __('Maintenance') }}</flux:sidebar.item>
+                    @if(auth()->user()->can('vehicle.view') || auth()->user()->can('vehicle.create') || auth()->user()->can('vehicle.edit') || auth()->user()->can('vehicle.delete'))
+                    <flux:sidebar.item icon="fuel" :href="route('vehicles.fuel')" :current="request()->routeIs('vehicles.fuel')" wire:navigate>{{ __('Fuel Logs') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="gauge" :href="route('vehicles.odometer')" :current="request()->routeIs('vehicles.odometer')" wire:navigate>{{ __('Odometer Logs') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="wrench" :href="route('vehicles.maintenance')" :current="request()->routeIs('vehicles.maintenance')" wire:navigate>{{ __('Maintenance') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="clipboard-check" :href="route('vehicles.checkup')" :current="request()->routeIs('vehicles.checkup')" wire:navigate>{{ __('Vehicle Checkup') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="clipboard-list" :href="route('vehicles.checkup-templates')" :current="request()->routeIs('vehicles.checkup-templates')" wire:navigate>{{ __('Checkup Templates') }}</flux:sidebar.item>
                     <flux:sidebar.item icon="presentation-chart-line" :href="route('vehicles.analytics')" :current="request()->routeIs('vehicles.analytics')" wire:navigate>{{ __('Analytics') }}</flux:sidebar.item>
                     @endif
                 @endif

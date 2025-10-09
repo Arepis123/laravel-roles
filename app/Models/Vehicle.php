@@ -10,7 +10,7 @@ class Vehicle extends Model
 {
     use HasQrCode;
 
-    protected $fillable = ['model', 'plate_number', 'capacity', 'driver_name', 'notes', 'status', 'allowed_positions', 'allowed_users', 'parking_required', 'qr_code_identifier'];
+    protected $fillable = ['model', 'plate_number', 'vehicle_type', 'capacity', 'driver_name', 'notes', 'status', 'allowed_positions', 'allowed_users', 'parking_required', 'qr_code_identifier'];
 
     protected $casts = [
         'capacity' => 'integer',
@@ -18,6 +18,17 @@ class Vehicle extends Model
         'allowed_users' => 'array',
         'parking_required' => 'boolean'
     ];
+
+    public function getVehicleTypeLabel(): string
+    {
+        return match($this->vehicle_type) {
+            'car' => 'Car',
+            'motorcycle' => 'Motorcycle',
+            'van' => 'Van',
+            'truck' => 'Truck',
+            default => ucfirst($this->vehicle_type ?? 'car'),
+        };
+    }
 
     /**
      * Original morphMany relationship for bookings

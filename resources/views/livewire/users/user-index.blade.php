@@ -14,247 +14,218 @@
     @endif
 
     {{-- Stats Cards --}}
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Total Users</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ \App\Models\User::notDeleted()->count() }}</p>
+    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+        <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+            <div class="flex flex-col items-center justify-center text-center sm:flex-row sm:items-center sm:justify-start sm:text-left">
+                <div class="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg hidden sm:block">
+                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
                 </div>
-                <flux:icon.users class="size-8 text-blue-500" />
-            </div>
-        </div>
-        
-        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Active Users</p>
-                    <p class="text-2xl font-bold text-green-600">{{ \App\Models\User::notDeleted()->where('status', 'active')->count() }}</p>
+                <div class="ml-0 sm:ml-4">
+                    <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Total Users</flux:heading>
+                    <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">{{ number_format(\App\Models\User::notDeleted()->count()) }}</flux:text>
                 </div>
-                <flux:icon.check-circle class="size-8 text-green-500" />
             </div>
-        </div>
-        
-        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Inactive Users</p>
-                    <p class="text-2xl font-bold text-red-600">{{ \App\Models\User::notDeleted()->where('status', 'inactive')->count() }}</p>
+        </flux:card>
+
+        <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+            <div class="flex flex-col items-center justify-center text-center sm:flex-row sm:items-center sm:justify-start sm:text-left">
+                <div class="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg hidden sm:block">
+                    <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
                 </div>
-                <flux:icon.x-circle class="size-8 text-red-500" />
-            </div>
-        </div>
-        
-        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Total Roles</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ \Spatie\Permission\Models\Role::count() }}</p>
+                <div class="ml-0 sm:ml-4">
+                    <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Active Users</flux:heading>
+                    <flux:text class="text-xl font-semibold text-green-600 dark:text-green-400">{{ number_format(\App\Models\User::notDeleted()->where('status', 'active')->count()) }}</flux:text>
                 </div>
-                <flux:icon.shield-check class="size-8 text-purple-500" />
             </div>
-        </div>
+        </flux:card>
+
+        <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+            <div class="flex flex-col items-center justify-center text-center sm:flex-row sm:items-center sm:justify-start sm:text-left">
+                <div class="p-2 bg-red-100 dark:bg-red-900/50 rounded-lg hidden sm:block">
+                    <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="ml-0 sm:ml-4">
+                    <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Inactive Users</flux:heading>
+                    <flux:text class="text-xl font-semibold text-red-600 dark:text-red-400">{{ number_format(\App\Models\User::notDeleted()->where('status', 'inactive')->count()) }}</flux:text>
+                </div>
+            </div>
+        </flux:card>
+
+        <flux:card class="p-4 sm:p-6 dark:bg-zinc-900">
+            <div class="flex flex-col items-center justify-center text-center sm:flex-row sm:items-center sm:justify-start sm:text-left">
+                <div class="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg hidden sm:block">
+                    <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                </div>
+                <div class="ml-0 sm:ml-4">
+                    <flux:heading class="text-gray-500 dark:text-gray-400 font-medium">Total Roles</flux:heading>
+                    <flux:text class="text-xl font-semibold text-gray-900 dark:text-white">{{ number_format(\Spatie\Permission\Models\Role::count()) }}</flux:text>
+                </div>
+            </div>
+        </flux:card>
     </div>
 
     {{-- Filters and Actions --}}
-    <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4 mb-6">
-        <div class="space-y-4">
-            <!-- Mobile-first stacked layout -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4">
-                <div class="sm:col-span-2 lg:col-span-3">
-                    <flux:input 
-                        wire:model.live.debounce.300ms="search" 
-                        type="search" 
-                        placeholder="Search users..." 
-                        icon="magnifying-glass"
-                    />
-                </div>
-                
-                <div class="lg:col-span-2">
-                    <flux:select wire:model.live="statusFilter" placeholder="All Status">
-                        <flux:select.option value="">All Status</flux:select.option>
-                        <flux:select.option value="active">Active</flux:select.option>
-                        <flux:select.option value="inactive">Inactive</flux:select.option>
-                    </flux:select>
-                </div>
-                
-                <div class="lg:col-span-2">
-                    <flux:select wire:model.live="roleFilter" placeholder="All Roles">
-                        <flux:select.option value="">All Roles</flux:select.option>
-                        @foreach($roles as $role)
-                            <flux:select.option value="{{ $role }}">{{ $role }}</flux:select.option>
-                        @endforeach
-                    </flux:select>
-                </div>
+    <div class="mb-6 mx-2">
+        <flux:accordion>
+            <flux:accordion.item>
+                <flux:accordion.heading>
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5 transition-transform duration-200 accordion-icon"
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                        </svg>
+                        Filters & Actions
+                    </span>
+                </flux:accordion.heading>
+                <flux:accordion.content>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pt-4 mx-3">
+                        <flux:field>
+                            <flux:label>Search Users</flux:label>
+                            <flux:input
+                                wire:model.live.debounce.300ms="search"
+                                type="search"
+                                placeholder="Search by name or email..."
+                            >
+                                <flux:icon.magnifying-glass slot="leading" class="size-4" />
+                            </flux:input>
+                        </flux:field>
 
-                <div class="lg:col-span-2">
-                    <flux:select wire:model.live="positionFilter" placeholder="All Positions">
-                        <flux:select.option value="">All Positions</flux:select.option>
-                        @foreach($positions as $position)
-                            <flux:select.option value="{{ $position }}">{{ $position }}</flux:select.option>
-                        @endforeach
-                    </flux:select>
-                </div>
-                
-                <div class="lg:col-span-1">
-                    <flux:button wire:click="resetFilters" variant="filled" class="w-full">
-                        <flux:icon.arrow-path class="w-4 h-4" />
-                        <!-- <span class="hidden sm:inline">Reset</span> -->
-                    </flux:button>                
-                </div>
-                
-                @can('user.create')
-                <div class="lg:col-span-2">
-                    <flux:button variant="primary" href="{{ route('users.create') }}" class="w-full">
-                        <flux:icon.plus class="w-4 h-4 sm:me-1" />
-                        <span class="hidden sm:inline">Create User</span>
-                        <span class="sm:hidden">Create</span>
-                    </flux:button>
-                </div>
-                @endcan
-            </div>
-        </div>
+                        <flux:field>
+                            <flux:label>Status</flux:label>
+                            <flux:select variant="listbox" wire:model.live="statusFilter" placeholder="All Status">
+                                <flux:select.option value="">All Status</flux:select.option>
+                                <flux:select.option value="active">Active</flux:select.option>
+                                <flux:select.option value="inactive">Inactive</flux:select.option>
+                            </flux:select>
+                        </flux:field>
+
+                        <flux:field>
+                            <flux:label>Role</flux:label>
+                            <flux:select variant="listbox" wire:model.live="roleFilter" placeholder="All Roles">
+                                <flux:select.option value="">All Roles</flux:select.option>
+                                @foreach($roles as $role)
+                                    <flux:select.option value="{{ $role }}">{{ $role }}</flux:select.option>
+                                @endforeach
+                            </flux:select>
+                        </flux:field>
+
+                        <flux:field>
+                            <flux:label>Position</flux:label>
+                            <flux:select variant="listbox" wire:model.live="positionFilter" placeholder="All Positions">
+                                <flux:select.option value="">All Positions</flux:select.option>
+                                @foreach($positions as $position)
+                                    <flux:select.option value="{{ $position }}">{{ $position }}</flux:select.option>
+                                @endforeach
+                            </flux:select>
+                        </flux:field>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-wrap gap-3 pt-4 mx-3">
+                        <flux:button variant="filled" size="sm" wire:click="resetFilters" icon="arrow-path" class="bg-gray-600 hover:bg-gray-700">
+                            Reset Filters
+                        </flux:button>
+
+                        @can('user.create')
+                        <flux:button variant="filled" size="sm" href="{{ route('users.create') }}" icon="plus" class="bg-blue-600 hover:bg-blue-700">
+                            Create User
+                        </flux:button>
+                        @endcan
+                    </div>
+                </flux:accordion.content>
+            </flux:accordion.item>
+        </flux:accordion>
     </div>
 
     {{-- Users Table --}}
-    <div class="hidden md:block sm:block bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden">
+    <div class="hidden md:block sm:block bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-700 overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-                <thead class="bg-gray-50 dark:bg-neutral-900">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-zinc-700">
+                <thead class="bg-gray-50 dark:bg-zinc-800">
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left">
-                            <button 
-                                wire:click="sort('name')" 
-                                class="group inline-flex items-center text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200 transition-colors cursor-pointer"
-                            >
-                                User
-                                <span class="ml-2 flex-none rounded">
-                                    @if($sortField === 'name')
-                                        @if($sortDirection === 'asc')
-                                            <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
-                                            </svg>
-                                        @else
-                                            <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                                            </svg>
-                                        @endif
+                        <th wire:click="sort('name')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 select-none">
+                            <div class="flex items-center space-x-1">
+                                <span>User</span>
+                                @if($sortField === 'name')
+                                    @if($sortDirection === 'asc')
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                        </svg>
                                     @else
-                                        <svg class="size-3 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                         </svg>
                                     @endif
-                                </span>
-                            </button>
+                                @endif
+                            </div>
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left">
-                            <button 
-                                wire:click="sort('email')" 
-                                class="group inline-flex items-center text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200 transition-colors cursor-pointer"
-                            >
-                                Email
-                                <span class="ml-2 flex-none rounded">
-                                    @if($sortField === 'email')
-                                        @if($sortDirection === 'asc')
-                                            <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
-                                            </svg>
-                                        @else
-                                            <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                                            </svg>
-                                        @endif
+                        <th wire:click="sort('email')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 select-none">
+                            <div class="flex items-center space-x-1">
+                                <span>Email</span>
+                                @if($sortField === 'email')
+                                    @if($sortDirection === 'asc')
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                        </svg>
                                     @else
-                                        <svg class="size-3 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                         </svg>
                                     @endif
-                                </span>
-                            </button>
+                                @endif
+                            </div>
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left">
-                            <button 
-                                wire:click="sort('position')" 
-                                class="group inline-flex items-center text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200 transition-colors cursor-pointer"
-                            >
-                                Position
-                                <span class="ml-2 flex-none rounded">
-                                    @if($sortField === 'position')
-                                        @if($sortDirection === 'asc')
-                                            <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
-                                            </svg>
-                                        @else
-                                            <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                                            </svg>
-                                        @endif
+                        <th wire:click="sort('position')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 select-none">
+                            <div class="flex items-center space-x-1">
+                                <span>Position</span>
+                                @if($sortField === 'position')
+                                    @if($sortDirection === 'asc')
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                        </svg>
                                     @else
-                                        <svg class="size-3 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                         </svg>
                                     @endif
-                                </span>
-                            </button>
+                                @endif
+                            </div>
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left">
-                            <button 
-                                wire:click="sort('roles')" 
-                                class="group inline-flex items-center text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200 transition-colors cursor-pointer"
-                            >
-                                Roles
-                                <span class="ml-2 flex-none rounded">
-                                    @if($sortField === 'roles')
-                                        @if($sortDirection === 'asc')
-                                            <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
-                                            </svg>
-                                        @else
-                                            <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                                            </svg>
-                                        @endif
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Roles
+                        </th>
+                        <th wire:click="sort('status')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 select-none">
+                            <div class="flex items-center space-x-1">
+                                <span>Status</span>
+                                @if($sortField === 'status')
+                                    @if($sortDirection === 'asc')
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                        </svg>
                                     @else
-                                        <svg class="size-3 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                         </svg>
                                     @endif
-                                </span>
-                            </button>
+                                @endif
+                            </div>
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left">
-                            <button 
-                                wire:click="sort('status')" 
-                                class="group inline-flex items-center text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200 transition-colors cursor-pointer"
-                            >
-                                Status
-                                <span class="ml-2 flex-none rounded">
-                                    @if($sortField === 'status')
-                                        @if($sortDirection === 'asc')
-                                            <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
-                                            </svg>
-                                        @else
-                                            <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                                            </svg>
-                                        @endif
-                                    @else
-                                        <svg class="size-3 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
-                                        </svg>
-                                    @endif
-                                </span>
-                            </button>
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             Actions
                         </th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200 dark:bg-neutral-800 dark:divide-neutral-700" wire:loading.class="opacity-50">
+                <tbody class="bg-white dark:bg-zinc-900 divide-y divide-gray-200 dark:divide-zinc-700" wire:loading.class="opacity-50">
                     @forelse ($users as $user)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
+                        <tr class="hover:bg-gray-50 dark:hover:bg-zinc-800">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0 h-10 w-10">                                        

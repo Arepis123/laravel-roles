@@ -12,6 +12,7 @@
         .sx__calendar-wrapper {
             font-family: Inter, sans-serif, 'Instrument Sans';
             height: 100%;
+            background-color: white !important;
         }
 
         /* Custom button styles for Schedule-X */
@@ -55,22 +56,78 @@
 
         /* Dark mode support */
         .dark .sx__calendar-wrapper {
-            background-color: rgb(38, 38, 38);
+            background-color: rgb(30, 41, 57) !important;
             color: white;
         }
 
         .dark .sx__month-grid-day {
-            background-color: rgb(38, 38, 38);
+            background-color: rgb(30, 41, 57) !important;
             border-color: rgb(64, 64, 64);
         }
 
         .dark .sx__month-grid-day:hover {
-            background-color: rgb(51, 51, 51);
+            background-color: rgb(51, 51, 51) !important;
         }
 
         .dark .sx__calendar-header {
-            background-color: rgb(38, 38, 38);
+            background-color: rgb(30, 41, 57) !important;
             border-color: rgb(64, 64, 64);
+        }
+
+        /* Mobile dark mode fixes - override Schedule-X responsive styles */
+        @media (max-width: 640px) {
+            .dark .sx__calendar-wrapper {
+                background-color: rgb(30, 41, 57) !important;
+            }
+
+            .dark .sx__month-grid-day {
+                background-color: rgb(30, 41, 57) !important;
+            }
+
+            .dark .sx__calendar-header {
+                background-color: rgb(30, 41, 57) !important;
+            }
+
+            .dark .sx__week-grid,
+            .dark .sx__day-grid,
+            .dark .sx__month-agenda-wrapper {
+                background-color: rgb(30, 41, 57) !important;
+            }
+        }
+
+        /* Dark mode button text */
+        .dark .sx__date-picker__chevron-wrapper,
+        .dark .sx__today-button {
+            color: white !important;
+        }
+
+        .dark .sx__date-picker__chevron-wrapper svg,
+        .dark .sx__today-button svg {
+            stroke: white !important;
+        }
+
+        /* Dark mode date input field */
+        .dark .sx__date-input,
+        .dark .sx__date-picker-input,
+        .dark .sx__date-picker {
+            background-color: rgb(30, 41, 57) !important;
+            color: white !important;
+            border-color: rgb(64, 64, 64) !important;
+        }
+
+        .dark .sx__date-picker-wrapper {
+            background-color: rgb(30, 41, 57) !important;
+        }
+
+        /* Additional dark mode overrides for all Schedule-X components */
+        .dark .sx__month-grid-wrapper,
+        .dark .sx__week-grid-wrapper,
+        .dark .sx__day-grid-wrapper,
+        .dark .sx__time-grid-wrapper,
+        .dark .sx__calendar,
+        .dark .sx__calendar-wrapper > *,
+        .dark .sx__view-wrapper {
+            background-color: rgb(30, 41, 57) !important;
         }
 
         /* Custom event tooltip */
@@ -175,7 +232,7 @@
             <!-- Stats Cards - First Row -->
             <div class="grid auto-rows-min gap-3 md:grid-cols-3">
                 <!-- Total Bookings Card -->
-                <div class="relative overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
+                <div class="relative overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
                     <div class="p-4 flex flex-col justify-betweenh-auto">
                         <div>
                             <h3 class="text-base font-semibold text-gray-900 dark:text-white">Total Bookings</h3>
@@ -191,7 +248,7 @@
                 </div>
 
                 <!-- Pending Approvals Card -->
-                <div class="relative overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
+                <div class="relative overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
                     <div class="p-4 flex flex-col justify-betweenh-auto">
                         <div>
                             <h3 class="text-base font-semibold text-gray-900 dark:text-white">Pending Bookings</h3>
@@ -207,7 +264,7 @@
                 </div>
 
                 <!-- Today's Bookings Card -->
-                <div class="relative overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
+                <div class="relative overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
                     <div class="p-4 flex flex-col justify-betweenh-auto">
                         <div>
                             <h3 class="text-base font-semibold text-gray-900 dark:text-white">Today's Bookings</h3>
@@ -226,7 +283,7 @@
             <!-- Stats Cards - Second Row -->
             <div class="grid auto-rows-min gap-3 md:grid-cols-3">
                 <!-- This Week's Bookings Card -->
-                <div class="relative overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
+                <div class="relative overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
                     <div class="p-4 flex flex-col justify-betweenh-auto">
                         <div>
                             <h3 class="text-base font-semibold text-gray-900 dark:text-white">This Week</h3>
@@ -256,7 +313,7 @@
                 </div>
 
                 <!-- Utilization Rate Card -->
-                <div class="relative overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
+                <div class="relative overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
                     <div class="p-4 flex flex-col justify-betweenh-auto">
                         <div>
                             <h3 class="text-base font-semibold text-gray-900 dark:text-white">Utilization Rate</h3>
@@ -314,7 +371,7 @@
                 </div>
 
                 <!-- Most Booked Asset Card -->
-                <div class="relative overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
+                <div class="relative overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
                     <div class="p-4 flex flex-col justify-betweenh-auto">
                         <div>
                             <h3 class="text-base font-semibold text-gray-900 dark:text-white">Most Booked</h3>
@@ -354,7 +411,7 @@
 
             <!-- Asset Usage Trends Chart -->
             <div class="mt-6">
-                <div class="relative overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
+                <div class="relative overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
                     <div class="p-6" x-data="assetUsageController()">
                         <!-- Header with Month Selector -->
                         <div class="flex justify-between items-center mb-6">
@@ -414,7 +471,7 @@
 
             <!-- Booking Status Distribution Chart -->
             <div class="mt-6">
-                <div class="relative overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
+                <div class="relative overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
                     <div class="p-6" x-data="bookingStatusController()">
                         <!-- Header with Month Selector -->
                         <div class="flex justify-between items-center mb-6">
@@ -443,7 +500,7 @@
                             <div class="flex items-center gap-2">
                                 <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
                                 <span class="text-sm text-gray-600 dark:text-gray-300">Loading chart...</span>
                             </div>
@@ -490,7 +547,7 @@
              x-transition:leave="transition ease-in duration-200"
              x-transition:leave-start="opacity-100 transform translate-y-0"
              x-transition:leave-end="opacity-0 transform translate-y-4"
-             class="relative flex-1 overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800 min-h-96">
+             class="relative flex-1 overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-zinc-700 dark:bg-zinc-900 min-h-96">
             
             <div class="p-4 h-full flex flex-col">
                 <!-- Calendar Header -->

@@ -17,6 +17,10 @@ class AssetManagement extends Component
 
     public $selectedAssetType = 'all';
     public $search = '';
+    public $filterStatus = 'all';
+    public $filterAccess = 'all';
+    public $sortField = 'name';
+    public $sortDirection = 'asc';
     public $showModal = false;
     public $editingAsset = null;
     public $assetType = '';
@@ -106,10 +110,30 @@ class AssetManagement extends Component
         $this->resetPage();
     }
 
+    public function updatedFilterStatus()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterAccess()
+    {
+        $this->resetPage();
+    }
+
+    public function sortBy($field)
+    {
+        if ($this->sortField === $field) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortField = $field;
+            $this->sortDirection = 'asc';
+        }
+    }
+
     public function getAllAssets()
     {
         $assets = collect();
-        
+
         // Get Meeting Rooms
         if ($this->selectedAssetType === 'all' || $this->selectedAssetType === 'meeting_rooms') {
             $meetingRooms = MeetingRoom::when($this->search, function($query) {
@@ -126,7 +150,8 @@ class AssetManagement extends Component
                     'bookings_count' => Booking::where('asset_type', 'App\Models\MeetingRoom')
                         ->where('asset_id', $room->id)
                         ->count(),
-                    'model' => $room
+                    'model' => $room,
+                    'has_restrictions' => false // Meeting rooms don't have access restrictions
                 ];
             });
             $assets = $assets->merge($meetingRooms);
@@ -139,6 +164,8 @@ class AssetManagement extends Component
                       ->orWhere('plate_number', 'like', '%' . $this->search . '%')
                       ->orWhere('driver_name', 'like', '%' . $this->search . '%');
             })->get()->map(function($vehicle) {
+                $hasRestrictions = !empty($vehicle->allowed_positions) || !empty($vehicle->allowed_users);
+
                 return [
                     'id' => $vehicle->id,
                     'type' => 'vehicle',
@@ -149,7 +176,8 @@ class AssetManagement extends Component
                     'bookings_count' => Booking::where('asset_type', 'App\Models\Vehicle')
                         ->where('asset_id', $vehicle->id)
                         ->count(),
-                    'model' => $vehicle
+                    'model' => $vehicle,
+                    'has_restrictions' => $hasRestrictions
                 ];
             });
             $assets = $assets->merge($vehicles);
@@ -172,13 +200,45 @@ class AssetManagement extends Component
                     'bookings_count' => Booking::where('asset_type', 'App\Models\ItAsset')
                         ->where('asset_id', $asset->id)
                         ->count(),
-                    'model' => $asset
+                    'model' => $asset,
+                    'has_restrictions' => false // IT assets don't have access restrictions
                 ];
             });
             $assets = $assets->merge($itAssets);
         }
 
-        return $assets->sortBy('name');
+        // Apply Status filter
+        if ($this->filterStatus !== 'all') {
+            $assets = $assets->filter(function($asset) {
+                if ($this->filterStatus === 'available') {
+                    return $asset['status'] === 'Available';
+                } elseif ($this->filterStatus === 'in_use') {
+                    return $asset['status'] === 'In Use';
+                } elseif ($this->filterStatus === 'maintenance') {
+                    return $asset['status'] === 'Maintenance';
+                }
+                return true;
+            });
+        }
+
+        // Apply Access filter (only applicable to vehicles)
+        if ($this->filterAccess !== 'all') {
+            $assets = $assets->filter(function($asset) {
+                if ($this->filterAccess === 'restricted') {
+                    return $asset['has_restrictions'] === true;
+                } elseif ($this->filterAccess === 'unrestricted') {
+                    return $asset['has_restrictions'] === false;
+                }
+                return true;
+            });
+        }
+
+        // Apply sorting
+        $sortedAssets = $this->sortDirection === 'asc'
+            ? $assets->sortBy($this->sortField)
+            : $assets->sortByDesc($this->sortField);
+
+        return $sortedAssets->values();
     }
 
     private function getAssetStatus($modelType, $assetId)

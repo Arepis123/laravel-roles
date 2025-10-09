@@ -147,17 +147,312 @@ class BookingCreate extends Component
     public function getBookingDaysProperty()
     {
         if (!$this->booking_date) return 0;
-        
+
         if (!$this->allowsMultiDayBooking || !$this->end_date) {
             return 1;
         }
-        
+
         try {
             $start = Carbon::parse($this->booking_date);
             $end = Carbon::parse($this->end_date);
             return $start->diffInDays($end) + 1; // +1 to include both start and end dates
         } catch (\Exception $e) {
             return 1;
+        }
+    }
+
+    /**
+     * Check if selected vehicle has maintenance conflict with booking dates
+     */
+    public function getVehicleMaintenanceConflictProperty()
+    {
+        if ($this->asset_type !== 'vehicle' || !$this->asset_id || !$this->booking_date) {
+            return null;
+        }
+
+        $vehicle = Vehicle::find($this->asset_id);
+        if (!$vehicle) {
+            return null;
+        }
+
+        $maintenanceStatus = $vehicle->maintenanceStatus;
+
+        // Check for ongoing maintenance
+        if ($maintenanceStatus['status'] === 'ongoing') {
+            return [
+                'type' => 'error',
+                'message' => '🔧 This vehicle is currently under maintenance and cannot be booked.',
+                'details' => $maintenanceStatus['message']
+            ];
+        }
+
+        // Check for scheduled maintenance conflict
+        if ($maintenanceStatus['status'] === 'scheduled') {
+            $startDateTime = Carbon::parse($this->booking_date . ' 00:00');
+            $endDateStr = $this->end_date ?: $this->booking_date;
+            $endDateTime = Carbon::parse($endDateStr . ' 23:59');
+
+            if ($vehicle->hasScheduledMaintenanceInPeriod($startDateTime, $endDateTime)) {
+                return [
+                    'type' => 'warning',
+                    'message' => 'Maintenance Scheduled',
+                    'details' => 'This vehicle has scheduled maintenance during your selected booking period. Please choose different dates or select another vehicle.'
+                ];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Get existing bookings for the selected asset and date
+     */
+    public function getExistingBookingsProperty()
+    {
+        if (!$this->asset_type || !$this->asset_id || !$this->booking_date) {
+            return collect();
+        }
+
+        $assetModel = $this->assetTypeConfig[$this->asset_type]['model'];
+        $endDateStr = $this->end_date ?: $this->booking_date;
+
+        // For multi-day bookings, get all bookings that overlap with the date range
+        if ($this->allowsMultiDayBooking) {
+            return Booking::where('asset_type', $assetModel)
+                ->where('asset_id', $this->asset_id)
+                ->whereIn('status', ['pending', 'approved'])
+                ->where(function($query) use ($endDateStr) {
+                    $query->where(function($dateOverlap) use ($endDateStr) {
+                        // Existing booking overlaps with our date range
+                        $dateOverlap->whereDate('start_time', '<=', $endDateStr)
+                                   ->whereDate('end_time', '>=', $this->booking_date);
+                    });
+                })
+                ->with('user:id,name')
+                ->orderBy('start_time')
+                ->get();
+        } else {
+            // For single-day bookings (meeting rooms), get bookings on the selected date
+            return Booking::where('asset_type', $assetModel)
+                ->where('asset_id', $this->asset_id)
+                ->whereIn('status', ['pending', 'approved'])
+                ->whereDate('start_time', $this->booking_date)
+                ->with('user:id,name')
+                ->orderBy('start_time')
+                ->get();
+        }
+    }
+
+    /**
+     * #3: Get suggested alternative time slots when conflicts occur
+     */
+    public function getSuggestedTimeSlotsProperty()
+    {
+        if (!$this->asset_type || !$this->asset_id || !$this->booking_date) {
+            return collect();
+        }
+
+        // Only suggest if user has attempted to select times
+        if (!$this->start_time || !$this->end_time) {
+            return collect();
+        }
+
+        // Check if current selection has conflicts
+        if ($this->isTimeRangeAvailable($this->start_time, $this->end_time)) {
+            return collect(); // No conflicts, no need for suggestions
+        }
+
+        $assetModel = $this->assetTypeConfig[$this->asset_type]['model'];
+        $suggestions = collect();
+
+        // Get all bookings for the day
+        $existingBookings = $this->existingBookings;
+
+        if ($existingBookings->isEmpty()) {
+            return collect();
+        }
+
+        try {
+            $requestedStart = Carbon::createFromFormat('H:i', $this->start_time);
+            $requestedEnd = Carbon::createFromFormat('H:i', $this->end_time);
+            $requestedDuration = $requestedStart->diffInMinutes($requestedEnd);
+
+            // Find gaps between bookings
+            $workDayStart = Carbon::createFromFormat('H:i', '08:00');
+            $workDayEnd = Carbon::createFromFormat('H:i', '22:00');
+
+            $sortedBookings = $existingBookings->sortBy('start_time');
+
+            // Check if there's a slot before the first booking
+            $firstBooking = $sortedBookings->first();
+            $slotStart = $workDayStart->copy();
+            $firstBookingStart = Carbon::parse($firstBooking->start_time);
+
+            if ($slotStart->lt($firstBookingStart)) {
+                $gapDuration = $slotStart->diffInMinutes($firstBookingStart);
+                if ($gapDuration >= $requestedDuration) {
+                    $slotEnd = $slotStart->copy()->addMinutes($requestedDuration);
+                    $suggestions->push([
+                        'start_time' => $slotStart->format('H:i'),
+                        'end_time' => $slotEnd->format('H:i'),
+                        'label' => $slotStart->format('g:i A') . ' - ' . $slotEnd->format('g:i A'),
+                        'duration' => $requestedDuration,
+                    ]);
+                }
+            }
+
+            // Check gaps between consecutive bookings
+            for ($i = 0; $i < $sortedBookings->count() - 1; $i++) {
+                $currentBooking = $sortedBookings[$i];
+                $nextBooking = $sortedBookings[$i + 1];
+
+                $gapStart = Carbon::parse($currentBooking->end_time);
+                $gapEnd = Carbon::parse($nextBooking->start_time);
+
+                $gapDuration = $gapStart->diffInMinutes($gapEnd);
+
+                if ($gapDuration >= $requestedDuration) {
+                    $slotEnd = $gapStart->copy()->addMinutes($requestedDuration);
+                    $suggestions->push([
+                        'start_time' => $gapStart->format('H:i'),
+                        'end_time' => $slotEnd->format('H:i'),
+                        'label' => $gapStart->format('g:i A') . ' - ' . $slotEnd->format('g:i A'),
+                        'duration' => $requestedDuration,
+                    ]);
+                }
+            }
+
+            // Check if there's a slot after the last booking
+            $lastBooking = $sortedBookings->last();
+            $lastBookingEnd = Carbon::parse($lastBooking->end_time);
+
+            if ($lastBookingEnd->lt($workDayEnd)) {
+                $gapDuration = $lastBookingEnd->diffInMinutes($workDayEnd);
+                if ($gapDuration >= $requestedDuration) {
+                    $slotEnd = $lastBookingEnd->copy()->addMinutes($requestedDuration);
+                    $suggestions->push([
+                        'start_time' => $lastBookingEnd->format('H:i'),
+                        'end_time' => $slotEnd->format('H:i'),
+                        'label' => $lastBookingEnd->format('g:i A') . ' - ' . $slotEnd->format('g:i A'),
+                        'duration' => $requestedDuration,
+                    ]);
+                }
+            }
+
+            // Limit to 3 suggestions
+            return $suggestions->take(3);
+
+        } catch (\Exception $e) {
+            \Log::error('Error generating suggested time slots:', [
+                'error' => $e->getMessage(),
+                'asset_type' => $this->asset_type,
+                'asset_id' => $this->asset_id,
+                'booking_date' => $this->booking_date,
+            ]);
+            return collect();
+        }
+    }
+
+    /**
+     * #3: Apply suggested time slot
+     */
+    public function applySuggestion($startTime, $endTime)
+    {
+        $this->start_time = $startTime;
+        $this->end_time = $endTime;
+        $this->dispatch('timeSlotApplied');
+    }
+
+    /**
+     * Get quick duration options based on asset type
+     */
+    public function getQuickDurationOptionsProperty()
+    {
+        if (!$this->asset_type) {
+            return [];
+        }
+
+        // Define duration options for each asset type
+        $durationOptions = [
+            'meeting_room' => [
+                ['minutes' => 60, 'label' => '1 hour'],
+                ['minutes' => 120, 'label' => '2 hours'],
+                ['minutes' => 180, 'label' => '3 hours'],
+                ['minutes' => 240, 'label' => '4 hours'],
+            ],
+            'vehicle' => [
+                ['minutes' => 60, 'label' => '1 hour'],
+                ['minutes' => 120, 'label' => '2 hours'],
+                ['minutes' => 180, 'label' => '3 hours'],
+                ['minutes' => 240, 'label' => '4 hours'],
+            ],
+            'it_asset' => [
+                ['minutes' => 240, 'label' => '4 hours'],
+                ['minutes' => 480, 'label' => '8 hours'],
+                ['minutes' => 1440, 'label' => '1 day'], // 24 hours = 1 day
+                ['minutes' => 2880, 'label' => '2 days'], // 48 hours = 2 days
+            ],
+        ];
+
+        return $durationOptions[$this->asset_type] ?? [];
+    }
+
+    /**
+     * Quick Time Slot Selection - Apply preset duration from start time
+     * Supports both same-day and multi-day bookings
+     */
+    public function applyQuickDuration($minutes)
+    {
+        if (!$this->start_time || !$this->booking_date) {
+            return;
+        }
+
+        try {
+            $startTime = Carbon::createFromFormat('H:i', $this->start_time);
+
+            // For durations >= 1 day (1440 minutes), handle multi-day bookings
+            if ($minutes >= 1440 && $this->allowsMultiDayBooking) {
+                $days = floor($minutes / 1440);
+                $remainingMinutes = $minutes % 1440;
+
+                // Set end date
+                $endDate = Carbon::parse($this->booking_date)->addDays($days);
+                $this->end_date = $endDate->format('Y-m-d');
+
+                // Set end time (add remaining minutes to start time)
+                $endTime = $startTime->copy()->addMinutes($remainingMinutes);
+
+                // Make sure end time doesn't exceed 22:00 (10 PM)
+                $maxEndTime = Carbon::createFromFormat('H:i', '22:00');
+                if ($endTime->gt($maxEndTime)) {
+                    $endTime = $maxEndTime;
+                }
+
+                $this->end_time = $endTime->format('H:i');
+            } else {
+                // For same-day bookings (< 1 day or non-multi-day asset types)
+                $endTime = $startTime->copy()->addMinutes($minutes);
+
+                // Make sure it doesn't exceed 22:00 (10 PM) for same-day bookings
+                $maxEndTime = Carbon::createFromFormat('H:i', '22:00');
+                if ($endTime->gt($maxEndTime)) {
+                    $endTime = $maxEndTime;
+                }
+
+                $this->end_time = $endTime->format('H:i');
+
+                // Clear end_date if it was set
+                if ($this->allowsMultiDayBooking) {
+                    $this->end_date = '';
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error applying quick duration:', [
+                'error' => $e->getMessage(),
+                'start_time' => $this->start_time,
+                'booking_date' => $this->booking_date,
+                'duration' => $minutes
+            ]);
         }
     }
 
@@ -212,6 +507,22 @@ class BookingCreate extends Component
         });
     }
 
+    /**
+     * Toggle favorite status for an asset
+     */
+    public function toggleFavorite($assetId)
+    {
+        if (!$this->asset_type || !$assetId) {
+            return;
+        }
+
+        $assetModel = $this->assetTypeConfig[$this->asset_type]['model'];
+        auth()->user()->toggleFavorite($assetModel, $assetId);
+
+        // Re-render to show updated favorite status
+        $this->dispatch('favoriteToggled');
+    }
+
     public function getAssetOptionsProperty()
     {
         if (empty($this->asset_type) || !isset($this->assetTypeConfig[$this->asset_type])) {
@@ -221,86 +532,174 @@ class BookingCreate extends Component
         $config = $this->assetTypeConfig[$this->asset_type];
         $model = $config['model'];
         $nameField = $config['name_field'];
+        $currentUser = auth()->user();
 
-        // Special handling for vehicles to include plate number, access filtering, and maintenance status
+        // Special handling for vehicles to include plate number, access filtering, and availability status
         if ($this->asset_type === 'vehicle') {
-            $currentUser = auth()->user();
-
             return $model::select('id', 'model', 'plate_number', 'allowed_positions', 'allowed_users')
                 ->with('maintenanceLogs')
                 ->get()
                 ->filter(function ($vehicle) use ($currentUser) {
                     return $vehicle->canUserBook($currentUser);
                 })
-                ->map(function ($vehicle) {
+                ->map(function ($vehicle) use ($currentUser, $model) {
                     // Create a stdClass object to maintain consistency with the blade template
                     $item = new \stdClass();
                     $item->id = $vehicle->id;
                     $item->name = $vehicle->model . ' (' . $vehicle->plate_number . ')';
+                    $item->is_favorite = $currentUser->hasFavorited($model, $vehicle->id);
 
-                    // Check maintenance status and add to description
-                    $maintenanceStatus = $vehicle->maintenanceStatus;
-                    $statusMessage = '';
+                    // #6: Add availability indicator
+                    $availabilityInfo = $this->getAssetAvailability($vehicle->id, 'vehicle');
 
-                    if ($maintenanceStatus['status'] === 'ongoing') {
-                        $statusMessage = ' [🔧 Under Maintenance - Unavailable]';
-                    } elseif ($maintenanceStatus['status'] === 'scheduled') {
-                        $statusMessage = ' [📅 Maintenance Scheduled]';
-                    }
-
-                    $item->name .= $statusMessage;
-
-                    // Add access restriction info as description
+                    // Combine access restriction and availability info
                     $hasPositions = !empty($vehicle->allowed_positions);
                     $hasUsers = !empty($vehicle->allowed_users);
 
+                    $descriptionParts = [];
+
                     if ($hasPositions && $hasUsers) {
-                        $item->description = 'Position: ' . implode(', ', $vehicle->allowed_positions) . ' + Specific users';
+                        $descriptionParts[] = 'Position: ' . implode(', ', $vehicle->allowed_positions) . ' + Specific users';
                     } elseif ($hasUsers) {
-                        $item->description = 'Specific users only';
+                        $descriptionParts[] = 'Specific users only';
                     } elseif ($hasPositions) {
-                        $item->description = 'Positions: ' . implode(', ', $vehicle->allowed_positions);
-                    } else {
-                        $item->description = 'Available to all users';
+                        $descriptionParts[] = 'Positions: ' . implode(', ', $vehicle->allowed_positions);
                     }
 
-                    // Add maintenance status to description if present
-                    if ($maintenanceStatus['status'] !== 'available') {
-                        $item->description .= ' • ' . $maintenanceStatus['message'];
+                    if ($availabilityInfo) {
+                        $descriptionParts[] = $availabilityInfo;
                     }
+
+                    $item->description = !empty($descriptionParts) ? implode(' • ', $descriptionParts) : 'Available to all users';
+                    $item->availability = $availabilityInfo;
 
                     return $item;
                 })
+                ->sortByDesc('is_favorite') // Sort favorites first
                 ->values(); // Reset array keys after filtering
         }
 
-        // Special handling for IT assets to include asset tag
+        // Special handling for IT assets to include asset tag and availability
         if ($this->asset_type === 'it_asset') {
             return $model::select('id', 'name', 'asset_tag', 'location', 'specs')
                 ->get()
-                ->map(function ($asset) {
+                ->map(function ($asset) use ($currentUser, $model) {
                     $item = new \stdClass();
                     $item->id = $asset->id;
                     $item->name = $asset->name . ' (' . $asset->asset_tag . ')';
-                    $item->description = $asset->location ?: $asset->specs ?: '';
+                    $item->is_favorite = $currentUser->hasFavorited($model, $asset->id);
+
+                    // #6: Add availability indicator
+                    $availabilityInfo = $this->getAssetAvailability($asset->id, 'it_asset');
+
+                    $descriptionParts = [];
+                    if ($asset->location) {
+                        $descriptionParts[] = $asset->location;
+                    } elseif ($asset->specs) {
+                        $descriptionParts[] = $asset->specs;
+                    }
+
+                    if ($availabilityInfo) {
+                        $descriptionParts[] = $availabilityInfo;
+                    }
+
+                    $item->description = !empty($descriptionParts) ? implode(' • ', $descriptionParts) : '';
+                    $item->availability = $availabilityInfo;
+
                     return $item;
-                });
+                })
+                ->sortByDesc('is_favorite') // Sort favorites first
+                ->values();
         }
 
-        // Build query based on asset type and available columns
-        $query = $model::select('id', "{$nameField} as name");
-        
-        // Add description field based on asset type
+        // For meeting rooms with availability indicator
         if ($this->asset_type === 'meeting_room') {
-            $query->selectRaw("COALESCE(location, '') as description");
-        } elseif ($this->asset_type === 'it_asset') {
-            $query->selectRaw("COALESCE(location, specs, '') as description");
-        } else {
-            // For other asset types or fallback
-            $query->selectRaw("'' as description");
+            return $model::select('id', "{$nameField} as name", 'location')
+                ->get()
+                ->map(function ($room) use ($currentUser, $model) {
+                    $item = new \stdClass();
+                    $item->id = $room->id;
+                    $item->name = $room->name;
+                    $item->is_favorite = $currentUser->hasFavorited($model, $room->id);
+
+                    // #6: Add availability indicator
+                    $availabilityInfo = $this->getAssetAvailability($room->id, 'meeting_room');
+
+                    $descriptionParts = [];
+                    if ($room->location) {
+                        $descriptionParts[] = $room->location;
+                    }
+
+                    if ($availabilityInfo) {
+                        $descriptionParts[] = $availabilityInfo;
+                    }
+
+                    $item->description = !empty($descriptionParts) ? implode(' • ', $descriptionParts) : '';
+                    $item->availability = $availabilityInfo;
+
+                    return $item;
+                })
+                ->sortByDesc('is_favorite') // Sort favorites first
+                ->values();
         }
-        
-        return $query->get();
+
+        // Fallback
+        return $model::select('id', "{$nameField} as name")->get();
+    }
+
+    /**
+     * #6: Get real-time availability info for an asset
+     */
+    protected function getAssetAvailability($assetId, $assetType)
+    {
+        if (!$this->booking_date) {
+            return null; // No date selected, can't determine availability
+        }
+
+        $assetModel = $this->assetTypeConfig[$assetType]['model'];
+        $now = Carbon::now();
+        $bookingDate = Carbon::parse($this->booking_date);
+        $isToday = $bookingDate->isToday();
+
+        // Check for ongoing bookings (only relevant for today)
+        if ($isToday) {
+            $ongoingBooking = Booking::where('asset_type', $assetModel)
+                ->where('asset_id', $assetId)
+                ->whereIn('status', ['pending', 'approved'])
+                ->where('start_time', '<=', $now)
+                ->where('end_time', '>', $now)
+                ->first();
+
+            if ($ongoingBooking) {
+                $availableAt = Carbon::parse($ongoingBooking->end_time);
+                return 'In use until ' . $availableAt->format('g:i A');
+            }
+        }
+
+        // Check for upcoming bookings on the selected date
+        $nextBooking = Booking::where('asset_type', $assetModel)
+            ->where('asset_id', $assetId)
+            ->whereIn('status', ['pending', 'approved'])
+            ->whereDate('start_time', $bookingDate)
+            ->where('start_time', '>', $now)
+            ->orderBy('start_time')
+            ->first();
+
+        if ($nextBooking) {
+            $bookingStart = Carbon::parse($nextBooking->start_time);
+            if ($isToday) {
+                return 'Next booking at ' . $bookingStart->format('g:i A');
+            } else {
+                return 'Has bookings on this date';
+            }
+        }
+
+        // No bookings found
+        if ($isToday) {
+            return 'Available now';
+        } else {
+            return 'Available all day';
+        }
     }
 
     public function updatedAssetType()
@@ -519,15 +918,19 @@ class BookingCreate extends Component
         if (!$this->start_time) {
             return [];
         }
-        
+
         $slots = [];
-        
+
         try {
             $startTime = Carbon::createFromFormat('H:i', $this->start_time);
             $endOfDay = Carbon::createFromFormat('H:i', '22:00'); // 10 PM
-            
-            // For multi-day bookings or when no specific date checking is needed
-            if ($this->allowsMultiDayBooking) {
+
+            // Determine if this is ACTUALLY a multi-day booking based on dates
+            $endDateStr = $this->end_date ?: $this->booking_date;
+            $isActuallyMultiDay = $this->allowsMultiDayBooking && $this->end_date && ($this->end_date !== $this->booking_date);
+
+            // For ACTUAL multi-day bookings, don't check time conflicts (entire days are blocked)
+            if ($isActuallyMultiDay) {
                 $currentTime = $startTime->copy()->addMinutes(30);
                 while ($currentTime->lte($endOfDay)) {
                     $timeString = $currentTime->format('H:i');
@@ -536,18 +939,18 @@ class BookingCreate extends Component
                     $currentTime->addMinutes(30);
                 }
             } else {
-                // For meeting rooms, check availability
+                // For single-day bookings (including single-day vehicle/IT asset bookings), check availability
                 if (!$this->asset_type || !$this->asset_id || !$this->booking_date) {
                     return [];
                 }
-                
+
                 // Start from 30 minutes after start time
-                $currentTime = $startTime->copy()->addMinutes(30);            
-                
+                $currentTime = $startTime->copy()->addMinutes(30);
+
                 while ($currentTime->lte($endOfDay)) {
                     $timeString = $currentTime->format('H:i');
                     $displayTime = $currentTime->format('g:i A');
-                    
+
                     // Check if the time range from start_time to this end_time is available
                     if ($this->isTimeRangeAvailable($this->start_time, $timeString)) {
                         $slots[$timeString] = $displayTime;
@@ -555,18 +958,18 @@ class BookingCreate extends Component
                         // If this slot is not available, stop checking further slots
                         break;
                     }
-                    
+
                     $currentTime->addMinutes(30);
                 }
             }
-            
+
         } catch (\Exception $e) {
             \Log::error('Error generating end times:', [
                 'error' => $e->getMessage(),
                 'start_time' => $this->start_time
             ]);
         }
-        
+
         return $slots;
     }
 
@@ -583,7 +986,7 @@ class BookingCreate extends Component
         try {
             // Get the model class for this asset type
             $assetModel = $this->assetTypeConfig[$this->asset_type]['model'];
-            
+
             // Check for vehicle maintenance conflicts (vehicles only)
             if ($this->asset_type === 'vehicle') {
                 $vehicle = Vehicle::find($this->asset_id);
@@ -597,11 +1000,13 @@ class BookingCreate extends Component
                     // since hasAvailableTimeSlots doesn't have date context
                 }
             }
-            
-            // For multi-day bookings, check if the entire date range has conflicts
-            if ($this->allowsMultiDayBooking) {
-                $endDateStr = $this->end_date ?: $this->booking_date;
-                
+
+            // Determine if this is ACTUALLY a multi-day booking based on dates
+            $endDateStr = $this->end_date ?: $this->booking_date;
+            $isActuallyMultiDay = $this->allowsMultiDayBooking && $this->end_date && ($this->end_date !== $this->booking_date);
+
+            // For ACTUAL multi-day bookings, check if the entire date range has conflicts
+            if ($isActuallyMultiDay) {
                 $conflictingBooking = Booking::where('asset_type', $assetModel)
                     ->where('asset_id', $this->asset_id)
                     ->whereIn('status', ['pending', 'approved'])
@@ -632,9 +1037,9 @@ class BookingCreate extends Component
 
                 return !$conflictingBooking;
             } else {
-                // For single-day bookings (meeting rooms), check specific time slots
+                // For single-day bookings (meeting rooms, or single-day vehicle/IT asset bookings), check specific time slots
                 $checkDateTime = Carbon::createFromFormat('Y-m-d H:i', $this->booking_date . ' ' . $timeSlot);
-                
+
                 $conflictingBooking = Booking::where('asset_type', $assetModel)
                     ->where('asset_id', $this->asset_id)
                     ->whereIn('status', ['pending', 'approved'])
@@ -671,11 +1076,13 @@ class BookingCreate extends Component
         try {
             // Get the model class for this asset type
             $assetModel = $this->assetTypeConfig[$this->asset_type]['model'];
-            
-            // For multi-day bookings (vehicles and IT assets)
-            if ($this->allowsMultiDayBooking) {
-                $endDateStr = $this->end_date ?: $this->booking_date;
-                
+
+            // Determine if this is ACTUALLY a multi-day booking based on dates
+            $endDateStr = $this->end_date ?: $this->booking_date;
+            $isActuallyMultiDay = $this->allowsMultiDayBooking && $this->end_date && ($this->end_date !== $this->booking_date);
+
+            // For ACTUAL multi-day bookings (vehicles and IT assets)
+            if ($isActuallyMultiDay) {
                 $conflictingBooking = Booking::where('asset_type', $assetModel)
                     ->where('asset_id', $this->asset_id)
                     ->whereIn('status', ['pending', 'approved'])
@@ -706,10 +1113,10 @@ class BookingCreate extends Component
 
                 return !$conflictingBooking;
             } else {
-                // For single-day bookings (meeting rooms), use time-based overlap checking
+                // For single-day bookings (meeting rooms, or single-day vehicle/IT asset bookings), use time-based overlap checking
                 $startDateTime = Carbon::createFromFormat('Y-m-d H:i', $this->booking_date . ' ' . $startTime);
                 $endDateTime = Carbon::createFromFormat('Y-m-d H:i', $this->booking_date . ' ' . $endTime);
-                
+
                 $conflictingBooking = Booking::where('asset_type', $assetModel)
                     ->where('asset_id', $this->asset_id)
                     ->whereIn('status', ['pending', 'approved'])
@@ -720,7 +1127,7 @@ class BookingCreate extends Component
                                     ->where('start_time', '<', $endDateTime);
                         })
                         ->orWhere(function ($overlap) use ($startDateTime, $endDateTime) {
-                            // Existing booking ends during our requested time  
+                            // Existing booking ends during our requested time
                             $overlap->where('end_time', '>', $startDateTime)
                                     ->where('end_time', '<=', $endDateTime);
                         })

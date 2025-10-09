@@ -4,7 +4,6 @@
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
             <div>
                 <div class="flex items-center gap-2 mb-1">
-                    <flux:icon name="pencil" class="w-6 h-6 text-blue-500" />
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ __('Edit Role') }}</h1>
                 </div>
                 <p class="text-gray-600 dark:text-gray-400">{{ __('Modify role name and permissions') }}</p>
@@ -12,9 +11,9 @@
             
             <!-- Progress Indicator -->
             <div class="flex gap-4 text-sm">
-                <div class="text-center bg-white dark:bg-neutral-800 rounded-lg p-3 border border-gray-200 dark:border-neutral-700">
-                    <div class="font-semibold text-blue-600">{{ count($permissions ?? []) }}/{{ count($allPermissions) }}</div>
-                    <div class="text-gray-500 text-xs">Selected</div>
+                <div class="text-center bg-white dark:bg-zinc-800 rounded-lg p-3 border border-gray-200 dark:border-zinc-700">
+                    <div class="font-semibold text-blue-600 dark:text-blue-500">{{ count($permissions ?? []) }}/{{ count($allPermissions) }}</div>
+                    <div class="text-gray-900 dark:text-neutral-200 text-xs">Selected</div>
                 </div>
             </div>
         </div>
@@ -30,10 +29,10 @@
 
     <form wire:submit="submit" class="space-y-6">
         <!-- Role Information Card -->
-        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden">
-            <div class="px-6 py-3 bg-gray-50 dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-700">
-                <flux:icon name="identification" class="w-5 h-5 inline text-gray-500 me-1" />
-                <div class="text-left text-xs font-medium text-gray-500 uppercase inline">Role Information</div>                
+        <div class="bg-white dark:bg-zinc-900  rounded-lg border border-gray-200 dark:border-zinc-700 overflow-hidden mb-6">
+            <div class="px-6 py-3 bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-700">
+                <flux:icon name="identification" class="w-5 h-5 inline text-gray-900 dark:text-neutral-200 me-1" />
+                <div class="text-left text-xs font-medium text-gray-900 dark:text-neutral-200 uppercase inline">Role Information</div>                
             </div>
             <div class="p-6">
                 <div class="max-w-md">
@@ -43,20 +42,20 @@
         </div>
 
         <!-- Permissions Management Card -->
-        <div class="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden">
-            <div class="px-6 py-3 bg-gray-50 dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-700">
+        <div class="bg-white dark:bg-zinc-900  rounded-lg border border-gray-200 dark:border-zinc-700 overflow-hidden mb-6">
+            <div class="px-6 py-3 bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-700">
                 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">                   
                     <div>
-                        <flux:icon name="key" class="w-5 h-5 inline text-gray-500 me-1" />
-                        <div class="text-xs font-medium text-gray-500 uppercase inline">
+                        <flux:icon name="key" class="w-5 h-5 inline text-gray-900 dark:text-neutral-200 me-1" />
+                        <div class="text-xs font-medium text-gray-900 dark:text-neutral-200 uppercase inline">
                             Assigned Permissions
                         </div> 
                     </div>
                     <div class="flex gap-2">
-                        <flux:button size="sm" variant="ghost" type="button" onclick="selectAllPermissions()">
+                        <flux:button size="sm" variant="ghost" type="button" wire:click="selectAll">
                             Select All
                         </flux:button>
-                        <flux:button size="sm" variant="ghost" type="button" onclick="deselectAllPermissions()">
+                        <flux:button size="sm" variant="ghost" type="button" wire:click="deselectAll">
                             Deselect All
                         </flux:button>
                     </div>
@@ -106,30 +105,10 @@
                 Cancel
             </flux:button>
             <flux:button variant="primary" type="submit" class="w-full sm:w-auto">
-                <flux:icon name="check" class="w-4 h-4 mr-1" />
+                {{-- <flux:icon name="check" class="w-4 h-4 mr-1" /> --}}
                 Save Changes
             </flux:button>
         </div>
     </form>
 
-    <!-- JavaScript for Select/Deselect All -->
-    <script>
-        function selectAllPermissions() {
-            const checkboxes = document.querySelectorAll('input[type="checkbox"][wire\\:model="permissions"]');
-            checkboxes.forEach(checkbox => {
-                if (!checkbox.checked) {
-                    checkbox.click();
-                }
-            });
-        }
-        
-        function deselectAllPermissions() {
-            const checkboxes = document.querySelectorAll('input[type="checkbox"][wire\\:model="permissions"]');
-            checkboxes.forEach(checkbox => {
-                if (checkbox.checked) {
-                    checkbox.click();
-                }
-            });
-        }
-    </script>
 </div>

@@ -1,5 +1,21 @@
 <div class="min-h-screen py-4 sm:py-8">
     <div class="max-w-6xl mx-auto px-0 sm:px-6 lg:px-8">
+        <!-- Validation Errors -->
+        @if ($errors->any())
+            <div class="mb-6">
+                <flux:callout variant="danger" icon="exclamation-triangle">
+                    <flux:callout.heading>Validation Errors</flux:callout.heading>
+                    <flux:callout.text>
+                        <ul class="list-disc list-inside mt-2">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </flux:callout.text>
+                </flux:callout>
+            </div>
+        @endif
+
         <!-- Header Section -->
         <div class="mb-6 sm:mb-8">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -193,18 +209,23 @@
                                     </div>
                                 </div>
 
-                                <flux:checkbox.group wire:model="roles" label="Update Roles" description="Select roles to assign to this user">
-                                    <div class="grid grid-cols-1 gap-3 mt-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Update Roles
+                                    </label>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Select a role to assign to this user</p>
+                                    <div class="grid grid-cols-1 gap-3">
                                         @foreach ($allRoles as $role)
                                             @if ($role->name === 'Super Admin')
                                                 @if (auth()->user()->hasRole('Super Admin'))
-                                                    <label class="flex items-center p-3 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
-                                                        <input type="radio" wire:model="selectedRole" value="{{ $role->name }}" class="sr-only" />
+                                                    <label class="flex items-center p-3 rounded-lg border-2 cursor-pointer transition-colors {{ $selectedRole === $role->name ? 'border-red-500 bg-red-50 dark:bg-red-900/20' : 'border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20' }}">
+                                                        <input type="radio" wire:model.live="selectedRole" value="{{ $role->name }}" class="sr-only" />
                                                         <div class="flex items-center flex-1">
                                                             <div class="flex items-center">
-                                                                <div class="w-4 h-4 border-2 border-red-300 rounded-full mr-3 flex items-center justify-center">
-                                                                    <div class="w-2 h-2 bg-red-500 rounded-full opacity-0 transition-opacity" 
-                                                                         :class="$wire.selectedRole === '{{ $role->name }}' ? 'opacity-100' : 'opacity-0'"></div>
+                                                                <div class="w-5 h-5 border-2 rounded-full mr-3 flex items-center justify-center {{ $selectedRole === $role->name ? 'border-red-500' : 'border-red-300' }}">
+                                                                    @if($selectedRole === $role->name)
+                                                                        <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                                                                    @endif
                                                                 </div>
                                                                 <span class="font-medium text-red-700 dark:text-red-300">{{ $role->name }}</span>
                                                             </div>
@@ -213,13 +234,14 @@
                                                     </label>
                                                 @endif
                                             @else
-                                                <label class="flex items-center p-3 rounded-lg border border-gray-200 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700 cursor-pointer transition-colors">
-                                                    <input type="radio" wire:model="selectedRole" value="{{ $role->name }}" class="sr-only" />
+                                                <label class="flex items-center p-3 rounded-lg border-2 cursor-pointer transition-colors {{ $selectedRole === $role->name ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700' }}">
+                                                    <input type="radio" wire:model.live="selectedRole" value="{{ $role->name }}" class="sr-only" />
                                                     <div class="flex items-center flex-1">
                                                         <div class="flex items-center">
-                                                            <div class="w-4 h-4 border-2 border-gray-300 dark:border-neutral-500 rounded-full mr-3 flex items-center justify-center">
-                                                                <div class="w-2 h-2 bg-blue-500 rounded-full opacity-0 transition-opacity" 
-                                                                     :class="$wire.selectedRole === '{{ $role->name }}' ? 'opacity-100' : 'opacity-0'"></div>
+                                                            <div class="w-5 h-5 border-2 rounded-full mr-3 flex items-center justify-center {{ $selectedRole === $role->name ? 'border-blue-500' : 'border-gray-300 dark:border-neutral-500' }}">
+                                                                @if($selectedRole === $role->name)
+                                                                    <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+                                                                @endif
                                                             </div>
                                                             <span class="font-medium text-gray-900 dark:text-white">{{ $role->name }}</span>
                                                         </div>
@@ -233,7 +255,7 @@
                                             @endif
                                         @endforeach
                                     </div>
-                                </flux:checkbox.group>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -78,48 +78,67 @@
     </div>
 
     <!-- Filters and Search -->
-    <flux:card class="p-4 mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            <div>
-                <flux:input
-                    wire:model.live="search"
-                    placeholder="Search assets..."
-                    class="w-full"
-                >
-                    <flux:icon.magnifying-glass slot="leading" class="size-4" />
-                </flux:input>
-            </div>
+    <div class="mb-6 mx-2">
+        <flux:accordion>
+            <flux:accordion.item>
+                <flux:accordion.heading>
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5 transition-transform duration-200 accordion-icon"
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                        </svg>
+                        Filters & Actions
+                    </span>
+                </flux:accordion.heading>
+                <flux:accordion.content>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pt-4 mx-3">
+                        <flux:field>
+                            <flux:label>Search Assets</flux:label>
+                            <flux:input
+                                wire:model.live="search"
+                                placeholder="Search by name..."
+                                class="w-full"
+                            >
+                                <flux:icon.magnifying-glass slot="leading" class="size-4" />
+                            </flux:input>
+                        </flux:field>
 
-            <div>
-                <flux:select wire:model.live="selectedAssetType" class="w-full">
-                    <flux:select.option value="all">All Asset Types</flux:select.option>
-                    <flux:select.option value="vehicles">Vehicles</flux:select.option>
-                    <flux:select.option value="meeting_rooms">Meeting Rooms</flux:select.option>
-                    <flux:select.option value="it_assets">IT Assets</flux:select.option>
-                </flux:select>
-            </div>
+                        <flux:field>
+                            <flux:label>Asset Type</flux:label>
+                            <flux:select variant="listbox" wire:model.live="selectedAssetType" placeholder="All Asset Types">
+                                <flux:select.option value="all">All Asset Types</flux:select.option>
+                                <flux:select.option value="vehicles">Vehicles</flux:select.option>
+                                <flux:select.option value="meeting_rooms">Meeting Rooms</flux:select.option>
+                                <flux:select.option value="it_assets">IT Assets</flux:select.option>
+                            </flux:select>
+                        </flux:field>
 
-            <div>
-                <flux:select wire:model.live="qrFilter" class="w-full">
-                    <flux:select.option value="all">All QR Status</flux:select.option>
-                    <flux:select.option value="generated">QR Generated</flux:select.option>
-                    <flux:select.option value="missing">Missing QR</flux:select.option>
-                </flux:select>
-            </div>
+                        <flux:field>
+                            <flux:label>QR Status</flux:label>
+                            <flux:select variant="listbox" wire:model.live="qrFilter" placeholder="All Status">
+                                <flux:select.option value="all">All QR Status</flux:select.option>
+                                <flux:select.option value="generated">QR Generated</flux:select.option>
+                                <flux:select.option value="missing">Missing QR</flux:select.option>
+                            </flux:select>
+                        </flux:field>
+                    </div>
 
-            <div class="flex gap-2">
-                @if(count($selectedAssets) > 0)
-                    <flux:button wire:click="$set('showBulkModal', true)" variant="primary">
-                        Bulk Actions ({{ count($selectedAssets) }})
-                    </flux:button>
-                @endif
+                    <!-- Action Buttons -->
+                    <div class="flex flex-wrap gap-3 pt-4 mx-3">
+                        @if(count($selectedAssets) > 0)
+                            <flux:button variant="filled" size="sm" wire:click="$set('showBulkModal', true)" icon="cube" class="bg-blue-600 hover:bg-blue-700">
+                                Bulk Actions ({{ count($selectedAssets) }})
+                            </flux:button>
+                        @endif
 
-                <flux:button wire:click="$set('showTemplateModal', true)" variant="primary">
-                    Print Templates
-                </flux:button>
-            </div>
-        </div>
-    </flux:card>
+                        <flux:button variant="filled" size="sm" wire:click="$set('showTemplateModal', true)" icon="printer" class="bg-purple-600 hover:bg-purple-700">
+                            Print Templates
+                        </flux:button>
+                    </div>
+                </flux:accordion.content>
+            </flux:accordion.item>
+        </flux:accordion>
+    </div>
 
     <!-- Assets Table -->
     <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-700 overflow-hidden">

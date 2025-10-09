@@ -44,7 +44,7 @@ class UserEdit extends Component
         ]);
         
         $this->user->name = $this->name;
-        $this->user->email = $this->user->email;
+        $this->user->email = $this->email;
         $this->user->status = $this->status;
         $this->user->position = $this->position;
 

@@ -316,14 +316,35 @@ class VehicleMaintenanceManagement extends Component
         }
 
         if ($this->filterUpcoming) {
-            $query->whereNotNull('next_maintenance_due')
-                  ->where('next_maintenance_due', '>', now())
-                  ->where('next_maintenance_due', '<=', now()->addDays(30));
+            $query->where(function($q) {
+                // Check for scheduled maintenance coming up in next 30 days
+                $q->where(function($subQuery) {
+                    $subQuery->where('status', 'scheduled')
+                             ->where('performed_at', '>', now())
+                             ->where('performed_at', '<=', now()->addDays(30));
+                })
+                // Also check for next_maintenance_due (for completed maintenance)
+                ->orWhere(function($subQuery) {
+                    $subQuery->whereNotNull('next_maintenance_due')
+                             ->where('next_maintenance_due', '>', now())
+                             ->where('next_maintenance_due', '<=', now()->addDays(30));
+                });
+            });
         }
 
         if ($this->filterOverdue) {
-            $query->whereNotNull('next_maintenance_due')
-                  ->where('next_maintenance_due', '<', now());
+            $query->where(function($q) {
+                // Check for scheduled maintenance that's overdue
+                $q->where(function($subQuery) {
+                    $subQuery->where('status', 'scheduled')
+                             ->where('performed_at', '<', now());
+                })
+                // Also check for overdue next_maintenance_due (for completed maintenance)
+                ->orWhere(function($subQuery) {
+                    $subQuery->whereNotNull('next_maintenance_due')
+                             ->where('next_maintenance_due', '<', now());
+                });
+            });
         }
 
         // Apply sorting

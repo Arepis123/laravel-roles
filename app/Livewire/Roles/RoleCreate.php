@@ -22,6 +22,16 @@ class RoleCreate extends Component
         return view('livewire.roles.role-create');
     }
 
+    public function selectAll()
+    {
+        $this->permissions = $this->allPermissions->pluck('name')->toArray();
+    }
+
+    public function deselectAll()
+    {
+        $this->permissions = [];
+    }
+
     public function submit()
     {
         $this->validate([
@@ -30,11 +40,11 @@ class RoleCreate extends Component
         ]);
 
         $role = Role::create([
-            'name' => $this->name          
+            'name' => $this->name
         ]);
 
         $role->syncPermissions($this->permissions);
 
         return to_route('roles.index')->with('success', 'Role has been successfully created');
-    }    
+    }
 }
