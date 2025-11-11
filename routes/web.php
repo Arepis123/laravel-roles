@@ -160,7 +160,27 @@ Route::middleware(['auth'])->group(function () {
 
     // Reports page
     Route::get('reports/reports', Reports::class)->name('reports')->middleware('permission:asset.view|asset.create|asset.edit|asset.delete');
-    
+
+    // Reminder Settings (Super Admin only)
+    Route::get('admin/reminder-settings', \App\Livewire\Admin\ReminderSettings::class)->name('admin.reminder-settings')->middleware('role:Super Admin');
+
+    // Announcement Management (Super Admin only)
+    Route::get('admin/announcements', \App\Livewire\Admin\AnnouncementManagement::class)->name('admin.announcements')->middleware('role:Super Admin');
+
+    // Announcement dismiss route - API endpoint for dismissing announcements
+    Route::post('api/announcements/{id}/dismiss', function ($id) {
+        $announcement = \App\Models\Announcement::find($id);
+        if ($announcement && auth()->check()) {
+            $announcement->markAsReadBy(auth()->user());
+            return response()->json(['success' => true]);
+        }
+        return response()->json(['success' => false], 404);
+    })->name('api.announcements.dismiss');
+
+    // Secure announcement image serving
+    Route::get('secure/announcements/images/{imagePath}', [App\Http\Controllers\AnnouncementImageController::class, 'show'])
+        ->name('announcements.image.show');
+
     // Report view route - View report in browser  
     Route::get('/reports/view/{id}', function ($id) {
         try {

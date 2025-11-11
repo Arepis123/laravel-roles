@@ -81,6 +81,21 @@
             </div>
         </flux:field>
 
+        {{-- Last Parking Level Info for Vehicles --}}
+        @if($asset_type === 'vehicle' && $asset_id && $this->lastParkingInfo)
+            <flux:callout color="blue" icon="information-circle" class="mt-2">
+                <flux:callout.heading>Last Parking Location</flux:callout.heading>
+                <flux:callout.text>
+                    This vehicle was last parked at
+                    <strong>Level {{ $this->lastParkingInfo['level'] }}</strong>
+                    @if($this->lastParkingInfo['is_reserved'])
+                        <span class="text-blue-600 dark:text-blue-400 font-medium">(Reserved Slot)</span>
+                    @endif
+                    on {{ $this->lastParkingInfo['date']->format('M d, Y') }}.
+                </flux:callout.text>
+            </flux:callout>
+        @endif
+
         <style>
             /* Hide description and toggle button in the selected button value (after selection) */
             .asset-select [data-flux-select-button] .asset-description,
@@ -665,10 +680,31 @@
                         <div class="flex items-center space-x-3">
                             <div>
                                 <flux:heading>Destination</flux:heading>
-                                <flux:text class="mt-2">{{ $destination }}</flux:text>              
+                                <flux:text class="mt-2">{{ $destination }}</flux:text>
                             </div>
                         </div>
                         @endif
+                    </div>
+                    @endif
+
+                    {{-- Last Parking Location Info for Vehicles --}}
+                    @if($asset_type === 'vehicle' && $asset_id && $this->lastParkingInfo)
+                    <flux:separator />
+                    <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <div class="flex items-start gap-2">
+                            <flux:icon name="information-circle" class="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                            <div class="flex-1">
+                                <flux:heading size="sm" class="text-blue-900 dark:text-blue-100">Last Parking Location</flux:heading>
+                                <flux:text class="text-sm text-blue-800 dark:text-blue-200 mt-1">
+                                    This vehicle was last parked at
+                                    <strong>Level {{ $this->lastParkingInfo['level'] }}</strong>
+                                    @if($this->lastParkingInfo['is_reserved'])
+                                        <span class="font-medium">(Reserved Slot)</span>
+                                    @endif
+                                    on {{ $this->lastParkingInfo['date']->format('M d, Y') }}.
+                                </flux:text>
+                            </div>
+                        </div>
                     </div>
                     @endif
 

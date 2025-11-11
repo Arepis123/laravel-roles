@@ -168,11 +168,9 @@ class BookingMyShow extends Component
         } else {
             // For meeting room and IT assets
             $this->validate([
-                // 'doneRemarks' => 'required|string|min:10',
-                'doneRemarks' => 'string|min:5',
+                'doneRemarks' => 'nullable|string|min:5',
             ], [
-                'doneRemarks.required' => 'Remarks are required when marking as done.',
-                'doneRemarks.min' => 'Remarks must be at least 10 characters.',
+                'doneRemarks.min' => 'Remarks must be at least 5 characters if provided.',
             ]);
         }
 

@@ -1613,12 +1613,39 @@ class BookingCreate extends Component
      */
     public function isFormValid()
     {
-        return !empty($this->asset_type) && 
-               !empty($this->asset_id) && 
-               !empty($this->booking_date) && 
-               !empty($this->start_time) && 
-               !empty($this->end_time) && 
+        return !empty($this->asset_type) &&
+               !empty($this->asset_id) &&
+               !empty($this->booking_date) &&
+               !empty($this->start_time) &&
+               !empty($this->end_time) &&
                !empty($this->purpose);
+    }
+
+    /**
+     * Get the last parking level used for the selected vehicle
+     */
+    public function getLastParkingInfoProperty()
+    {
+        if ($this->asset_type !== 'vehicle' || empty($this->asset_id)) {
+            return null;
+        }
+
+        $lastBooking = Booking::where('asset_type', Vehicle::class)
+            ->where('asset_id', $this->asset_id)
+            ->where('status', 'done')
+            ->whereNotNull('parking_level')
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
+        if (!$lastBooking) {
+            return null;
+        }
+
+        return [
+            'level' => $lastBooking->parking_level,
+            'is_reserved' => $lastBooking->is_reserved_slot,
+            'date' => $lastBooking->updated_at,
+        ];
     }
 
     public function render()

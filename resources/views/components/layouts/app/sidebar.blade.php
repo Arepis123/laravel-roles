@@ -55,6 +55,10 @@
                     @if(auth()->user()->can('report.view') || auth()->user()->can('report.create') || auth()->user()->can('report.edit') || auth()->user()->can('report.delete'))
                     <flux:sidebar.item icon="file-text" :href="route('reports')" :current="request()->routeIs('reports')" wire:navigate>{{ __('Report') }}</flux:sidebar.item>
                     @endif
+                    @if(auth()->user()->hasRole(['Super Admin']))
+                    <flux:sidebar.item icon="bell" :href="route('admin.reminder-settings')" :current="request()->routeIs('admin.reminder-settings')" wire:navigate>{{ __('Email Reminders') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="megaphone" :href="route('admin.announcements')" :current="request()->routeIs('admin.announcements')" wire:navigate>{{ __('Announcements') }}</flux:sidebar.item>
+                    @endif
                 @endif
 
                 @if(auth()->user()->hasPermissionTo('vehicle.view'))

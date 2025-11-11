@@ -154,7 +154,12 @@
                                             @if ($booking->asset_type_label == 'Vehicle')
                                                 {{ $booking->asset?->model ?? 'N/A' }}
                                                 @if($booking->asset?->plate_number)
-                                                    <span class="text-xs text-gray-500 block">{{ $booking->asset->plate_number }}
+                                                    <span class="text-xs text-gray-500 block">{{ $booking->asset->plate_number }}</span>
+                                                @endif
+                                            @elseif ($booking->asset_type_label == 'IT Asset')
+                                                {{ $booking->asset?->name ?? 'N/A' }}
+                                                @if($booking->asset?->asset_tag)
+                                                    <span class="text-xs text-gray-500 block">{{ $booking->asset->asset_tag }}</span>
                                                 @endif
                                             @else
                                                 {{ $booking->asset?->name ?? 'N/A' }}
@@ -398,6 +403,11 @@
                             {{ $booking->asset?->model ?? 'N/A' }}
                             @if($booking->asset?->plate_number)
                                 <span class="text-sm text-gray-500 font-normal">({{ $booking->asset->plate_number }})</span>
+                            @endif
+                        @elseif ($booking->asset_type_label == 'IT Asset')
+                            {{ $booking->asset?->name ?? 'N/A' }}
+                            @if($booking->asset?->asset_tag)
+                                <span class="text-sm text-gray-500 font-normal">({{ $booking->asset->asset_tag }})</span>
                             @endif
                         @else
                             {{ $booking->asset?->name ?? 'N/A' }}

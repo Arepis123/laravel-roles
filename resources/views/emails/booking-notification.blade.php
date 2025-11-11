@@ -191,7 +191,23 @@
                     <div class="detail-value">{{ $assetDetails['destination'] }}</div>
                 </div>
             @endif
-            
+
+            @if($assetDetails['type'] === 'Vehicle' && isset($assetDetails['last_parking']))
+                <div class="detail-row">
+                    <div class="detail-label">Last Parking:</div>
+                    <div class="detail-value">
+                        <div style="background-color: #e3f2fd; padding: 8px; border-radius: 3px; border-left: 3px solid #2196F3;">
+                            <strong>Level {{ $assetDetails['last_parking']['level'] }}</strong>
+                            @if($assetDetails['last_parking']['is_reserved'])
+                                <span style="color: #1976D2; font-weight: bold;">(Reserved Slot)</span>
+                            @endif
+                            <br>
+                            <small style="color: #666;">Last parked on {{ $assetDetails['last_parking']['date'] }}</small>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             @if(isset($assetDetails['passengers']))
                 <div class="detail-row">
                     <div class="detail-label">Passengers:</div>

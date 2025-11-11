@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -10,22 +11,24 @@ use Illuminate\Queue\SerializesModels;
 use App\Models\Booking;
 use App\Models\User;
 
-class BookingNotification extends Mailable
+class IncompleteBookingReminder extends Mailable
 {
     use Queueable, SerializesModels;
 
     public $booking;
     public $user;
     public $assetDetails;
+    public $customMessage;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(Booking $booking, User $user)
+    public function __construct(Booking $booking, User $user, $customMessage = null)
     {
         $this->booking = $booking;
         $this->user = $user;
-        
+        $this->customMessage = $customMessage;
+
         // Load the asset details
         $this->assetDetails = $this->getAssetDetails();
     }
@@ -36,7 +39,7 @@ class BookingNotification extends Mailable
     private function getAssetDetails()
     {
         $asset = $this->booking->asset;
-        
+
         if (!$asset) {
             return [
                 'name' => 'Unknown Asset',
@@ -45,7 +48,7 @@ class BookingNotification extends Mailable
         }
 
         $assetType = class_basename($this->booking->asset_type);
-        
+
         switch ($assetType) {
             case 'MeetingRoom':
                 return [
@@ -70,12 +73,6 @@ class BookingNotification extends Mailable
                     $details['passengers'] = $this->booking->passengerNames;
                 }
 
-                // Add last parking information if available
-                $lastParking = $this->getLastParkingInfo($asset->id);
-                if ($lastParking) {
-                    $details['last_parking'] = $lastParking;
-                }
-
                 return $details;
             case 'ItAsset':
                 return [
@@ -93,37 +90,14 @@ class BookingNotification extends Mailable
     }
 
     /**
-     * Get the last parking information for a vehicle
-     */
-    private function getLastParkingInfo($vehicleId)
-    {
-        $lastBooking = Booking::where('asset_type', \App\Models\Vehicle::class)
-            ->where('asset_id', $vehicleId)
-            ->where('status', 'done')
-            ->whereNotNull('parking_level')
-            ->orderBy('updated_at', 'desc')
-            ->first();
-
-        if (!$lastBooking) {
-            return null;
-        }
-
-        return [
-            'level' => $lastBooking->parking_level,
-            'is_reserved' => $lastBooking->is_reserved_slot,
-            'date' => $lastBooking->updated_at->format('M d, Y'),
-        ];
-    }
-
-    /**
      * Get the message envelope.
      */
     public function envelope(): Envelope
     {
         $assetType = $this->assetDetails['type'];
-        
+
         return new Envelope(
-            subject: "New {$assetType} Booking Request - {$this->user->name}",
+            subject: "Reminder: Please Complete Your {$assetType} Booking",
         );
     }
 
@@ -133,11 +107,12 @@ class BookingNotification extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.booking-notification',
+            view: 'emails.incomplete-booking-reminder',
             with: [
                 'booking' => $this->booking,
                 'user' => $this->user,
                 'assetDetails' => $this->assetDetails,
+                'customMessage' => $this->customMessage,
             ]
         );
     }

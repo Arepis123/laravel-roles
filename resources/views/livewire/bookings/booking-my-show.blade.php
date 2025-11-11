@@ -237,7 +237,23 @@
                             @endforeach
                         </flux:select>
                     </flux:field>
-                </div> 
+
+                    {{-- Plate Number for Vehicles --}}
+                    @if($asset_type === 'vehicle' && $booking->asset && $booking->asset->plate_number)
+                        <flux:field>
+                            <flux:heading>Plate Number</flux:heading>
+                            <flux:input value="{{ $booking->asset->plate_number }}" type="text" disabled/>
+                        </flux:field>
+                    @endif
+
+                    {{-- Asset Tag for IT Assets --}}
+                    @if($asset_type === 'it_asset' && $booking->asset && $booking->asset->asset_tag)
+                        <flux:field>
+                            <flux:heading>Asset Tag</flux:heading>
+                            <flux:input value="{{ $booking->asset->asset_tag }}" type="text" disabled/>
+                        </flux:field>
+                    @endif
+                </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <flux:field>
@@ -523,11 +539,11 @@
                 <flux:separator />
 
                 <flux:field>
-                    <flux:label>Remarks *</flux:label>
-                    <flux:textarea 
-                        wire:model="doneRemarks" 
-                        rows="4" 
-                        placeholder="Enter your remarks about the booking completion..."
+                    <flux:label>Remarks (Optional)</flux:label>
+                    <flux:textarea
+                        wire:model="doneRemarks"
+                        rows="4"
+                        placeholder="Enter your remarks about the booking completion (optional)..."
                     />
                     @error('doneRemarks')
                         <flux:error>{{ $message }}</flux:error>
