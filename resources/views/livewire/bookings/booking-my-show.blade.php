@@ -160,22 +160,53 @@
                     @endif
                     
                     @if($vehicleData['fuel_filled'] ?? false)
-                        <div class="flex justify-between">
-                            <span class="text-gray-600 dark:text-gray-300">Fuel Filled:</span>
-                            <span class="font-medium">Yes</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600 dark:text-gray-300">Fuel Cost:</span>
-                            <span class="font-medium">RM {{ number_format($vehicleData['fuel_cost'] ?? 0, 2) }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600 dark:text-gray-300">Fuel Amount:</span>
-                            <span class="font-medium">{{ number_format($vehicleData['fuel_amount'] ?? 0, 1) }} L</span>
+                        <div class="pt-3 border-t border-gray-200 dark:border-gray-700">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="font-semibold text-gray-900 dark:text-white">Fuel Fill-ups</span>
+                                <span class="text-sm font-medium text-green-600 dark:text-green-400">
+                                    {{ $vehicleData['fuel_logs']->count() }} fill-up{{ $vehicleData['fuel_logs']->count() > 1 ? 's' : '' }}
+                                </span>
+                            </div>
+
+                            <div class="space-y-3">
+                                @foreach($vehicleData['fuel_logs'] as $index => $log)
+                                    <div class="p-3 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Fill-up #{{ $index + 1 }}</span>
+                                            <div class="flex items-center gap-4 text-sm">
+                                                <div>
+                                                    <span class="text-gray-600 dark:text-gray-400">Cost:</span>
+                                                    <span class="font-medium ml-1">RM {{ number_format($log->fuel_cost, 2) }}</span>
+                                                </div>
+                                                <div>
+                                                    <span class="text-gray-600 dark:text-gray-400">Amount:</span>
+                                                    <span class="font-medium ml-1">{{ number_format($log->fuel_amount, 1) }} L</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+
+                                {{-- Total Summary --}}
+                                <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-semibold text-blue-900 dark:text-blue-200">Total:</span>
+                                        <div class="text-right">
+                                            <div class="font-bold text-blue-900 dark:text-blue-200">
+                                                RM {{ number_format($vehicleData['total_fuel_cost'], 2) }}
+                                            </div>
+                                            <div class="text-sm text-blue-700 dark:text-blue-300">
+                                                {{ number_format($vehicleData['total_fuel_amount'], 1) }} L
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     @else
                         <div class="flex justify-between">
                             <span class="text-gray-600 dark:text-gray-300">Fuel Filled:</span>
-                            <span class="font-medium">No</span>
+                            <span class="font-medium">No fuel fill-ups</span>
                         </div>
                     @endif
                     
@@ -299,7 +330,7 @@
                                 @if($passenger)
                                     <div class="flex items-center p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                                         <div class="flex-shrink-0">                                            
-                                            <flux:avatar size="xs" color="auto" name="{{ preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $passenger->name) }}" />                                        
+                                            <flux:avatar size="xs" color="auto" name="{{ preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', $passenger->name) }}" />                                        
                                         </div>
                                         <div class="ml-3 min-w-0 flex-1">
                                             <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
@@ -501,14 +532,14 @@
                 <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Quick Actions</h3>
                 
                 <div class="space-y-3">
-                    <flux:button href="{{ route('bookings.index.user') }}" class="w-full" icon="chevron-left">                                                      
+                    <flux:button href="{{ route('bookings.index.user', ['page' => $returnPage, 'highlightId' => $booking->id]) }}" class="w-full" icon="chevron-left">
                         Back to Bookings
                     </flux:button>
 
-                    @if(auth()->id() === $booking->booked_by && $status == 'pending')                       
-                        <flux:button href="{{ route('bookings.edit.user', $booking) }}" class="w-full" icon="pencil-square">                                                      
+                    @if(auth()->id() === $booking->booked_by && $status == 'pending')
+                        <flux:button href="{{ route('bookings.edit.user', ['booking' => $booking->id, 'page' => $returnPage]) }}" class="w-full" icon="pencil-square">
                             Edit Booking
-                        </flux:button>                          
+                        </flux:button>
                     @endif                    
 
                     @if($status === 'approved' && auth()->id() === $booking->booked_by)                       
@@ -621,42 +652,97 @@
                         @enderror
                     </flux:field>
 
-                    <flux:field>
-                        <flux:checkbox 
-                            wire:model.live="gasFilledUp" 
-                            label="Fuel was filled up"
-                        />
-                    </flux:field>
+                    {{-- Fuel Fill-ups Section --}}
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            {{-- <flux:label>Fuel Fill-ups During Trip</flux:label> --}}
+                            <flux:button
+                                size="sm"
+                                wire:click="addFuelEntry"
+                                icon="plus"
+                                variant="filled"
+                            >
+                                Add Fill-up
+                            </flux:button>
+                        </div>
 
-                    @if($gasFilledUp)
-                        <flux:field>
-                            <flux:label>Fuel Cost (RM)</flux:label>
-                            <flux:input 
-                                wire:model="gasAmount" 
-                                type="number" 
-                                placeholder="Enter amount spent on fuel"
-                                min="0"
-                                step="0.01"
-                            />
-                            @error('gasAmount')
-                                <flux:error>{{ $message }}</flux:error>
-                            @enderror
-                        </flux:field>
+                        @if(count($fuelEntries) === 0)
+                            <div class="text-center py-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-dashed border-gray-300 dark:border-gray-600">
+                                <p class="text-sm text-gray-500 dark:text-gray-400">No fuel fill-ups added</p>
+                                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Click "Add Fill-up" to record fuel purchases</p>
+                            </div>
+                        @else
+                            @foreach($fuelEntries as $index => $entry)
+                                <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <flux:heading size="sm">Fill-up #{{ $index + 1 }}</flux:heading>
+                                        <flux:button
+                                            size="xs"
+                                            wire:click="removeFuelEntry({{ $index }})"
+                                            icon="x-mark"
+                                            variant="ghost"
+                                            class="text-red-600 hover:text-red-800"
+                                        />
+                                    </div>
 
-                        <flux:field>
-                            <flux:label>Fuel Amount (Liters)</flux:label>
-                            <flux:input 
-                                wire:model="gasLiters" 
-                                type="number" 
-                                placeholder="Enter amount of fuel in liters"
-                                min="0"
-                                step="0.1"
-                            />
-                            @error('gasLiters')
-                                <flux:error>{{ $message }}</flux:error>
-                            @enderror
-                        </flux:field>
-                    @endif
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <flux:field>
+                                            <flux:label>Fuel Cost (RM)</flux:label>
+                                            <flux:input
+                                                wire:model="fuelEntries.{{ $index }}.fuel_cost"
+                                                type="number"
+                                                placeholder="0.00"
+                                                min="0"
+                                                step="0.01"
+                                            />
+                                            @error("fuelEntries.{$index}.fuel_cost")
+                                                <flux:error>{{ $message }}</flux:error>
+                                            @enderror
+                                        </flux:field>
+
+                                        <flux:field>
+                                            <flux:label>Fuel Amount (Liters)</flux:label>
+                                            <flux:input
+                                                wire:model="fuelEntries.{{ $index }}.fuel_amount"
+                                                type="number"
+                                                placeholder="0.0"
+                                                min="0"
+                                                step="0.1"
+                                            />
+                                            @error("fuelEntries.{$index}.fuel_amount")
+                                                <flux:error>{{ $message }}</flux:error>
+                                            @enderror
+                                        </flux:field>
+                                    </div>
+                                </div>
+                            @endforeach
+
+                            {{-- Summary --}}
+                            @if(count($fuelEntries) > 0)
+                                @php
+                                    $totalCost = collect($fuelEntries)->sum(function($entry) {
+                                        return is_numeric($entry['fuel_cost']) ? floatval($entry['fuel_cost']) : 0;
+                                    });
+                                    $totalLiters = collect($fuelEntries)->sum(function($entry) {
+                                        return is_numeric($entry['fuel_amount']) ? floatval($entry['fuel_amount']) : 0;
+                                    });
+                                @endphp
+                                <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="font-medium text-blue-900 dark:text-blue-200">Total:</span>
+                                        <div class="text-right">
+                                            <div class="font-semibold text-blue-900 dark:text-blue-200">
+                                                RM {{ number_format($totalCost, 2) }}
+                                            </div>
+                                            <div class="text-xs text-blue-700 dark:text-blue-300">
+                                                {{ number_format($totalLiters, 1) }} L
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+                        @endif
+                    </div>
 
                     {{-- Parking Location Section --}}
                     @if($this->isParkingRequired())

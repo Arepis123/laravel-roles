@@ -279,12 +279,12 @@
                             </td>
                             
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                {{ $log->recordedBy ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $log->recordedBy->name) : ($log->performed_by ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $log->performed_by) : 'N/A') }}                                
+                                {{ $log->recordedBy ? preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', $log->recordedBy->name) : ($log->performed_by ? preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', $log->performed_by) : 'N/A') }}                                
                             </td>
                             
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                 @if($log->booking)
-                                    <div class="text-sm font-medium">{{ $log->booking->user->name ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $log->booking->user->name) : ($log->booking->user->name ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $log->booking->user->name) : 'N/A') }}</div>
+                                    <div class="text-sm font-medium">{{ $log->booking->user->name ? preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', $log->booking->user->name) : ($log->booking->user->name ? preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', $log->booking->user->name) : 'N/A') }}</div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">#{{ $log->booking->id }}</div>
                                 @else
                                     <span class="text-gray-400">-</span>

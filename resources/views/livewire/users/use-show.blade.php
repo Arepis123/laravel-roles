@@ -8,13 +8,13 @@
             </div>
             <div class="flex flex-wrap items-center gap-2 sm:gap-3">
                 @can('user.edit')
-                <flux:button variant="primary" href="{{ route('users.edit', $user->id) }}" size="sm" class="flex items-center gap-2">
+                <flux:button variant="primary" href="{{ route('users.edit', ['id' => $user->id, 'page' => request()->query('page', 1)]) }}" size="sm" class="flex items-center gap-2">
                     <flux:icon.pencil class="size-4" />
                     <span class="hidden sm:inline">Edit User</span>
                     <span class="sm:hidden">Edit</span>
                 </flux:button>
                 @endcan
-                <flux:button variant="ghost" href="{{ route('users.index') }}" size="sm" class="flex items-center gap-2">
+                <flux:button variant="ghost" href="{{ route('users.index', ['page' => request()->query('page', 1)]) }}" size="sm" class="flex items-center gap-2">
                     <flux:icon.arrow-left class="size-4" />
                     <span class="hidden sm:inline">Back to Users</span>
                     <span class="sm:hidden">Back</span>
@@ -52,7 +52,7 @@
                             circle 
                             size="xl" 
                             color="auto" 
-                            name="{{ $user->name ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $user->name) : 'N/A' }}" 
+                            name="{{ $user->name ? preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', $user->name) : 'N/A' }}" 
                             class="ring-4 ring-white dark:ring-neutral-800 bg-white dark:bg-zinc-900" 
                         />
                         <!-- Status Indicator -->
@@ -357,7 +357,7 @@
                 </div>
                 <div class="p-4 sm:p-6 space-y-2 sm:space-y-3">
                     @can('user.edit')
-                    <flux:button variant="ghost" href="{{ route('users.edit', $user->id) }}" size="sm" class="w-full justify-start">
+                    <flux:button variant="ghost" href="{{ route('users.edit', ['id' => $user->id, 'page' => request()->query('page', 1)]) }}" size="sm" class="w-full justify-start">
                         <flux:icon.pencil class="size-4 mr-3 inline" />
                         <div class="inline">Edit Profile</div>
                     </flux:button>

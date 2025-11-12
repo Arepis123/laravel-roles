@@ -21,8 +21,8 @@ class UserIndex extends Component
     public $userToDelete = [];
     
     // Sorting properties
-    public $sortField = 'created_at';
-    public $sortDirection = 'desc';
+    public $sortField = 'status';
+    public $sortDirection = 'asc';
 
     protected $queryString = ['search', 'statusFilter', 'roleFilter', 'positionFilter', 'sortField', 'sortDirection'];
 
@@ -53,13 +53,30 @@ class UserIndex extends Component
                 $q->where('position', $this->positionFilter);
             });
 
-        // Apply sorting
+        // Apply sorting with custom position order
         if ($this->sortField === 'roles') {
             // Special handling for roles sorting
             $query->withCount('roles')
                   ->orderBy('roles_count', $this->sortDirection);
         } else {
-            $query->orderBy($this->sortField, $this->sortDirection);
+            // Default multi-level sorting: Status (active first) -> Position (CEO->Manager->Executive->Non-executive)
+            $query->orderByRaw("CASE
+                    WHEN status = 'active' THEN 0
+                    WHEN status = 'inactive' THEN 1
+                    ELSE 2
+                END ASC")
+                  ->orderByRaw("CASE
+                    WHEN position = 'CEO' THEN 1
+                    WHEN position = 'Manager' THEN 2
+                    WHEN position = 'Executive' THEN 3
+                    WHEN position = 'Non-executive' THEN 4
+                    ELSE 5
+                END ASC");
+
+            // If user manually sorts by a specific field, apply that as the primary sort
+            if ($this->sortField !== 'status') {
+                $query->orderBy($this->sortField, $this->sortDirection);
+            }
         }
 
         $users = $query->paginate($this->perPage);
@@ -138,8 +155,8 @@ class UserIndex extends Component
         $this->statusFilter = '';
         $this->roleFilter = '';
         $this->positionFilter = ''; // Reset position filter
-        $this->sortField = 'created_at';
-        $this->sortDirection = 'desc';
+        $this->sortField = 'status';
+        $this->sortDirection = 'asc';
         $this->resetPage();
     }
 }

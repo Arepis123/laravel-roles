@@ -17,13 +17,15 @@ class BookingMyIndex extends Component
     public $search = '';
     public $sortField = 'created_at';
     public $sortDirection = 'desc';
-    
+    public $highlightId = null;
+
     protected $queryString = [
         'search' => ['except' => ''],
         'statusFilter' => ['except' => ''],
         'assetTypeFilter' => ['except' => ''],
         'sortField' => ['except' => 'created_at'],
         'sortDirection' => ['except' => 'desc'],
+        'highlightId' => ['except' => null],
     ];
 
     public function render()

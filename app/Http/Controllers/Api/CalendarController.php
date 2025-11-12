@@ -396,7 +396,7 @@ class CalendarController extends Controller
 
         // $userName = $booking->bookedBy?->name ?? 'Unknown';
         $userName = $booking->bookedBy
-            ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $booking->bookedBy->name)
+            ? preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', $booking->bookedBy->name)
             : 'Unknown';
         
         return "{$assetName} - {$userName}";

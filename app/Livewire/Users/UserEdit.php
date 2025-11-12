@@ -12,6 +12,7 @@ class UserEdit extends Component
     public $selectedRole;
     public $status;
     public $position;
+    public $returnPage = 1; // Store the page to return to
 
     public function mount($id)
     {
@@ -21,9 +22,12 @@ class UserEdit extends Component
         $this->status = $this->user->status;
         $this->position = $this->user->position;
         $this->allRoles = Role::all();
-        
+
         // Get the first role (since user can only have one now)
         $this->selectedRole = $this->user->roles()->first()?->name;
+
+        // Capture the page number from query string
+        $this->returnPage = request()->query('page', 1);
     }
 
     public function render()
@@ -57,6 +61,6 @@ class UserEdit extends Component
         // Sync the single selected role
         $this->user->syncRoles([$this->selectedRole]);
 
-        return to_route("users.index")->with("success", "User successfully updated.");
+        return to_route("users.index", ['page' => $this->returnPage])->with("success", "User successfully updated.");
     }
 }

@@ -55,10 +55,10 @@
                     @if(auth()->user()->can('report.view') || auth()->user()->can('report.create') || auth()->user()->can('report.edit') || auth()->user()->can('report.delete'))
                     <flux:sidebar.item icon="file-text" :href="route('reports')" :current="request()->routeIs('reports')" wire:navigate>{{ __('Report') }}</flux:sidebar.item>
                     @endif
-                    @if(auth()->user()->hasRole(['Super Admin']))
+                    {{-- @if(auth()->user()->hasRole(['Super Admin']))
                     <flux:sidebar.item icon="bell" :href="route('admin.reminder-settings')" :current="request()->routeIs('admin.reminder-settings')" wire:navigate>{{ __('Email Reminders') }}</flux:sidebar.item>
                     <flux:sidebar.item icon="megaphone" :href="route('admin.announcements')" :current="request()->routeIs('admin.announcements')" wire:navigate>{{ __('Announcements') }}</flux:sidebar.item>
-                    @endif
+                    @endif --}}
                 @endif
 
                 @if(auth()->user()->hasPermissionTo('vehicle.view'))
@@ -86,17 +86,17 @@
 
             <flux:dropdown position="top" align="start" class="max-lg:hidden">
                 <flux:sidebar.profile
-                    :name="auth()->user()->name ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', auth()->user()->name) : 'N/A'"
+                    :name="auth()->user()->name ? preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', auth()->user()->name) : 'N/A'"
                 />
 
                 <flux:menu class="w-[220px]">
                     <flux:menu.radio.group>
                         <div class="p-0 text-sm font-normal">
                             <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-                                <flux:avatar name="{{ auth()->user() ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', auth()->user()->name) : 'N/A' }}" />
+                                <flux:avatar name="{{ auth()->user() ? preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', auth()->user()->name) : 'N/A' }}" />
 
                                 <div class="grid flex-1 text-start text-sm leading-tight">
-                                    <span class="truncate font-semibold">{{ auth()->user()->name ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', auth()->user()->name) : 'N/A' }}</span>
+                                    <span class="truncate font-semibold">{{ auth()->user()->name ? preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', auth()->user()->name) : 'N/A' }}</span>
                                     <span class="truncate text-xs">{{ auth()->user()->email }}</span>
                                 </div>
                             </div>
@@ -128,7 +128,7 @@
             <flux:dropdown position="top" align="end">
             <flux:profile
                 :initials="auth()->user()
-                    ? collect(explode(' ', preg_replace('/\s+(BIN|BINTI)\b.*/i', '', auth()->user()->name)))
+                    ? collect(explode(' ', preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', auth()->user()->name)))
                         ->map(fn($part) => strtoupper(substr($part, 0, 1)))
                         ->implode('')
                     : 'NA'"
@@ -140,11 +140,11 @@
                         <div class="p-0 text-sm font-normal">
                             <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
                                 <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
-                                    <flux:avatar class="flex h-full w-full items-center justify-center" name="{{ auth()->user() ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', auth()->user()->name) : 'N/A' }}" />
+                                    <flux:avatar class="flex h-full w-full items-center justify-center" name="{{ auth()->user() ? preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', auth()->user()->name) : 'N/A' }}" />
                                 </span>
 
                                 <div class="grid flex-1 text-start text-sm leading-tight">
-                                    <span class="truncate font-semibold">{{ auth()->user()->name ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', auth()->user()->name) : 'N/A' }}</span>
+                                    <span class="truncate font-semibold">{{ auth()->user()->name ? preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', auth()->user()->name) : 'N/A' }}</span>
                                     <span class="truncate text-xs">{{ auth()->user()->email }}</span>
                                 </div>
                             </div>

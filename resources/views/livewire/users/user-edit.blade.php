@@ -43,7 +43,7 @@
         <div class="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-700 mb-6">
             <div class="p-4 sm:p-6">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                    <flux:avatar circle size="md" color="auto" name="{{ $user->name ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $user->name) : 'N/A' }}" />
+                    <flux:avatar circle size="md" color="auto" name="{{ $user->name ? preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', $user->name) : 'N/A' }}" />
                     <div class="flex-1 min-w-0">
                         <div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-white truncate">{{ $user->name }}</h3>

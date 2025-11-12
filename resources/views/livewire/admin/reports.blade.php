@@ -309,10 +309,10 @@
                                 
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center space-x-3">
-                                        <flux:avatar size="xs" color="auto" name="{{ $report->generatedBy->name ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $report->generatedBy->name) : 'N/A' }}" />                                        
+                                        <flux:avatar size="xs" color="auto" name="{{ $report->generatedBy->name ? preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', $report->generatedBy->name) : 'N/A' }}" />                                        
                                         <div>
                                             <div class="text-sm font-medium text-gray-900 dark:text-neutral-200">
-                                                {{ $report->generatedBy->name ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $report->generatedBy->name) : 'N/A' }}                                                
+                                                {{ $report->generatedBy->name ? preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', $report->generatedBy->name) : 'N/A' }}                                                
                                             </div>
                                             <div class="text-xs text-gray-500">                                            
                                                 {{ $report->generatedBy?->email ?? 'N/A' }}

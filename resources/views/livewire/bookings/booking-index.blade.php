@@ -1,4 +1,30 @@
-<div>
+<div x-data="{}" x-init="
+    @if($highlightId)
+        setTimeout(() => {
+            const element = document.getElementById('booking-row-{{ $highlightId }}') || document.getElementById('booking-card-{{ $highlightId }}');
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                // Add blinking animation
+                let blinkCount = 0;
+                const blinkInterval = setInterval(() => {
+                    if (blinkCount % 2 === 0) {
+                        element.classList.remove('bg-gray-100', 'dark:bg-zinc-700', 'border-zinc-400', 'dark:border-zinc-500');
+                    } else {
+                        element.classList.add('bg-gray-100', 'dark:bg-zinc-700', 'border-zinc-400', 'dark:border-zinc-500');
+                    }
+                    blinkCount++;
+
+                    // Stop after 2 blinks (1 complete cycle at 700ms interval)
+                    if (blinkCount >= 2) {
+                        clearInterval(blinkInterval);
+                        element.classList.remove('bg-gray-100', 'dark:bg-zinc-700', 'border-zinc-400', 'dark:border-zinc-500');
+                    }
+                }, 700);
+            }
+        }, 100);
+    @endif
+">
     <div class="relative mb-6 w-full">
         <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
             <!-- Header Section -->
@@ -101,76 +127,95 @@
     </div>
 
     <!-- Desktop Table View (hidden on mobile) -->
-    <div class="hidden md:block sm:block border border-gray-200 rounded-xl shadow-2xs overflow-hidden dark:bg-neutral-800 dark:border-neutral-700">
+    <div class="hidden md:block sm:block bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-700 overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-                <thead class="bg-gray-50 dark:bg-neutral-700">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-zinc-700">
+                <thead class="bg-gray-50 dark:bg-zinc-800">
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">
-                            <div class="flex items-center gap-1">
-                                #
-                                <button wire:click="sortBy('id')" class="hover:bg-gray-100 p-1 rounded">
-                                    <flux:icon name="chevron-up-down" class="w-3 h-3" />
-                                </button>
-                            </div>
-                        </th>  
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">Asset Details</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">
-                            <div class="flex items-center gap-1">
-                                Duration
-                                <button wire:click="sortBy('start_time')" class="hover:bg-gray-100 p-1 rounded">
-                                    <flux:icon name="chevron-up-down" class="w-3 h-3" />
-                                </button>
-                            </div>
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">Booking Info</th>
-                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">
-                            <div class="flex items-center gap-1">
-                                Status
-                                <button wire:click="sortBy('status')" class="hover:bg-gray-100 p-1 rounded">
-                                    <flux:icon name="chevron-up-down" class="w-3 h-3" />
-                                </button>
+                        <th wire:click="sortBy('id')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 select-none">
+                            <div class="flex items-center space-x-1">
+                                <span>#</span>
+                                @if($sortField === 'id')
+                                    @if($sortDirection === 'asc')
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                        </svg>
+                                    @else
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    @endif
+                                @endif
                             </div>
                         </th>
-                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">Actions</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Asset Details</th>
+                        <th wire:click="sortBy('start_time')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 select-none">
+                            <div class="flex items-center space-x-1">
+                                <span>Duration</span>
+                                @if($sortField === 'start_time')
+                                    @if($sortDirection === 'asc')
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                        </svg>
+                                    @else
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    @endif
+                                @endif
+                            </div>
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Booking Info</th>
+                        <th wire:click="sortBy('status')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 select-none">
+                            <div class="flex items-center space-x-1">
+                                <span>Status</span>
+                                @if($sortField === 'status')
+                                    @if($sortDirection === 'asc')
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                        </svg>
+                                    @else
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    @endif
+                                @endif
+                            </div>
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200 dark:bg-neutral-800 dark:divide-neutral-700">
+                <tbody class="bg-white dark:bg-zinc-900 divide-y divide-gray-200 dark:divide-zinc-700">
                     @forelse ($bookings as $booking)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors duration-200">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900 dark:text-neutral-200">
-                                    #{{ str_pad($booking->id, 4, '0', STR_PAD_LEFT) }}
-                                </div>
+                        <tr id="booking-row-{{ $booking->id }}"
+                            class="hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors duration-300 {{ $highlightId == $booking->id ? 'bg-gray-100 dark:bg-zinc-700' : '' }}">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                #{{ str_pad($booking->id, 4, '0', STR_PAD_LEFT) }}
                             </td>
-                           
-                            <td class="px-6 py-4">
-                                <div class="flex items-start gap-2">                                    
-                                    <div class="min-w-0">
-                                        <flux:badge size="sm" icon="{{ $booking->asset_type_label == 'Vehicle' ? 'car' : ($booking->asset_type_label == 'Meeting Room' ? 'building-office' : 'computer-desktop') }}" color="{{ $booking->asset_type_label == 'Vehicle' ? 'green' : ($booking->asset_type_label == 'Meeting Room' ? 'blue' : 'fuchsia') }}">
-                                            {{ $booking->asset_type_label }}
-                                        </flux:badge>
-                                        <div class="text-sm font-medium text-gray-900 dark:text-neutral-200 mt-1">
-                                            @if ($booking->asset_type_label == 'Vehicle')
-                                                {{ $booking->asset?->model ?? 'N/A' }}
-                                                @if($booking->asset?->plate_number)
-                                                    <span class="text-xs text-gray-500 block">{{ $booking->asset->plate_number }}</span>
-                                                @endif
-                                            @elseif ($booking->asset_type_label == 'IT Asset')
-                                                {{ $booking->asset?->name ?? 'N/A' }}
-                                                @if($booking->asset?->asset_tag)
-                                                    <span class="text-xs text-gray-500 block">{{ $booking->asset->asset_tag }}</span>
-                                                @endif
-                                            @else
-                                                {{ $booking->asset?->name ?? 'N/A' }}
-                                            @endif
-                                        </div>
-                                    </div>
+
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <flux:badge size="sm" icon="{{ $booking->asset_type_label == 'Vehicle' ? 'car' : ($booking->asset_type_label == 'Meeting Room' ? 'building-office' : 'computer-desktop') }}" color="{{ $booking->asset_type_label == 'Vehicle' ? 'green' : ($booking->asset_type_label == 'Meeting Room' ? 'blue' : 'fuchsia') }}">
+                                    {{ $booking->asset_type_label }}
+                                </flux:badge>
+                                <div class="text-sm font-medium text-gray-900 dark:text-white mt-1">
+                                    @if ($booking->asset_type_label == 'Vehicle')
+                                        {{ $booking->asset?->model ?? 'N/A' }}
+                                        @if($booking->asset?->plate_number)
+                                            <span class="text-xs text-gray-500 dark:text-gray-400 block">{{ $booking->asset->plate_number }}</span>
+                                        @endif
+                                    @elseif ($booking->asset_type_label == 'IT Asset')
+                                        {{ $booking->asset?->name ?? 'N/A' }}
+                                        @if($booking->asset?->asset_tag)
+                                            <span class="text-xs text-gray-500 dark:text-gray-400 block">{{ $booking->asset->asset_tag }}</span>
+                                        @endif
+                                    @else
+                                        {{ $booking->asset?->name ?? 'N/A' }}
+                                    @endif
                                 </div>
                             </td>
 
-                            <td class="px-6 py-4">
-                                <div class="text-sm text-gray-900 dark:text-neutral-200">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900 dark:text-white">
                                     @php
                                         $start = \Carbon\Carbon::parse($booking->start_time);
                                         $end = \Carbon\Carbon::parse($booking->end_time);
@@ -230,21 +275,17 @@
                                 </div>
                             </td>
 
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <flux:avatar size="xs" color="auto" name="{{ $booking->user ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $booking->user->name) : 'N/A' }}" />
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center gap-2">
+                                    <flux:avatar size="xs" color="auto" name="{{ $booking->user ? preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', $booking->user->name) : 'N/A' }}" />
                                     <div class="min-w-0">
-                                        <div class="text-sm font-medium text-gray-900 dark:text-neutral-200 truncate">
-                                            {{ $booking->user ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $booking->user->name) : 'No user found' }}
+                                        <div class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                            {{ $booking->user ? preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', $booking->user->name) : 'No user found' }}
                                         </div>
-                                        <div class="text-xs text-gray-500">
-                                            {{ $booking->user?->email ?? 'N/A' }}
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                                            {{ \Carbon\Carbon::parse($booking->created_at)->diffForHumans() }}
                                         </div>
                                     </div>
-                                </div>
-                                <div class="text-xs text-gray-400 flex items-center gap-1">
-                                    <flux:icon name="calendar" class="w-3 h-3" />
-                                    Booked {{ \Carbon\Carbon::parse($booking->created_at)->diffForHumans() }}
                                 </div>
                             </td>
 
@@ -286,16 +327,19 @@
                                 </div>
                             </td>
 
-                            <td class="px-6 py-4 whitespace-nowrap text-center">                              
-                                <flux:button.group>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex space-x-2">
                                     @can('book.create')
-                                    <flux:button size="sm" href="{{ route('bookings.show', $booking->id) }}" variant="ghost">
-                                        <flux:icon name="eye" class="w-4 h-4" />
+                                    <flux:button size="xs" href="{{ route('bookings.show', ['id' => $booking->id, 'page' => $bookings->currentPage()]) }}" variant="ghost">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
                                     </flux:button>
                                     @endcan
                                     @can('book.edit')
                                     <flux:dropdown>
-                                        <flux:button icon="chevron-down" size="sm" variant="ghost"></flux:button>                                           
+                                        <flux:button icon="chevron-down" size="xs" variant="ghost"></flux:button>                                           
                                         <flux:menu>
                                             <flux:menu.submenu heading="Change status" icon="cog-6-tooth">
                                                 <flux:menu.radio.group>
@@ -318,26 +362,24 @@
                                                 </flux:menu.radio.group>
                                             </flux:menu.submenu>
                                             <flux:menu.separator />
-                                            <flux:menu.item icon="pencil" href="{{ route('bookings.edit', $booking->id) }}">
+                                            <flux:menu.item icon="pencil" href="{{ route('bookings.edit', ['booking' => $booking->id, 'page' => $bookings->currentPage()]) }}">
                                                 Edit Details
                                             </flux:menu.item>
                                         </flux:menu>
                                     </flux:dropdown>
-                                    @endcan                                                                                                         
-                                </flux:button.group>
+                                    @endcan
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="6" class="px-6 py-12 text-center">
-                                <div class="flex flex-col items-center gap-2">
-                                    <flux:icon name="calendar-days" class="w-8 h-8 text-gray-400" />
-                                    <div class="text-gray-500">No bookings found</div>
-                                    @can('book.create')
-                                    <flux:button size="sm" href="{{ route('bookings.create') }}" variant="ghost">
-                                        Create first booking
-                                    </flux:button>
-                                    @endcan
+                                <div class="text-gray-500 dark:text-gray-400">
+                                    <svg class="mx-auto h-8 w-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    <h3 class="font-medium text-gray-900 dark:text-white mb-1">No bookings</h3>
+                                    <p class="text-gray-500 dark:text-gray-400">Get started by creating your first booking.</p>
                                 </div>
                             </td>
                         </tr>
@@ -347,7 +389,7 @@
         </div>
         
         @if($bookings->hasPages())
-        <div class="px-6 py-3 border-t border-gray-200 dark:border-neutral-700">
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-zinc-700">
             {{ $bookings->links() }}
         </div>
         @endif        
@@ -357,7 +399,8 @@
     <!-- Mobile Card View (hidden on desktop) -->
     <div class="sm:hidden md:hidden space-y-4">
         @forelse ($bookings as $booking)
-            <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg p-4 shadow-sm">
+            <div id="booking-card-{{ $booking->id }}"
+                 class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg p-4 shadow-sm transition-colors duration-300 {{ $highlightId == $booking->id ? 'bg-gray-100 dark:bg-zinc-700 border-zinc-400 dark:border-zinc-500' : '' }}">
                 <!-- Card Header -->
                 <div class="flex items-start justify-between mb-3">
                     <div class="flex items-center gap-2">
@@ -472,10 +515,10 @@
 
                 <!-- Booked by info -->
                 <div class="flex items-center gap-2 mb-4">
-                    <flux:avatar size="xs" color="auto" name="{{ $booking->user ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $booking->user->name) : 'N/A' }}" />
+                    <flux:avatar size="xs" color="auto" name="{{ $booking->user ? preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', $booking->user->name) : 'N/A' }}" />
                     <div class="min-w-0 flex-1">
                         <div class="text-sm font-medium text-gray-900 dark:text-white truncate">
-                            {{ $booking->user ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $booking->user->name) : 'No user found' }}
+                            {{ $booking->user ? preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', $booking->user->name) : 'No user found' }}
                         </div>
                         <div class="text-xs text-gray-500 dark:text-gray-400">
                             Booked {{ \Carbon\Carbon::parse($booking->created_at)->diffForHumans() }}
@@ -502,7 +545,7 @@
 
                 <!-- Card Actions -->
                 <div class="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-neutral-700">
-                    <flux:button size="sm" href="{{ route('bookings.show', $booking->id) }}" variant="ghost">
+                    <flux:button size="sm" href="{{ route('bookings.show', ['id' => $booking->id, 'page' => $bookings->currentPage()]) }}" variant="ghost">
                         <flux:icon name="eye" class="w-4 h-4 mr-1" />
                         View More
                     </flux:button>
@@ -531,7 +574,7 @@
                                 </flux:menu.radio.group>
                             </flux:menu.submenu>
                             <flux:menu.separator />
-                            <flux:menu.item icon="pencil" href="{{ route('bookings.edit', $booking->id) }}">
+                            <flux:menu.item icon="pencil" href="{{ route('bookings.edit', ['booking' => $booking->id, 'page' => $bookings->currentPage()]) }}">
                                 Edit Details
                             </flux:menu.item>
                         </flux:menu>

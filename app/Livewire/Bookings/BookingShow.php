@@ -30,10 +30,13 @@ class BookingShow extends Component
     public bool $showDoneModal = false;
     public string $doneRemarks = '';
     public string $currentOdometer = '';
-    public bool $gasFilledUp = false;
-    public string $gasAmount = '';
-    public string $gasLiters = '';
     public string $fuelLevel = '4';
+
+    // Multiple fuel entries
+    public array $fuelEntries = [];
+
+    // Page preservation
+    public $returnPage = 1;
 
     protected $assetTypeConfig = [
         'meeting_room' => [
@@ -57,6 +60,9 @@ class BookingShow extends Component
     {
         $this->booking = Booking::with('user')->findOrFail($id);
 
+        // Capture the current page for return navigation
+        $this->returnPage = request()->query('page', 1);
+
         $this->asset_type = $this->getAssetTypeKey($this->booking->asset_type);
         $this->asset_id = (string) $this->booking->asset_id;
         $this->start_time = $this->booking->start_time ?? '';
@@ -72,10 +78,24 @@ class BookingShow extends Component
             $doneDetails = $this->booking->done_details;
             $this->doneRemarks = $doneDetails['remarks'] ?? '';
             $this->currentOdometer = $doneDetails['odometer'] ?? '';
-            $this->gasFilledUp = $doneDetails['gas_filled'] ?? false;
-            $this->gasAmount = $doneDetails['gas_amount'] ?? '';
-            $this->gasLiters = $doneDetails['gas_liters'] ?? '';
             $this->fuelLevel = $doneDetails['fuel_level'] ?? '4';
+        }
+
+        // Load existing fuel logs if booking is done
+        if ($this->booking->status === 'done') {
+            $existingFuelLogs = VehicleFuelLog::where('booking_id', $this->booking->id)
+                ->orderBy('filled_at')
+                ->get();
+
+            if ($existingFuelLogs->count() > 0) {
+                $this->fuelEntries = $existingFuelLogs->map(function ($log) {
+                    return [
+                        'id' => $log->id,
+                        'fuel_cost' => $log->fuel_cost,
+                        'fuel_amount' => $log->fuel_amount,
+                    ];
+                })->toArray();
+            }
         }
     }
 
@@ -95,10 +115,28 @@ class BookingShow extends Component
     {
         $this->doneRemarks = '';
         $this->currentOdometer = '';
-        $this->gasFilledUp = false;
-        $this->gasAmount = '';
-        $this->gasLiters = '';
         $this->fuelLevel = '4';
+        $this->fuelEntries = [];
+    }
+
+    /**
+     * Add a new fuel entry
+     */
+    public function addFuelEntry()
+    {
+        $this->fuelEntries[] = [
+            'fuel_cost' => '',
+            'fuel_amount' => '',
+        ];
+    }
+
+    /**
+     * Remove a fuel entry by index
+     */
+    public function removeFuelEntry($index)
+    {
+        unset($this->fuelEntries[$index]);
+        $this->fuelEntries = array_values($this->fuelEntries); // Re-index array
     }
 
     /**
@@ -117,23 +155,32 @@ class BookingShow extends Component
     {
         // Validation based on asset type
         if ($this->asset_type === 'vehicle') {
-            $this->validate([
+            $validationRules = [
                 'currentOdometer' => 'required|numeric|min:0',
                 'fuelLevel' => 'required|integer|min:1|max:8',
-                'gasAmount' => $this->gasFilledUp ? 'required|numeric|min:0' : 'nullable',
-                'gasLiters' => $this->gasFilledUp ? 'required|numeric|min:0' : 'nullable',
-            ], [
+            ];
+
+            $validationMessages = [
                 'currentOdometer.required' => 'Current odometer reading is required.',
                 'currentOdometer.numeric' => 'Odometer must be a valid number.',
                 'fuelLevel.required' => 'Fuel level is required.',
                 'fuelLevel.integer' => 'Fuel level must be a valid number.',
                 'fuelLevel.min' => 'Fuel level must be at least 1.',
                 'fuelLevel.max' => 'Fuel level must be at most 8.',
-                'gasAmount.required' => 'Fuel cost is required when fuel was filled up.',
-                'gasAmount.numeric' => 'Fuel cost must be a valid number.',
-                'gasLiters.required' => 'Fuel amount in liters is required when fuel was filled up.',
-                'gasLiters.numeric' => 'Fuel amount must be a valid number.',
-            ]);
+            ];
+
+            // Validate each fuel entry
+            foreach ($this->fuelEntries as $index => $entry) {
+                $validationRules["fuelEntries.{$index}.fuel_cost"] = 'required|numeric|min:0';
+                $validationRules["fuelEntries.{$index}.fuel_amount"] = 'required|numeric|min:0';
+
+                $validationMessages["fuelEntries.{$index}.fuel_cost.required"] = 'Fuel cost is required for fill-up #' . ($index + 1);
+                $validationMessages["fuelEntries.{$index}.fuel_cost.numeric"] = 'Fuel cost must be a valid number for fill-up #' . ($index + 1);
+                $validationMessages["fuelEntries.{$index}.fuel_amount.required"] = 'Fuel amount is required for fill-up #' . ($index + 1);
+                $validationMessages["fuelEntries.{$index}.fuel_amount.numeric"] = 'Fuel amount must be a valid number for fill-up #' . ($index + 1);
+            }
+
+            $this->validate($validationRules, $validationMessages);
         } else {
             // For meeting room and IT assets
             $this->validate([
@@ -172,18 +219,19 @@ class BookingShow extends Component
                 'notes' => $notes
             ]);
 
-            // Save fuel log if gas was filled
-            if ($this->gasFilledUp && $this->gasAmount && $this->gasLiters) {
+            // Save all fuel entries
+            foreach ($this->fuelEntries as $index => $entry) {
                 VehicleFuelLog::create([
                     'booking_id' => $this->booking->id,
                     'vehicle_id' => $this->booking->asset_id,
-                    'fuel_cost' => $this->gasAmount,
-                    'fuel_amount' => $this->gasLiters,
+                    'fuel_cost' => $entry['fuel_cost'],
+                    'fuel_amount' => $entry['fuel_amount'],
                     'fuel_type' => 'petrol', // Default to petrol, can be made dynamic later
+                    'fuel_station' => null,
                     'odometer_at_fill' => $this->currentOdometer,
                     'filled_by' => auth()->id(),
                     'filled_at' => now(),
-                    'notes' => 'Fuel filled during booking completion'
+                    'notes' => 'Fuel fill-up #' . ($index + 1) . ' during booking completion'
                 ]);
             }
 
@@ -489,16 +537,17 @@ class BookingShow extends Component
             ->latest('recorded_at')
             ->first();
 
-        // Get fuel log for this booking
-        $fuelLog = VehicleFuelLog::where('booking_id', $this->booking->id)
-            ->latest('filled_at')
-            ->first();
+        // Get all fuel logs for this booking
+        $fuelLogs = VehicleFuelLog::where('booking_id', $this->booking->id)
+            ->orderBy('filled_at')
+            ->get();
 
         return [
             'odometer_reading' => $odometerLog ? $odometerLog->odometer_reading : null,
-            'fuel_filled' => $fuelLog ? true : false,
-            'fuel_cost' => $fuelLog ? $fuelLog->fuel_cost : null,
-            'fuel_amount' => $fuelLog ? $fuelLog->fuel_amount : null,
+            'fuel_filled' => $fuelLogs->count() > 0,
+            'fuel_logs' => $fuelLogs,
+            'total_fuel_cost' => $fuelLogs->sum('fuel_cost'),
+            'total_fuel_amount' => $fuelLogs->sum('fuel_amount'),
             'fuel_level' => $this->booking->done_details['fuel_level'] ?? null,
         ];
     }

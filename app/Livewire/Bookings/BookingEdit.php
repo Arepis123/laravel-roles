@@ -25,9 +25,10 @@ class BookingEdit extends Component
     public string $end_time = '';     
     public string $purpose = '';
     public string $capacity = '';
-    public array $passengers = []; 
-    public string $destination = ''; 
-    public $availablePassengers; 
+    public array $passengers = [];
+    public string $destination = '';
+    public $availablePassengers;
+    public $returnPage = 1; // Store the page to return to 
 
     public array $additional_booking = [];
     public string $refreshment_details = '';
@@ -76,6 +77,7 @@ class BookingEdit extends Component
 
         $this->booking = $booking;
         $this->availablePassengers = collect(); // Initialize as empty collection
+        $this->returnPage = request()->query('page', 1); // Capture the page number
         $this->loadBookingData();
     }
 
@@ -954,8 +956,13 @@ class BookingEdit extends Component
             $successMessage .= '. Admin has been notified via email.';
 
             session()->flash('success', $successMessage);
-            
-            return redirect()->route('bookings.index');
+
+            // Determine which route to return to based on user role
+            if (auth()->user()->hasAnyRole(['Admin', 'Super Admin'])) {
+                return redirect()->route('bookings.index', ['page' => $this->returnPage]);
+            } else {
+                return redirect()->route('bookings.my', ['page' => $this->returnPage]);
+            }
 
         } catch (\Exception $e) {
             \Log::error('Booking update failed: ' . $e->getMessage());
@@ -980,7 +987,13 @@ class BookingEdit extends Component
             }
             
             session()->flash('success', 'Booking has been cancelled successfully.');
-            return redirect()->route('bookings.index');
+
+            // Determine which route to return to based on user role
+            if (auth()->user()->hasAnyRole(['Admin', 'Super Admin'])) {
+                return redirect()->route('bookings.index', ['page' => $this->returnPage]);
+            } else {
+                return redirect()->route('bookings.my', ['page' => $this->returnPage]);
+            }
         } catch (\Exception $e) {
             \Log::error('Booking cancellation failed: ' . $e->getMessage());
             session()->flash('error', 'Failed to cancel booking. Please try again.');

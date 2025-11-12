@@ -247,7 +247,7 @@
                             </td>
                             
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                {{ $log->filledBy->name ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $log->filledBy->name) : ($log->filledBy->name ? preg_replace('/\s+(BIN|BINTI)\b.*/i', '', $log->filledBy->name) : 'N/A') }}
+                                {{ $log->filledBy->name ? preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', $log->filledBy->name) : ($log->filledBy->name ? preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', $log->filledBy->name) : 'N/A') }}
                             </td>
                             
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
