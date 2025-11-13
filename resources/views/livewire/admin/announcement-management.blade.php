@@ -154,9 +154,13 @@
                                 {{ $announcement->views_count }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex gap-2">
-                                    <flux:button wire:click="openEditModal({{ $announcement->id }})" size="sm" variant="ghost" icon="pencil" tooltip="Edit" />
-                                    <flux:button wire:click="confirmDelete({{ $announcement->id }})" size="sm" variant="danger" icon="trash" tooltip="Delete" />
+                                <div class="flex gap-2">                                    
+                                    <flux:button wire:click="openEditModal({{ $announcement->id }})" size="sm" variant="ghost" title="Edit">
+                                        <flux:icon name="pencil" class="w-4 h-4" />
+                                    </flux:button>                                                                              
+                                    <flux:button wire:click="confirmDelete({{ $announcement->id }})" variant="ghost" size="sm" title="Delete" class="text-red-600 hover:text-red-800">
+                                        <flux:icon name="trash" class="w-4 h-4" />
+                                    </flux:button>
                                 </div>
                             </td>
                         </tr>

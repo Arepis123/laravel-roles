@@ -389,8 +389,8 @@
         </div>
         
         @if($bookings->hasPages())
-        <div class="px-6 py-4 border-t border-gray-200 dark:border-zinc-700">
-            {{ $bookings->links() }}
+        <div class="px-6 py-4">
+            <flux:pagination :paginator="$bookings" />
         </div>
         @endif        
        
@@ -598,8 +598,8 @@
 
         <!-- Mobile Pagination -->
         @if($bookings->hasPages())
-        <div class="pt-4 border-t border-gray-200 dark:border-neutral-700">
-            {{ $bookings->links() }}
+        <div class="pt-4">
+            <flux:pagination :paginator="$bookings" />
         </div>
         @endif
     </div>    

@@ -133,7 +133,7 @@ class BookingNotification extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.booking-notification',
+            markdown: 'emails.booking-notification',
             with: [
                 'booking' => $this->booking,
                 'user' => $this->user,
