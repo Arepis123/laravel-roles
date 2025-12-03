@@ -94,7 +94,7 @@
                     <flux:callout.heading>Last Parking Location</flux:callout.heading>
                     <flux:callout.text>
                         This vehicle was last parked at
-                        <strong>Level {{ $this->lastParkingInfo['level'] }}</strong>
+                        <strong>Level B{{ $this->lastParkingInfo['level'] }}</strong>
                         @if($this->lastParkingInfo['is_reserved'])
                             <span class="text-blue-600 dark:text-blue-400 font-medium">(Reserved Slot)</span>
                         @endif

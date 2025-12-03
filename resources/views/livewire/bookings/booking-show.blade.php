@@ -215,7 +215,7 @@
                         <div class="pt-3 border-t border-gray-200 dark:border-gray-700">
                             <div class="flex justify-between">
                                 <span class="text-gray-600 dark:text-gray-300">Parking Level:</span>
-                                <span class="font-medium">Level {{ $booking->parking_level }}</span>
+                                <span class="font-medium">Level B{{ $booking->parking_level }}</span>
                             </div>
                             @if($booking->parking_level == 1 && $booking->is_reserved_slot)
                                 <div class="flex justify-between">

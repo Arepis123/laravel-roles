@@ -11,17 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('booking_reminder_logs', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('booking_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('status')->default('sent')->comment('sent, failed, bounced');
-            $table->text('error_message')->nullable();
-            $table->integer('reminder_count')->default(1)->comment('Which reminder this is (1st, 2nd, 3rd, etc.)');
-            $table->timestamps();
+        if (!Schema::hasTable('booking_reminder_logs')) {
+            Schema::create('booking_reminder_logs', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('booking_id')->constrained()->onDelete('cascade');
+                $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                $table->string('status')->default('sent')->comment('sent, failed, bounced');
+                $table->text('error_message')->nullable();
+                $table->integer('reminder_count')->default(1)->comment('Which reminder this is (1st, 2nd, 3rd, etc.)');
+                $table->timestamps();
 
-            $table->index(['booking_id', 'user_id']);
-        });
+                $table->index(['booking_id', 'user_id']);
+            });
+        }
     }
 
     /**
