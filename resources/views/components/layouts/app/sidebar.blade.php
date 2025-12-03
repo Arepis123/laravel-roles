@@ -145,7 +145,11 @@
 
                                 <div class="grid flex-1 text-start text-sm leading-tight">
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                                     <span class="truncate font-semibold">{{ auth()->user()->name ? preg_replace('/\s+(BIN|BINTI|BT)\b.*/i', '', auth()->user()->name) : 'N/A' }}</span>
+=======
+                                    <span class="truncate font-semibold">{{ auth()->user()->name }}</span>
+>>>>>>> Stashed changes
 =======
                                     <span class="truncate font-semibold">{{ auth()->user()->name }}</span>
 >>>>>>> Stashed changes
