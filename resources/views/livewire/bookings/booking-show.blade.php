@@ -780,6 +780,36 @@
                             @endif
                         @endif
                     </div>
+
+                    {{-- Parking Location Section --}}
+                    @if($this->isParkingRequired())
+                        <flux:separator />
+
+                        <div class="space-y-4">
+                            <flux:field>
+                                <flux:label>Parking Level</flux:label>
+                                <flux:select wire:model.live="parkingLevel" variant="listbox">
+                                    <flux:select.option value="" selected>Select parking level</flux:select.option>
+                                    @foreach($this->getParkingLevels() as $level)
+                                        <flux:select.option value="{{ $level }}">Level B{{ $level }}</flux:select.option>
+                                    @endforeach
+                                </flux:select>
+                                @error('parkingLevel')
+                                    <flux:error>{{ $message }}</flux:error>
+                                @enderror
+                            </flux:field>
+
+                            @if($parkingLevel == 1)
+                                <flux:field>
+                                    <flux:checkbox
+                                        wire:model="isReservedSlot"
+                                        label="Parked in reserved parking slot"
+                                        description="Check this if you parked in a reserved parking slot on Level 1"
+                                    />
+                                </flux:field>
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
                 <flux:separator />

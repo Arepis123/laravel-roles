@@ -84,14 +84,19 @@
         {{-- Last Parking Level Info for Vehicles --}}
         @if($asset_type === 'vehicle' && $asset_id && $this->lastParkingInfo)
             <flux:callout color="blue" icon="information-circle" class="mt-2">
-                <flux:callout.heading>Last Parking Location</flux:callout.heading>
+                <flux:callout.heading>Last Vehicle Information</flux:callout.heading>
                 <flux:callout.text>
-                    This vehicle was last parked at
-                    <strong>Level B{{ $this->lastParkingInfo['level'] }}</strong>
+                    <strong>Last used by:</strong> {{ $this->lastParkingInfo['user_name'] }} on {{ $this->lastParkingInfo['date']->format('M d, Y') }}<br>
+                    <strong>Parking location:</strong> Level B{{ $this->lastParkingInfo['level'] }}
                     @if($this->lastParkingInfo['is_reserved'])
                         <span class="text-blue-600 dark:text-blue-400 font-medium">(Reserved Slot)</span>
+                    @endif<br>
+                    @if(isset($this->lastParkingInfo['fuel_level']))
+                        <strong>Fuel Level:</strong> {{ $this->lastParkingInfo['fuel_level'] }}/8<br>
                     @endif
-                    on {{ $this->lastParkingInfo['date']->format('M d, Y') }}.
+                    @if($this->lastParkingInfo['gas_filled'])
+                        <strong>Fuel Refilled:</strong> RM {{ number_format($this->lastParkingInfo['gas_amount'], 2) }}<br>
+                    @endif
                 </flux:callout.text>
             </flux:callout>
         @endif
@@ -123,29 +128,29 @@
             .asset-select [data-flux-select-options] .favorite-indicator {
                 display: inline;
             }
-        </style>    
+        </style>
 
-            {{-- Only show capacity for Meeting Room and Vehicle --}}
-            @if($this->shouldShowCapacity)
-                <flux:field>
-                    <flux:label>Capacity</flux:label>
-                    <flux:input placeholder="{{ $this->capacityPlaceholder }}" wire:model.live="capacity" type="number"/>
-                    <flux:error name="capacity" />
-                    @if($asset_type === 'vehicle' && $capacity)
-                        <flux:description>
-                            @if($capacity == 1)
-                                Only you will be using the vehicle
-                            @else
-                                You can select up to {{ $this->maxPassengers }} passenger(s)
-                            @endif
-                        </flux:description>
-                    @endif
-                </flux:field>
-            @endif
+        {{-- Only show capacity for Meeting Room and Vehicle --}}
+        @if($this->shouldShowCapacity)
+            <flux:field>
+                <flux:label>Capacity</flux:label>
+                <flux:input placeholder="{{ $this->capacityPlaceholder }}" wire:model.live="capacity" type="number" min="1"/>
+                <flux:error name="capacity" />
+                @if($asset_type === 'vehicle' && $capacity)
+                    <flux:description>
+                        @if($capacity == 1)
+                            Only you will be using the vehicle
+                        @else
+                            You can select up to {{ $this->maxPassengers }} passenger(s)
+                        @endif
+                    </flux:description>
+                @endif
+            </flux:field>
+        @endif
 
-            {{-- Destination field for Vehicles --}}
-            @if($asset_type === 'vehicle')
-                <flux:field>
+        {{-- Destination field for Vehicles --}}
+        @if($asset_type === 'vehicle')
+            <flux:field>
                     <flux:label>Destination</flux:label>
                     <flux:input placeholder="Where are you going?" wire:model="destination" type="text"/>
                     <flux:error name="destination" />
@@ -164,9 +169,9 @@
                         @if(count($passengers) > 0)
                             <flux:button 
                                 wire:click="deselectAllPassengers" 
-                                variant="ghost" 
+                                variant="filled" 
                                 size="sm"
-                                class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 py-0 my-0"
+                                class="hover:text-red-600 dark:hover:text-red-500 py-0 my-0"
                             >
                                 Deselect All
                             </flux:button>
@@ -331,7 +336,7 @@
                 {{-- #3: Smart Conflict Resolution - Suggest Alternative Time Slots --}}
                 @if($booking_date && $asset_type && $asset_id && $start_time && $end_time && $this->suggestedTimeSlots->count() > 0)
                     <flux:callout color="blue" icon="light-bulb">
-                        <flux:callout.heading>⚡ Alternative Time Slots</flux:callout.heading>
+                        <flux:callout.heading>Alternative Time Slots</flux:callout.heading>
                         <flux:callout.text>
                             Your selected time conflicts with an existing booking. Here are available alternatives with the same duration:
                         </flux:callout.text>
@@ -413,7 +418,6 @@
                             @endif
                             @if($vehicleUnderMaintenance)
                                 <flux:description class="text-amber-600 flex items-center gap-2">
-                                    <span>🔧</span>
                                     This vehicle is currently under maintenance and cannot be booked until maintenance is completed.
                                 </flux:description>
                             @endif
@@ -687,21 +691,26 @@
                     </div>
                     @endif
 
-                    {{-- Last Parking Location Info for Vehicles --}}
+                    {{-- Last Vehicle Information --}}
                     @if($asset_type === 'vehicle' && $asset_id && $this->lastParkingInfo)
                     <flux:separator />
                     <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                         <div class="flex items-start gap-2">
                             <flux:icon name="information-circle" class="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                             <div class="flex-1">
-                                <flux:heading size="sm" class="text-blue-900 dark:text-blue-100">Last Parking Location</flux:heading>
+                                <flux:heading size="sm" class="text-blue-900 dark:text-blue-100">Last Vehicle Information</flux:heading>
                                 <flux:text class="text-sm text-blue-800 dark:text-blue-200 mt-1">
-                                    This vehicle was last parked at
-                                    <strong>Level {{ $this->lastParkingInfo['level'] }}</strong>
+                                    <strong>Last used by:</strong> {{ $this->lastParkingInfo['user_name'] }} on {{ $this->lastParkingInfo['date']->format('M d, Y') }}<br>
+                                    <strong>Parking location:</strong> Level {{ $this->lastParkingInfo['level'] }}
                                     @if($this->lastParkingInfo['is_reserved'])
                                         <span class="font-medium">(Reserved Slot)</span>
+                                    @endif<br>
+                                    @if(isset($this->lastParkingInfo['fuel_level']))
+                                        <strong>Fuel Level:</strong> {{ $this->lastParkingInfo['fuel_level'] }}/8<br>
                                     @endif
-                                    on {{ $this->lastParkingInfo['date']->format('M d, Y') }}.
+                                    @if($this->lastParkingInfo['gas_filled'])
+                                        <strong>Fuel Refilled:</strong> RM {{ number_format($this->lastParkingInfo['gas_amount'], 2) }}<br>
+                                    @endif
                                 </flux:text>
                             </div>
                         </div>

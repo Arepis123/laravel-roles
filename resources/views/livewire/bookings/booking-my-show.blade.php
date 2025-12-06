@@ -749,15 +749,10 @@
                         <flux:separator />
                         
                         <div class="space-y-4">
-                            <div>
-                                <flux:heading size="sm">Parking Location</flux:heading>
-                                <flux:subheading>Please select where you parked the vehicle.</flux:subheading>
-                            </div>
-
                             <flux:field>
                                 <flux:label>Parking Level</flux:label>
-                                <flux:select wire:model.live="parkingLevel">
-                                    <flux:select.option value="">Select parking level</flux:select.option>
+                                <flux:select wire:model.live="parkingLevel" variant="listbox">
+                                <flux:select.option value="" selected>Select parking level</flux:select.option>
                                     @foreach($this->getParkingLevels() as $level)
                                         <flux:select.option value="{{ $level }}">Level B{{ $level }}</flux:select.option>
                                     @endforeach

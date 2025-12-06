@@ -278,7 +278,7 @@ class BookingCreate extends Component
             $requestedDuration = $requestedStart->diffInMinutes($requestedEnd);
 
             // Find gaps between bookings
-            $workDayStart = Carbon::createFromFormat('H:i', '08:00');
+            $workDayStart = Carbon::createFromFormat('H:i', '06:00');
             $workDayEnd = Carbon::createFromFormat('H:i', '22:00');
 
             $sortedBookings = $existingBookings->sortBy('start_time');
@@ -486,9 +486,39 @@ class BookingCreate extends Component
         if (!is_numeric($this->capacity)) {
             return 0;
         }
-        
+
         // Capacity minus 1 (the driver/current user)
         return max(0, intval($this->capacity) - 1);
+    }
+
+    /**
+     * Get the asset's maximum capacity from the database
+     */
+    public function getAssetMaxCapacity()
+    {
+        if (!$this->asset_type || !$this->asset_id) {
+            return null;
+        }
+
+        $assetModel = $this->assetTypeConfig[$this->asset_type]['model'];
+        $asset = $assetModel::find($this->asset_id);
+
+        return $asset ? $asset->capacity : null;
+    }
+
+    /**
+     * Get custom message for capacity max validation
+     */
+    private function getCapacityMaxMessage()
+    {
+        $maxCapacity = $this->getAssetMaxCapacity();
+
+        if (!$maxCapacity) {
+            return 'Capacity exceeds the maximum allowed.';
+        }
+
+        $assetName = $this->asset_type === 'vehicle' ? 'vehicle' : 'meeting room';
+        return "This {$assetName} has a maximum capacity of {$maxCapacity} people.";
     }
 
     public function getAssetTypeOptionsProperty()
@@ -873,12 +903,12 @@ class BookingCreate extends Component
     }
 
     /**
-     * Get available time slots (every 30 minutes from 8 AM to 22 PM)
+     * Get available time slots (every 30 minutes from 6 AM to 10 PM)
      */
     public function getAvailableTimeSlots()
     {
         $slots = [];
-        $start = 8; // 8 AM
+        $start = 6; // 6 AM
         $end = 22;  // 10 PM
         
         // Return empty if required fields not selected
@@ -931,7 +961,8 @@ class BookingCreate extends Component
 
             // For ACTUAL multi-day bookings, don't check time conflicts (entire days are blocked)
             if ($isActuallyMultiDay) {
-                $currentTime = $startTime->copy()->addMinutes(30);
+                // For multi-day bookings, start from 6:00 AM on the end date (not from start_time)
+                $currentTime = Carbon::createFromFormat('H:i', '06:00');
                 while ($currentTime->lte($endOfDay)) {
                     $timeString = $currentTime->format('H:i');
                     $displayTime = $currentTime->format('g:i A');
@@ -1005,34 +1036,18 @@ class BookingCreate extends Component
             $endDateStr = $this->end_date ?: $this->booking_date;
             $isActuallyMultiDay = $this->allowsMultiDayBooking && $this->end_date && ($this->end_date !== $this->booking_date);
 
-            // For ACTUAL multi-day bookings, check if the entire date range has conflicts
+            // For ACTUAL multi-day bookings, only check if start time on START DATE is available
+            // Full date range conflict will be checked when validating end time and during final save
             if ($isActuallyMultiDay) {
+                // Check if the time slot on the START DATE has conflicts
+                $checkDateTime = Carbon::createFromFormat('Y-m-d H:i', $this->booking_date . ' ' . $timeSlot);
+
                 $conflictingBooking = Booking::where('asset_type', $assetModel)
                     ->where('asset_id', $this->asset_id)
                     ->whereIn('status', ['pending', 'approved'])
-                    ->where(function($query) use ($endDateStr) {
-                        // Check for date range overlaps
-                        $query->where(function($dateOverlap) use ($endDateStr) {
-                            // Case 1: Existing booking starts during our requested period
-                            $dateOverlap->whereDate('start_time', '>=', $this->booking_date)
-                                       ->whereDate('start_time', '<=', $endDateStr);
-                        })
-                        ->orWhere(function($dateOverlap) use ($endDateStr) {
-                            // Case 2: Existing booking ends during our requested period
-                            $dateOverlap->whereDate('end_time', '>=', $this->booking_date)
-                                       ->whereDate('end_time', '<=', $endDateStr);
-                        })
-                        ->orWhere(function($dateOverlap) use ($endDateStr) {
-                            // Case 3: Existing booking completely encompasses our requested period
-                            $dateOverlap->whereDate('start_time', '<=', $this->booking_date)
-                                       ->whereDate('end_time', '>=', $endDateStr);
-                        })
-                        ->orWhere(function($dateOverlap) use ($endDateStr) {
-                            // Case 4: Our requested period encompasses existing booking
-                            $dateOverlap->whereDate('start_time', '>=', $this->booking_date)
-                                       ->whereDate('end_time', '<=', $endDateStr);
-                        });
-                    })
+                    ->whereDate('start_time', $this->booking_date) // Only check bookings on the start date
+                    ->where('start_time', '<=', $checkDateTime)
+                    ->where('end_time', '>', $checkDateTime)
                     ->exists();
 
                 return !$conflictingBooking;
@@ -1083,30 +1098,29 @@ class BookingCreate extends Component
 
             // For ACTUAL multi-day bookings (vehicles and IT assets)
             if ($isActuallyMultiDay) {
+                // Build full datetime ranges for proper comparison
+                $startDateTime = Carbon::createFromFormat('Y-m-d H:i', $this->booking_date . ' ' . $startTime);
+                $endDateTime = Carbon::createFromFormat('Y-m-d H:i', $endDateStr . ' ' . $endTime);
+
+                // Check for datetime overlaps (not just date overlaps)
                 $conflictingBooking = Booking::where('asset_type', $assetModel)
                     ->where('asset_id', $this->asset_id)
                     ->whereIn('status', ['pending', 'approved'])
-                    ->where(function($query) use ($endDateStr) {
-                        // Check for date range overlaps
-                        $query->where(function($dateOverlap) use ($endDateStr) {
-                            // Case 1: Existing booking starts during our requested period
-                            $dateOverlap->whereDate('start_time', '>=', $this->booking_date)
-                                       ->whereDate('start_time', '<=', $endDateStr);
+                    ->where(function($query) use ($startDateTime, $endDateTime) {
+                        $query->where(function($overlap) use ($startDateTime, $endDateTime) {
+                            // Existing booking starts during our requested time period
+                            $overlap->where('start_time', '>=', $startDateTime)
+                                    ->where('start_time', '<', $endDateTime);
                         })
-                        ->orWhere(function($dateOverlap) use ($endDateStr) {
-                            // Case 2: Existing booking ends during our requested period
-                            $dateOverlap->whereDate('end_time', '>=', $this->booking_date)
-                                       ->whereDate('end_time', '<=', $endDateStr);
+                        ->orWhere(function($overlap) use ($startDateTime, $endDateTime) {
+                            // Existing booking ends during our requested time period
+                            $overlap->where('end_time', '>', $startDateTime)
+                                    ->where('end_time', '<=', $endDateTime);
                         })
-                        ->orWhere(function($dateOverlap) use ($endDateStr) {
-                            // Case 3: Existing booking completely encompasses our requested period
-                            $dateOverlap->whereDate('start_time', '<=', $this->booking_date)
-                                       ->whereDate('end_time', '>=', $endDateStr);
-                        })
-                        ->orWhere(function($dateOverlap) use ($endDateStr) {
-                            // Case 4: Our requested period encompasses existing booking
-                            $dateOverlap->whereDate('start_time', '>=', $this->booking_date)
-                                       ->whereDate('end_time', '<=', $endDateStr);
+                        ->orWhere(function($overlap) use ($startDateTime, $endDateTime) {
+                            // Existing booking completely encompasses our requested time period
+                            $overlap->where('start_time', '<=', $startDateTime)
+                                    ->where('end_time', '>=', $endDateTime);
                         });
                     })
                     ->exists();
@@ -1304,7 +1318,12 @@ class BookingCreate extends Component
 
         // Add capacity validation only if it should be shown (Meeting Room and Vehicle)
         if ($this->shouldShowCapacity) {
-            $rules['capacity'] = 'required|numeric|min:1';
+            $assetMaxCapacity = $this->getAssetMaxCapacity();
+            if ($assetMaxCapacity) {
+                $rules['capacity'] = "required|numeric|min:1|max:{$assetMaxCapacity}";
+            } else {
+                $rules['capacity'] = 'required|numeric|min:1';
+            }
         }
 
         // Add destination validation for vehicles
@@ -1360,6 +1379,7 @@ class BookingCreate extends Component
             'purpose.min' => 'Purpose must be at least 3 characters long.',
             'capacity.numeric' => 'Capacity must be a number.',
             'capacity.min' => 'Capacity must be at least 1.',
+            'capacity.max' => $this->getCapacityMaxMessage(),
             'destination.required' => 'Please provide the destination.',
             'destination.min' => 'Destination must be at least 3 characters long.',
             'refreshment_details.required' => 'Please provide refreshment details.',
@@ -1425,31 +1445,26 @@ class BookingCreate extends Component
             $assetModel = $this->assetTypeConfig[$this->asset_type]['model'];
             
             if ($this->allowsMultiDayBooking) {
-                // For multi-day bookings (vehicles and IT assets) - check date range overlaps
+                // For multi-day bookings (vehicles and IT assets) - check datetime overlaps
                 $conflictingBooking = Booking::where('asset_type', $assetModel)
                     ->where('asset_id', $this->asset_id)
                     ->whereIn('status', ['pending', 'approved'])
-                    ->where(function($query) use ($endDateStr) {
-                        // Check for date range overlaps using all possible overlap scenarios
-                        $query->where(function($dateOverlap) use ($endDateStr) {
-                            // Case 1: Existing booking starts during our requested period
-                            $dateOverlap->whereDate('start_time', '>=', $this->booking_date)
-                                       ->whereDate('start_time', '<=', $endDateStr);
+                    ->where(function($query) use ($startDateTime, $endDateTime) {
+                        // Check for datetime overlaps (not just date overlaps)
+                        $query->where(function($overlap) use ($startDateTime, $endDateTime) {
+                            // Existing booking starts during our requested time period
+                            $overlap->where('start_time', '>=', $startDateTime)
+                                    ->where('start_time', '<', $endDateTime);
                         })
-                        ->orWhere(function($dateOverlap) use ($endDateStr) {
-                            // Case 2: Existing booking ends during our requested period
-                            $dateOverlap->whereDate('end_time', '>=', $this->booking_date)
-                                       ->whereDate('end_time', '<=', $endDateStr);
+                        ->orWhere(function($overlap) use ($startDateTime, $endDateTime) {
+                            // Existing booking ends during our requested time period
+                            $overlap->where('end_time', '>', $startDateTime)
+                                    ->where('end_time', '<=', $endDateTime);
                         })
-                        ->orWhere(function($dateOverlap) use ($endDateStr) {
-                            // Case 3: Existing booking completely encompasses our requested period
-                            $dateOverlap->whereDate('start_time', '<=', $this->booking_date)
-                                       ->whereDate('end_time', '>=', $endDateStr);
-                        })
-                        ->orWhere(function($dateOverlap) use ($endDateStr) {
-                            // Case 4: Our requested period encompasses existing booking
-                            $dateOverlap->whereDate('start_time', '>=', $this->booking_date)
-                                       ->whereDate('end_time', '<=', $endDateStr);
+                        ->orWhere(function($overlap) use ($startDateTime, $endDateTime) {
+                            // Existing booking completely encompasses our requested time period
+                            $overlap->where('start_time', '<=', $startDateTime)
+                                    ->where('end_time', '>=', $endDateTime);
                         });
                     })
                     ->exists();
@@ -1634,6 +1649,7 @@ class BookingCreate extends Component
             ->where('asset_id', $this->asset_id)
             ->where('status', 'done')
             ->whereNotNull('parking_level')
+            ->with('user:id,name') // Load the user relationship
             ->orderBy('updated_at', 'desc')
             ->first();
 
@@ -1641,10 +1657,20 @@ class BookingCreate extends Component
             return null;
         }
 
+        // Get fuel information from done_details
+        $doneDetails = $lastBooking->done_details ?? [];
+        $gasFilled = $doneDetails['gas_filled'] ?? false;
+        $gasAmount = $doneDetails['gas_amount'] ?? null;
+        $fuelLevel = $doneDetails['fuel_level'] ?? null;
+
         return [
             'level' => $lastBooking->parking_level,
             'is_reserved' => $lastBooking->is_reserved_slot,
             'date' => $lastBooking->updated_at,
+            'user_name' => $lastBooking->user?->name ?? 'Unknown',
+            'gas_filled' => $gasFilled,
+            'gas_amount' => $gasAmount,
+            'fuel_level' => $fuelLevel,
         ];
     }
 

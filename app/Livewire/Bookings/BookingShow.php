@@ -31,6 +31,8 @@ class BookingShow extends Component
     public string $doneRemarks = '';
     public string $currentOdometer = '';
     public string $fuelLevel = '4';
+    public $parkingLevel = null;
+    public bool $isReservedSlot = false;
 
     // Multiple fuel entries
     public array $fuelEntries = [];
@@ -169,6 +171,13 @@ class BookingShow extends Component
                 'fuelLevel.max' => 'Fuel level must be at most 8.',
             ];
 
+            // Add parking validation if required
+            if ($this->isParkingRequired()) {
+                $validationRules['parkingLevel'] = 'required|integer|min:1|max:5';
+                $validationMessages['parkingLevel.required'] = 'Parking level is required.';
+                $validationMessages['parkingLevel.integer'] = 'Parking level must be a valid number.';
+            }
+
             // Validate each fuel entry
             foreach ($this->fuelEntries as $index => $entry) {
                 $validationRules["fuelEntries.{$index}.fuel_cost"] = 'required|numeric|min:0';
@@ -252,10 +261,19 @@ class BookingShow extends Component
             ];
         }
 
-        // Update booking with done details
-        $this->booking->update([
+        // Prepare update data
+        $updateData = [
             'done_details' => $doneDetails
-        ]);
+        ];
+
+        // Add parking data if required and provided
+        if ($this->asset_type === 'vehicle' && $this->isParkingRequired() && $this->parkingLevel) {
+            $updateData['parking_level'] = $this->parkingLevel;
+            $updateData['is_reserved_slot'] = $this->isReservedSlot;
+        }
+
+        // Update booking with done details and parking data
+        $this->booking->update($updateData);
 
         // Close modal
         $this->closeDoneModal();
@@ -550,6 +568,27 @@ class BookingShow extends Component
             'total_fuel_amount' => $fuelLogs->sum('fuel_amount'),
             'fuel_level' => $this->booking->done_details['fuel_level'] ?? null,
         ];
+    }
+
+    /**
+     * Check if parking is required for this vehicle
+     */
+    public function isParkingRequired(): bool
+    {
+        if ($this->asset_type !== 'vehicle') {
+            return false;
+        }
+
+        $vehicle = Vehicle::find($this->booking->asset_id);
+        return $vehicle && $vehicle->parking_required;
+    }
+
+    /**
+     * Get available parking levels
+     */
+    public function getParkingLevels(): array
+    {
+        return [1, 2, 3, 4, 5];
     }
 
     public function render()
