@@ -4,7 +4,9 @@ namespace App\Livewire\Users;
 use Livewire\Component;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
+use App\Mail\UserCreated;
 
 class UserCreate extends Component
 {
@@ -50,6 +52,9 @@ class UserCreate extends Component
 
         // Assign the single selected role
         $user->assignRole($this->selectedRole);
+
+        // Send welcome email with credentials
+        Mail::to($user->email)->send(new UserCreated($user, $this->password, $this->selectedRole));
 
         return to_route('users.index')->with('success', 'User has been successfully created');
     }
